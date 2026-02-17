@@ -1,0 +1,1060 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import joblib
+import numpy as np
+import pandas as pd
+import os
+import warnings
+from datetime import datetime
+import traceback
+
+# Suppress scikit-learn warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+
+app = Flask(__name__)
+CORS(app)
+
+# ✅ File paths
+base_path = r"C:\ReactJS\SmartCF\MachineLeaning"
+csv_path = os.path.join(base_path, "Maharashtra_Diploma_Datasets.csv")
+
+# ✅ Load model and encoders (if available)
+try:
+    model = joblib.load(os.path.join(base_path, "college_prediction_model.pkl"))
+    encoders = joblib.load(os.path.join(base_path, "label_encoders.pkl"))
+    target_enc = joblib.load(os.path.join(base_path, "target_encoder.pkl"))
+    print("✅ ML Model and encoders loaded successfully")
+except Exception as e:
+    print(f"⚠️ Could not load ML models: {str(e)}, using fallback prediction")
+    model = None
+    encoders = None
+    target_enc = None
+
+# ✅ Load and preprocess CSV data
+print("📂 Loading dataset...")
+try:
+    df = pd.read_csv(csv_path)
+    print(f"📊 Dataset loaded: {len(df)} records, {len(df.columns)} columns")
+    print(f"📋 Columns: {list(df.columns)}")
+except Exception as e:
+    print(f"❌ Error loading CSV: {str(e)}")
+    raise
+
+# ✅ Clean column names
+df.columns = df.columns.str.strip()
+print("✅ Column names cleaned")
+
+# ✅ Handle missing values
+print("🔍 Handling missing values...")
+df.replace(['N/A', 'NA', 'NaN', 'nan', '', ' ', 'null', 'NULL'], pd.NA, inplace=True)
+
+# ✅ Define numeric columns that should be converted
+numeric_columns = [
+    'fees', 'hostel_fees', 'bus_fees', 'placement_rate', 
+    'average_package_lpa', 'highest_package_lpa', 'internship_rate',
+    'foreign_offers', 'labs_count', 'hostel_capacity', 
+    'total_intake', 'seats', 'cutoff_rank', 'established_year',
+    'cutoff_percentile', 'year', 'round', 'duration_years'
+]
+
+# ✅ CRITICAL FIX: Safely convert numeric columns
+def safe_numeric_conversion(series):
+    """Safely convert series to numeric, handling all edge cases"""
+    if series is None or len(series) == 0:
+        return pd.Series([0] * len(df))
+    
+    # Convert to string first
+    str_series = series.astype(str)
+    
+    # Replace common non-numeric values
+    str_series = str_series.replace(['N/A', 'NA', 'NaN', 'nan', '', ' ', 'null', 'NULL', 'None'], '0')
+    
+    # Remove any non-numeric characters (except decimal points and negative signs)
+    str_series = str_series.str.replace(r'[^\d\.\-]', '', regex=True)
+    
+    # Handle empty strings
+    str_series = str_series.replace('', '0')
+    
+    # Convert to numeric
+    numeric_series = pd.to_numeric(str_series, errors='coerce')
+    
+    # Fill NaN with 0
+    numeric_series = numeric_series.fillna(0)
+    
+    return numeric_series
+
+print("🔢 Converting numeric columns...")
+for col in numeric_columns:
+    if col in df.columns:
+        df[col] = safe_numeric_conversion(df[col])
+        print(f"  ✓ {col}: {df[col].dtype}, min={df[col].min():.2f}, max={df[col].max():.2f}, non-zero={len(df[df[col] > 0])}")
+    else:
+        print(f"  ⚠️ {col} not in dataset")
+
+# ✅ Ensure string columns are properly formatted
+string_columns = ['college_name', 'branch_name', 'category', 'city', 'district', 
+                  'region', 'university', 'autonomy_status', 'hostel_available',
+                  'degree_type', 'accreditation', 'top_recruiters', 'hostel_type',
+                  'wifi_campus', 'transport_facility', 'medical_facility',
+                  'contact_email', 'contact_phone', 'website_url']
+
+for col in string_columns:
+    if col in df.columns:
+        df[col] = df[col].fillna('N/A').astype(str).str.strip()
+
+print("✅ Dataset preprocessing complete")
+print(f"📊 Total records: {len(df)}")
+print(f"🏫 Unique colleges: {df['college_code'].nunique() if 'college_code' in df.columns else 'N/A'}")
+print(f"🎯 Unique branches: {df['branch_name'].nunique() if 'branch_name' in df.columns else 'N/A'}")
+print(f"📍 Unique cities: {df['city'].nunique() if 'city' in df.columns else 'N/A'}")
+
+# ✅ Define FEATURE_NAMES for model prediction
+FEATURE_NAMES = model.feature_names_in_.tolist() if model and hasattr(model, 'feature_names_in_') else [
+    'city', 'branch_name', 'category', 'year', 'fees', 
+    'placement_rate', 'hostel_available', 'autonomy_status', 'cutoff_rank'
+]
+
+# ✅ Enhanced helper function to predict fit based on both score and rank
+def predict_fit_comprehensive(user_score, user_rank, college_cutoff_rank, college_cutoff_percentile):
+    """Predict fit based on both score and rank comparison"""
+    predictions = []
+    reasons = []
+    
+    # Check if we have valid data
+    if (not user_score or user_score <= 0) and (not user_rank or user_rank <= 0):
+        return "Unknown Fit", "User score and rank not provided"
+    
+    if college_cutoff_rank <= 0 and college_cutoff_percentile <= 0:
+        return "Unknown Fit", "College cutoff data unavailable"
+    
+    # 1. Predict based on RANK (if available)
+    if user_rank and user_rank > 0 and college_cutoff_rank > 0:
+        rank_diff = college_cutoff_rank - user_rank  # Positive = user has better rank
+        
+        if rank_diff >= 1000:
+            predictions.append("Best Fit")
+            reasons.append(f"Your rank ({user_rank:,}) is significantly better than cutoff rank ({college_cutoff_rank:,})")
+        elif rank_diff >= 100:
+            predictions.append("Good Fit")
+            reasons.append(f"Your rank ({user_rank:,}) is better than cutoff rank ({college_cutoff_rank:,})")
+        elif rank_diff >= -500:
+            predictions.append("Stretch")
+            reasons.append(f"Your rank ({user_rank:,}) is close to cutoff rank ({college_cutoff_rank:,})")
+        else:
+            predictions.append("Unlikely Fit")
+            reasons.append(f"Your rank ({user_rank:,}) is lower than cutoff rank ({college_cutoff_rank:,})")
+    
+    # 2. Predict based on SCORE/PERCENTILE (if available)
+    if user_score and user_score > 0 and college_cutoff_percentile > 0:
+        score_diff = user_score - college_cutoff_percentile  # Positive = user has better score
+        
+        if score_diff >= 5:
+            predictions.append("Best Fit")
+            reasons.append(f"Your score ({user_score:.2f}%) is significantly higher than cutoff ({college_cutoff_percentile:.2f}%)")
+        elif score_diff >= 2:
+            predictions.append("Good Fit")
+            reasons.append(f"Your score ({user_score:.2f}%) is higher than cutoff ({college_cutoff_percentile:.2f}%)")
+        elif score_diff >= -2:
+            predictions.append("Stretch")
+            reasons.append(f"Your score ({user_score:.2f}%) is close to cutoff ({college_cutoff_percentile:.2f}%)")
+        else:
+            predictions.append("Unlikely Fit")
+            reasons.append(f"Your score ({user_score:.2f}%) is lower than cutoff ({college_cutoff_percentile:.2f}%)")
+    
+    # If we have predictions, return the best one
+    if predictions:
+        fit_order = {"Best Fit": 0, "Good Fit": 1, "Stretch": 2, "Unlikely Fit": 3}
+        best_fit = min(predictions, key=lambda x: fit_order.get(x, 4))
+        
+        # Get corresponding reason
+        best_index = predictions.index(best_fit)
+        reason = reasons[best_index]
+        
+        return best_fit, reason
+    
+    return "Unknown Fit", "Insufficient data for prediction"
+
+# ✅ Function to calculate match score (0-100)
+def calculate_match_score(user_score, user_rank, cutoff_rank, cutoff_percentile):
+    """Calculate a comprehensive match score (0-100) based on user's metrics vs cutoff"""
+    total_score = 0
+    factors = 0
+    
+    # Rank factor (50 points max)
+    if user_rank and cutoff_rank > 0:
+        if user_rank <= 0:
+            rank_factor = 0
+        elif user_rank <= (cutoff_rank * 0.5):  # Much better rank
+            rank_factor = 50
+        elif user_rank <= (cutoff_rank * 0.8):  # Better rank
+            rank_factor = 40
+        elif user_rank <= cutoff_rank:  # Equal or slightly better
+            rank_factor = 30
+        elif user_rank <= (cutoff_rank * 1.2):  # Within 20% of cutoff
+            rank_factor = 20
+        elif user_rank <= (cutoff_rank * 1.5):  # Within 50% of cutoff
+            rank_factor = 10
+        else:
+            rank_factor = 0
+        
+        total_score += rank_factor
+        factors += 1
+    
+    # Score/Percentile factor (50 points max)
+    if user_score and cutoff_percentile > 0:
+        if user_score <= 0:
+            score_factor = 0
+        elif user_score >= (cutoff_percentile + 10):  # Much better score
+            score_factor = 50
+        elif user_score >= (cutoff_percentile + 5):  # Better score
+            score_factor = 40
+        elif user_score >= cutoff_percentile:  # Equal or slightly better
+            score_factor = 30
+        elif user_score >= (cutoff_percentile - 5):  # Within 5% of cutoff
+            score_factor = 20
+        elif user_score >= (cutoff_percentile - 10):  # Within 10% of cutoff
+            score_factor = 10
+        else:
+            score_factor = 0
+        
+        total_score += score_factor
+        factors += 1
+    
+    # If we have no factors to calculate, return neutral score
+    if factors == 0:
+        return 50
+    
+    # Normalize to 0-100 scale
+    max_possible = 50 * factors
+    match_score = (total_score / max_possible) * 100
+    
+    return round(match_score, 1)
+
+# ✅ Function to calculate admission chance percentage
+def calculate_admission_chance(user_score, user_rank, cutoff_rank, cutoff_percentile):
+    """Calculate admission chance percentage (0-100%)"""
+    match_score = calculate_match_score(user_score, user_rank, cutoff_rank, cutoff_percentile)
+    
+    # Convert match score to admission chance
+    if match_score >= 90:
+        return 95
+    elif match_score >= 80:
+        return 85
+    elif match_score >= 70:
+        return 75
+    elif match_score >= 60:
+        return 65
+    elif match_score >= 50:
+        return 55
+    elif match_score >= 40:
+        return 45
+    elif match_score >= 30:
+        return 35
+    elif match_score >= 20:
+        return 25
+    elif match_score >= 10:
+        return 15
+    else:
+        return 5
+
+# ✅ Function to safely extract numeric values
+def safe_extract(value, default=0, data_type=float):
+    """Safely extract and convert values from dataframe"""
+    try:
+        if pd.isna(value) or value is None:
+            return default
+        
+        # Convert to string first
+        str_value = str(value).strip()
+        
+        # Handle common non-numeric values
+        if str_value in ['N/A', 'NA', 'NaN', 'nan', '', ' ', 'null', 'NULL']:
+            return default
+        
+        # Remove non-numeric characters
+        str_value = ''.join(c for c in str_value if c.isdigit() or c == '.' or c == '-')
+        
+        if not str_value or str_value == '-' or str_value == '.':
+            return default
+        
+        # Convert to appropriate type
+        if data_type == int:
+            return int(float(str_value))
+        else:
+            return float(str_value)
+    except Exception as e:
+        print(f"⚠️ Error extracting value '{value}': {str(e)}")
+        return default
+
+@app.route("/colleges", methods=["GET"])
+def get_colleges():
+    """Get all unique colleges (aggregated by college_code)"""
+    try:
+        # Get limit from query parameters
+        limit = int(request.args.get("limit", 10000))
+        
+        print(f"🏫 /colleges: Request received, limit={limit}")
+        
+        # Check required columns
+        required_cols = ['college_code', 'college_name', 'city', 'branch_name', 'fees', 'placement_rate']
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        
+        if missing_cols:
+            print(f"❌ Missing columns: {missing_cols}")
+            return jsonify({"error": f"Missing columns in dataset: {missing_cols}"}), 500
+        
+        # Group by college_code to get unique colleges
+        agg_dict = {
+            'college_name': 'first',
+            'short_name': 'first',
+            'city': 'first',
+            'district': 'first',
+            'region': 'first',
+            'university': 'first',
+            'autonomy_status': 'first',
+            'established_year': 'first',
+            'branch_name': lambda x: ', '.join(sorted(set(str(v) for v in x.unique() if pd.notna(v)))),
+            'degree_type': 'first',
+            'duration_years': 'first',
+            'accreditation': 'first',
+            'top_recruiters': 'first',
+            'placement_cell_contact': 'first',
+            'hostel_available': 'first',
+            'hostel_type': 'first',
+            'wifi_campus': 'first',
+            'transport_facility': 'first',
+            'medical_facility': 'first',
+            'image_url': 'first',
+            'logo_url': 'first',
+            'contact_email': 'first',
+            'contact_phone': 'first',
+            'website_url': 'first',
+            'fees': 'mean',
+            'hostel_fees': 'mean',
+            'bus_fees': 'mean',
+            'placement_rate': 'mean',
+            'average_package_lpa': 'mean',
+            'highest_package_lpa': 'max',
+            'internship_rate': 'mean',
+            'foreign_offers': 'sum',
+            'labs_count': 'max',
+            'hostel_capacity': 'max',
+            'total_intake': 'sum',
+            'seats': 'sum',
+            'cutoff_rank': 'min',
+            'cutoff_percentile': 'max'
+        }
+        
+        # Only include columns that exist in dataframe
+        agg_dict = {k: v for k, v in agg_dict.items() if k in df.columns}
+        
+        unique_colleges = df.groupby('college_code').agg(agg_dict).reset_index()
+        
+        # Convert to records
+        colleges_data = unique_colleges.to_dict(orient="records")
+        
+        # Map to frontend format
+        frontend_colleges = []
+        for college in colleges_data:
+            try:
+                frontend_college = {
+                    'college_code': str(college.get('college_code', '')),
+                    'college_name': str(college.get('college_name', 'Unknown College')),
+                    'city': str(college.get('city', 'N/A')),
+                    'branch': str(college.get('branch_name', 'N/A')),
+                    'fees': float(college.get('fees', 0)),
+                    'placement_rate': float(college.get('placement_rate', 0)),
+                    'cutoff_score': int(college.get('cutoff_rank', 0)),
+                    'autonomy_status': str(college.get('autonomy_status', 'N/A')),
+                    'hostel_available': str(college.get('hostel_available', 'N/A')),
+                    'image': str(college.get('image_url', '')),
+                    'total_intake': int(college.get('total_intake', 0)),
+                    'seats': int(college.get('seats', 0)),
+                    'category': 'ALL',
+                    'average_package_lpa': float(college.get('average_package_lpa', 0)),
+                    'highest_package_lpa': float(college.get('highest_package_lpa', 0)),
+                    'university': str(college.get('university', 'N/A')),
+                    'established_year': int(college.get('established_year', 0)),
+                    'accreditation': str(college.get('accreditation', 'N/A')),
+                    'district': str(college.get('district', 'N/A')),
+                    'region': str(college.get('region', 'N/A')),
+                    'degree_type': str(college.get('degree_type', 'N/A')),
+                    'duration_years': int(college.get('duration_years', 0)),
+                    'hostel_fees': float(college.get('hostel_fees', 0)),
+                    'bus_fees': float(college.get('bus_fees', 0)),
+                    'internship_rate': float(college.get('internship_rate', 0)),
+                    'foreign_offers': int(college.get('foreign_offers', 0)),
+                    'top_recruiters': str(college.get('top_recruiters', 'N/A')),
+                    'hostel_type': str(college.get('hostel_type', 'N/A')),
+                    'labs_count': int(college.get('labs_count', 0)),
+                    'wifi_campus': str(college.get('wifi_campus', 'N/A')),
+                    'transport_facility': str(college.get('transport_facility', 'N/A')),
+                    'medical_facility': str(college.get('medical_facility', 'N/A')),
+                    'hostel_capacity': int(college.get('hostel_capacity', 0)),
+                    'logo_url': str(college.get('logo_url', '')),
+                    'contact_email': str(college.get('contact_email', 'N/A')),
+                    'contact_phone': str(college.get('contact_phone', 'N/A')),
+                    'website_url': str(college.get('website_url', 'N/A')),
+                    'short_name': str(college.get('short_name', ''))
+                }
+                frontend_colleges.append(frontend_college)
+            except Exception as e:
+                print(f"⚠️ Error processing college {college.get('college_code')}: {str(e)}")
+                continue
+        
+        # Apply limit
+        frontend_colleges = frontend_colleges[:limit]
+        
+        print(f"✅ /colleges: Returning {len(frontend_colleges)} unique colleges")
+        return jsonify(frontend_colleges)
+        
+    except Exception as e:
+        print(f"❌ Error in /colleges: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/predict_admission", methods=["POST", "OPTIONS"])
+def predict_admission():
+    """BRANCH-SPECIFIC PREDICTIONS - Shows colleges multiple times for each matching branch"""
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
+    
+    try:
+        data = request.get_json()
+        print("\n" + "="*60)
+        print("📥 /predict_admission: Request received")
+        print("="*60)
+        
+        # Extract user data with defaults
+        user_score = data.get("score", 0)
+        user_rank = data.get("rank", 0)
+        user_category = data.get("category", "OPEN")
+        preferred_branches = data.get("branches", [])
+        
+        # Additional filters with reasonable defaults
+        preferred_cities = data.get("preferred_cities", [])
+        max_fees = data.get("max_fees", 1000000)  # Increased to 10 lakhs
+        min_placement = data.get("min_placement", 0)
+        limit = data.get("limit", 1000)
+        
+        # Debug info
+        print(f"🎯 User Profile:")
+        print(f"  • Score: {user_score}")
+        print(f"  • Rank: {user_rank}")
+        print(f"  • Category: {user_category}")
+        print(f"  • Preferred branches: {preferred_branches}")
+        print(f"  • Preferred cities: {preferred_cities}")
+        print(f"  • Max fees: ₹{max_fees:,.0f}")
+        print(f"  • Min placement: {min_placement}%")
+        
+        # Convert and validate inputs
+        try:
+            user_score_float = float(user_score) if user_score else 0
+        except:
+            user_score_float = 0
+        
+        try:
+            user_rank_int = int(user_rank) if user_rank else 0
+        except:
+            user_rank_int = 0
+        
+        try:
+            max_fees_float = float(max_fees)
+        except:
+            max_fees_float = 1000000
+        
+        try:
+            min_placement_float = float(min_placement)
+        except:
+            min_placement_float = 0
+        
+        # Validate required inputs
+        if not preferred_branches:
+            return jsonify({"error": "Please select at least one branch"}), 400
+        
+        if user_score_float <= 0 and user_rank_int <= 0:
+            return jsonify({"error": "Please provide either your score or rank"}), 400
+        
+        # Start with all data
+        filtered_df = df.copy()
+        print(f"\n📊 Initial dataset: {len(filtered_df)} records")
+        
+        # ✅ STEP 1: Filter by branches (CASE INSENSITIVE)
+        if 'branch_name' in filtered_df.columns:
+            # Clean branch names
+            filtered_df['branch_norm'] = filtered_df['branch_name'].astype(str).str.strip().str.lower()
+            preferred_branches_clean = [str(b).strip().lower() for b in preferred_branches]
+            
+            # Create branch mask
+            branch_mask = filtered_df['branch_norm'].isin(preferred_branches_clean)
+            
+            # Also try partial matching for common variations
+            if not branch_mask.any():
+                print("⚠️ No exact branch matches, trying partial matching...")
+                for pref_branch in preferred_branches_clean:
+                    if pref_branch:
+                        partial_mask = filtered_df['branch_norm'].str.contains(pref_branch, na=False)
+                        branch_mask = branch_mask | partial_mask
+            
+            filtered_df = filtered_df[branch_mask].copy()
+            print(f"📊 After branch filter: {len(filtered_df)} records")
+            
+            if len(filtered_df) == 0:
+                print("❌ No records after branch filter!")
+                available_branches = sorted(df['branch_name'].unique().tolist())[:20]
+                return jsonify({
+                    "error": f"No colleges found for branches: {preferred_branches}",
+                    "available_branches": available_branches
+                }), 400
+        
+        # ✅ STEP 2: Filter by category (FLEXIBLE MATCHING)
+        if 'category' in filtered_df.columns and user_category:
+            print(f"\n🏷️ Category filtering: '{user_category}'")
+            
+            # Normalize categories
+            filtered_df['cat_norm'] = filtered_df['category'].astype(str).str.strip().str.upper()
+            user_cat_norm = str(user_category).strip().upper()
+            
+            # Common category mappings
+            category_mappings = {
+                'OPEN': ['OPEN', 'GOPEN', 'LOPEN', 'GEN', 'GENERAL', 'GOPENH'],
+                'OBC': ['OBC', 'GOBC', 'LOBC', 'OBC-NCL', 'OBC_NCL'],
+                'SC': ['SC', 'GSC', 'LSC', 'SCHEDULED CASTE'],
+                'ST': ['ST', 'GST', 'LST', 'SCHEDULED TRIBE'],
+                'VJ': ['VJ', 'VJNT', 'GNTC', 'VJ/DT', 'VJ-DT'],
+                'NT': ['NT', 'NTB', 'NTC', 'NT(C)', 'NT(B)', 'NT1', 'NT2', 'NT3'],
+                'SBC': ['SBC', 'SEBC', 'GSEBC', 'LSEBC'],
+                'EWS': ['EWS', 'EWS1', 'EWS2']
+            }
+            
+            # Find matching categories
+            matching_categories = []
+            found_match = False
+            
+            # First check if user category is a standard category
+            for std_cat, variations in category_mappings.items():
+                if user_cat_norm == std_cat.upper():
+                    matching_categories = variations
+                    found_match = True
+                    break
+            
+            # If not found, check if user category matches any variation
+            if not found_match:
+                for std_cat, variations in category_mappings.items():
+                    if user_cat_norm in [v.upper() for v in variations]:
+                        matching_categories = variations
+                        found_match = True
+                        break
+            
+            # If still no match, use user category as is
+            if not found_match:
+                matching_categories = [user_cat_norm]
+            
+            print(f"  Looking for categories: {matching_categories}")
+            
+            # Apply category filter
+            cat_mask = pd.Series(False, index=filtered_df.index)
+            for cat in matching_categories:
+                cat_mask = cat_mask | (filtered_df['cat_norm'] == cat.upper())
+            
+            # Try partial matching if no exact matches
+            if not cat_mask.any():
+                for cat in matching_categories:
+                    if cat:
+                        partial_mask = filtered_df['cat_norm'].str.contains(cat.upper(), na=False)
+                        cat_mask = cat_mask | partial_mask
+            
+            filtered_df = filtered_df[cat_mask].copy()
+            print(f"📊 After category filter: {len(filtered_df)} records")
+            
+            # If still no matches, show all categories
+            if len(filtered_df) == 0:
+                print("⚠️ No category matches, showing all categories")
+                # Reset to data after branch filter
+                filtered_df = df[df['branch_norm'].isin(preferred_branches_clean)].copy() if 'branch_norm' in df.columns else df.copy()
+        
+        # ✅ STEP 3: Filter by fees
+        if 'fees' in filtered_df.columns:
+            print(f"\n💰 Fee analysis:")
+            print(f"  Max fee allowed: ₹{max_fees_float:,.0f}")
+            
+            if len(filtered_df) > 0:
+                # Check fee statistics
+                fees_series = filtered_df['fees']
+                min_fee = fees_series.min()
+                max_fee = fees_series.max()
+                avg_fee = fees_series.mean()
+                
+                print(f"  Actual fees - Min: ₹{min_fee:,.0f}, Avg: ₹{avg_fee:,.0f}, Max: ₹{max_fee:,.0f}")
+                
+                # Apply fee filter
+                fee_mask = fees_series <= max_fees_float
+                
+                if fee_mask.any():
+                    filtered_df = filtered_df[fee_mask].copy()
+                    print(f"📊 After fee filter: {len(filtered_df)} records")
+                else:
+                    print("⚠️ All fees exceed limit, relaxing fee filter")
+                    # Sort by fees and take top N
+                    filtered_df = filtered_df.nsmallest(100, 'fees')
+        
+        # ✅ STEP 4: Filter by cities
+        if preferred_cities and len(filtered_df) > 0:
+            print(f"\n📍 City filtering: {preferred_cities}")
+            
+            # Clean city names
+            filtered_df['city_norm'] = filtered_df['city'].astype(str).str.strip().str.lower()
+            preferred_cities_clean = [str(c).strip().lower() for c in preferred_cities]
+            
+            city_mask = filtered_df['city_norm'].isin(preferred_cities_clean)
+            
+            if city_mask.any():
+                filtered_df = filtered_df[city_mask].copy()
+                print(f"📊 After city filter: {len(filtered_df)} records")
+            else:
+                print("⚠️ No city matches, showing all cities")
+        
+        # ✅ STEP 5: Filter by placement rate
+        if 'placement_rate' in filtered_df.columns and min_placement_float > 0 and len(filtered_df) > 0:
+            placement_mask = filtered_df['placement_rate'] >= min_placement_float
+            filtered_df = filtered_df[placement_mask].copy()
+            print(f"📊 After placement filter: {len(filtered_df)} records")
+        
+        # Ensure we have data
+        if len(filtered_df) == 0:
+            print("\n⚠️ No records after all filters!")
+            print("🔍 Returning sample data for debugging...")
+            
+            # Get sample data for debugging
+            if 'branch_norm' in df.columns:
+                sample_df = df[df['branch_norm'].isin(preferred_branches_clean)].head(50).copy()
+            else:
+                sample_df = df.head(50).copy()
+            
+            filtered_df = sample_df
+            print(f"📊 Showing {len(filtered_df)} sample records")
+        
+        print(f"\n🎯 Final dataset for processing: {len(filtered_df)} records")
+        
+        # ✅ STEP 6: Process each record
+        frontend_colleges = []
+        processed_count = 0
+        error_count = 0
+        
+        for idx, row in filtered_df.iterrows():
+            try:
+                # Extract data with safe conversion
+                cutoff_rank = safe_extract(row.get('cutoff_rank', 0), 0, int)
+                cutoff_percentile = safe_extract(row.get('cutoff_percentile', 0), 0.0, float)
+                seats = safe_extract(row.get('seats', 0), 0, int)
+                fees = safe_extract(row.get('fees', 0), 0.0, float)
+                total_intake = safe_extract(row.get('total_intake', 0), 0, int)
+                
+                # Get string values
+                college_name = str(row.get('college_name', 'Unknown College')).strip()
+                branch_name = str(row.get('branch_name', 'N/A')).strip()
+                college_category = str(row.get('category', 'N/A')).strip()
+                city = str(row.get('city', 'N/A')).strip()
+                
+                # Debug print for first few records
+                if processed_count < 5:
+                    print(f"🏫 Processing [{processed_count+1}]: {college_name[:30]}... - {branch_name[:20]}...")
+                    print(f"   Category: {college_category}, City: {city}")
+                    print(f"   Cutoff Rank: {cutoff_rank}, Cutoff %: {cutoff_percentile:.2f}")
+                    print(f"   Fees: ₹{fees:,.0f}, Seats: {seats}")
+                
+                # Calculate predictions
+                fit, fit_reason = predict_fit_comprehensive(
+                    user_score_float, user_rank_int, cutoff_rank, cutoff_percentile
+                )
+                
+                match_score = calculate_match_score(
+                    user_score_float, user_rank_int, cutoff_rank, cutoff_percentile
+                )
+                
+                admission_chance = calculate_admission_chance(
+                    user_score_float, user_rank_int, cutoff_rank, cutoff_percentile
+                )
+                
+                # Only include if match score is reasonable
+                if match_score >= 10 or len(frontend_colleges) < 20:  # Always include at least 20
+                    # Create college object
+                    college_obj = {
+                        # Basic info
+                        'college_code': str(row.get('college_code', '')),
+                        'college_name': college_name,
+                        'short_name': str(row.get('short_name', '')),
+                        'city': city,
+                        
+                        # Branch info
+                        'branch': branch_name,
+                        'branch_name': branch_name,
+                        'branch_code': str(row.get('branch_code', '')),
+                        'branch_specific': True,
+                        
+                        # Financial info
+                        'fees': fees,
+                        'hostel_fees': safe_extract(row.get('hostel_fees', 0), 0.0, float),
+                        'bus_fees': safe_extract(row.get('bus_fees', 0), 0.0, float),
+                        
+                        # Academic info
+                        'placement_rate': safe_extract(row.get('placement_rate', 0), 0.0, float),
+                        'average_package_lpa': safe_extract(row.get('average_package_lpa', 0), 0.0, float),
+                        'highest_package_lpa': safe_extract(row.get('highest_package_lpa', 0), 0.0, float),
+                        'internship_rate': safe_extract(row.get('internship_rate', 0), 0.0, float),
+                        'foreign_offers': safe_extract(row.get('foreign_offers', 0), 0, int),
+                        
+                        # Cutoff info
+                        'cutoff_score': cutoff_rank,
+                        'cutoff_rank': cutoff_rank,
+                        'cutoff_percentile': cutoff_percentile,
+                        
+                        # Capacity info
+                        'total_intake': total_intake,
+                        'seats': seats,
+                        
+                        # College details
+                        'autonomy_status': str(row.get('autonomy_status', 'N/A')),
+                        'hostel_available': str(row.get('hostel_available', 'N/A')),
+                        'image': str(row.get('image_url', '')),
+                        'category': college_category,
+                        'university': str(row.get('university', 'N/A')),
+                        'established_year': safe_extract(row.get('established_year', 0), 0, int),
+                        'accreditation': str(row.get('accreditation', 'N/A')),
+                        'district': str(row.get('district', 'N/A')),
+                        'region': str(row.get('region', 'N/A')),
+                        'degree_type': str(row.get('degree_type', 'N/A')),
+                        'duration_years': safe_extract(row.get('duration_years', 0), 0, int),
+                        
+                        # Facilities
+                        'top_recruiters': str(row.get('top_recruiters', 'N/A')),
+                        'hostel_type': str(row.get('hostel_type', 'N/A')),
+                        'labs_count': safe_extract(row.get('labs_count', 0), 0, int),
+                        'wifi_campus': str(row.get('wifi_campus', 'N/A')),
+                        'transport_facility': str(row.get('transport_facility', 'N/A')),
+                        'medical_facility': str(row.get('medical_facility', 'N/A')),
+                        'hostel_capacity': safe_extract(row.get('hostel_capacity', 0), 0, int),
+                        
+                        # Contact info
+                        'logo_url': str(row.get('logo_url', '')),
+                        'contact_email': str(row.get('contact_email', 'N/A')),
+                        'contact_phone': str(row.get('contact_phone', 'N/A')),
+                        'website_url': str(row.get('website_url', 'N/A')),
+                        
+                        # Prediction results
+                        'fit': fit,
+                        'fit_reason': fit_reason,
+                        'match_score': match_score,
+                        'match_percentage': f"{match_score:.1f}%",
+                        'admission_chance': admission_chance,
+                        'admission_chance_percentage': f"{admission_chance}%",
+                        'user_score': user_score_float,
+                        'user_rank': user_rank_int,
+                        
+                        # Display fields
+                        'display_fees': f"₹{fees:,.0f}/year",
+                        'display_seats': f"{seats:,} seats",
+                        'display_total_intake': f"{total_intake:,} total intake",
+                        'display_cutoff': f"Rank: {cutoff_rank:,}" if cutoff_rank > 0 else f"Percentile: {cutoff_percentile:.1f}%",
+                        'display_cutoff_full': f"Rank: {cutoff_rank:,} | Percentile: {cutoff_percentile:.1f}%",
+                        'display_placement': f"{safe_extract(row.get('placement_rate', 0), 0.0, float):.1f}%",
+                        'display_avg_package': f"₹{safe_extract(row.get('average_package_lpa', 0), 0.0, float):,.1f}L",
+                        'display_high_package': f"₹{safe_extract(row.get('highest_package_lpa', 0), 0.0, float):,.1f}L",
+                        'display_info': f"{branch_name} | {city}",
+                        'display_stats': f"Seats: {seats:,} | Cutoff: {cutoff_rank if cutoff_rank > 0 else cutoff_percentile:.1f}%"
+                    }
+                    
+                    frontend_colleges.append(college_obj)
+                    processed_count += 1
+                
+            except Exception as e:
+                error_count += 1
+                print(f"⚠️ Error processing row {idx}: {str(e)}")
+                continue
+        
+        print(f"\n✅ Processing complete:")
+        print(f"   • Successfully processed: {processed_count}")
+        print(f"   • Errors encountered: {error_count}")
+        print(f"   • Total records available: {len(filtered_df)}")
+        
+        # Sort results
+        fit_order = {"Best Fit": 0, "Good Fit": 1, "Stretch": 2, "Unlikely Fit": 3, "Unknown Fit": 4}
+        frontend_colleges.sort(key=lambda x: (
+            fit_order.get(x.get('fit', 'Unknown Fit'), 5),
+            -x.get('match_score', 0),
+            -x.get('placement_rate', 0),
+            x.get('fees', 0)
+        ))
+        
+        # Apply limit
+        frontend_colleges = frontend_colleges[:limit]
+        
+        print(f"🎯 Returning {len(frontend_colleges)} college-branch combinations")
+        print("="*60)
+        
+        # Calculate statistics
+        best_fit_count = len([c for c in frontend_colleges if c.get('fit') == 'Best Fit'])
+        good_fit_count = len([c for c in frontend_colleges if c.get('fit') == 'Good Fit'])
+        stretch_count = len([c for c in frontend_colleges if c.get('fit') == 'Stretch'])
+        unlikely_count = len([c for c in frontend_colleges if c.get('fit') == 'Unlikely Fit'])
+        
+        return jsonify({
+            "total": len(frontend_colleges),
+            "statistics": {
+                "safe_bets": best_fit_count,
+                "target_colleges": good_fit_count,
+                "risky_options": stretch_count + unlikely_count,
+                "processed": processed_count,
+                "errors": error_count,
+                "filtered_records": len(filtered_df)
+            },
+            "user_profile": {
+                "user_score": user_score_float,
+                "user_rank": user_rank_int,
+                "user_category": user_category,
+                "preferred_branches": preferred_branches,
+                "preferred_cities": preferred_cities,
+                "max_fees": max_fees_float,
+                "min_placement": min_placement_float
+            },
+            "debug_info": {
+                "initial_records": len(df),
+                "branch_filtered": len(filtered_df),
+                "final_results": len(frontend_colleges),
+                "match_score_range": f"{min([c.get('match_score', 0) for c in frontend_colleges]):.1f}-{max([c.get('match_score', 0) for c in frontend_colleges]):.1f}" if frontend_colleges else "N/A"
+            },
+            "colleges": frontend_colleges
+        })
+        
+    except Exception as e:
+        print(f"❌ Error in /predict_admission: {str(e)}")
+        traceback.print_exc()
+        return jsonify({
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+@app.route("/college/<college_code>", methods=["GET"])
+def get_college_details(college_code):
+    """Get detailed information for a specific college"""
+    try:
+        print(f"🏫 /college/{college_code}: Request received")
+        
+        # Filter by college code
+        college_data = df[df['college_code'] == college_code]
+        
+        if college_data.empty:
+            return jsonify({"error": f"College with code {college_code} not found"}), 404
+        
+        # Get basic college info from first row
+        first_row = college_data.iloc[0]
+        
+        college_info = {
+            # Basic info
+            'college_code': college_code,
+            'college_name': str(first_row.get('college_name', 'Unknown College')),
+            'short_name': str(first_row.get('short_name', '')),
+            'city': str(first_row.get('city', 'N/A')),
+            'district': str(first_row.get('district', 'N/A')),
+            'region': str(first_row.get('region', 'N/A')),
+            'university': str(first_row.get('university', 'N/A')),
+            
+            # College status
+            'autonomy_status': str(first_row.get('autonomy_status', 'N/A')),
+            'established_year': safe_extract(first_row.get('established_year', 0), 0, int),
+            'accreditation': str(first_row.get('accreditation', 'N/A')),
+            
+            # Facilities
+            'hostel_available': str(first_row.get('hostel_available', 'N/A')),
+            'hostel_type': str(first_row.get('hostel_type', 'N/A')),
+            'hostel_capacity': safe_extract(first_row.get('hostel_capacity', 0), 0, int),
+            'wifi_campus': str(first_row.get('wifi_campus', 'N/A')),
+            'transport_facility': str(first_row.get('transport_facility', 'N/A')),
+            'medical_facility': str(first_row.get('medical_facility', 'N/A')),
+            
+            # Media
+            'logo_url': str(first_row.get('logo_url', '')),
+            'image_url': str(first_row.get('image_url', '')),
+            
+            # Contact info
+            'contact_email': str(first_row.get('contact_email', 'N/A')),
+            'contact_phone': str(first_row.get('contact_phone', 'N/A')),
+            'website_url': str(first_row.get('website_url', 'N/A')),
+            'placement_cell_contact': str(first_row.get('placement_cell_contact', 'N/A')),
+            
+            # Aggregated statistics
+            'total_branches': college_data['branch_name'].nunique(),
+            'total_intake': int(college_data['total_intake'].sum()),
+            'total_seats': int(college_data['seats'].sum()),
+            'average_fees': float(college_data['fees'].mean()),
+            'average_placement_rate': float(college_data['placement_rate'].mean()),
+            'highest_package_lpa': float(college_data['highest_package_lpa'].max()),
+            'best_cutoff_rank': int(college_data['cutoff_rank'].min()),
+            
+            # Branch-wise details
+            'branches': []
+        }
+        
+        # Add branch details
+        for _, branch_row in college_data.iterrows():
+            branch_info = {
+                'branch_code': str(branch_row.get('branch_code', '')),
+                'branch_name': str(branch_row.get('branch_name', 'N/A')),
+                'degree_type': str(branch_row.get('degree_type', 'N/A')),
+                'duration_years': safe_extract(branch_row.get('duration_years', 0), 0, int),
+                'shift': str(branch_row.get('shift', 'N/A')),
+                'year': safe_extract(branch_row.get('year', 0), 0, int),
+                'round': safe_extract(branch_row.get('round', 0), 0, int),
+                'category': str(branch_row.get('category', 'N/A')),
+                'cutoff_rank': safe_extract(branch_row.get('cutoff_rank', 0), 0, int),
+                'cutoff_percentile': safe_extract(branch_row.get('cutoff_percentile', 0), 0.0, float),
+                'total_intake': safe_extract(branch_row.get('total_intake', 0), 0, int),
+                'seats': safe_extract(branch_row.get('seats', 0), 0, int),
+                'fees': safe_extract(branch_row.get('fees', 0), 0.0, float),
+                'placement_rate': safe_extract(branch_row.get('placement_rate', 0), 0.0, float),
+                'average_package_lpa': safe_extract(branch_row.get('average_package_lpa', 0), 0.0, float)
+            }
+            college_info['branches'].append(branch_info)
+        
+        print(f"✅ /college/{college_code}: Returning details with {len(college_info['branches'])} branches")
+        return jsonify(college_info)
+        
+    except Exception as e:
+        print(f"❌ Error in /college/{college_code}: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/branches", methods=["GET"])
+def get_branches():
+    """Return all unique branches"""
+    try:
+        if 'branch_name' not in df.columns:
+            return jsonify({"error": "Branch column not found in dataset"}), 400
+        
+        branches = sorted([str(b).strip() for b in df['branch_name'].unique() if str(b).strip()])
+        print(f"✅ /branches: Returning {len(branches)} unique branches")
+        return jsonify({"branches": branches})
+    except Exception as e:
+        print(f"❌ Error in /branches: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/cities", methods=["GET"])
+def get_cities():
+    """Return all unique cities"""
+    try:
+        if 'city' not in df.columns:
+            return jsonify({"error": "City column not found in dataset"}), 400
+        
+        cities = sorted([str(c).strip() for c in df['city'].unique() if str(c).strip()])
+        print(f"✅ /cities: Returning {len(cities)} unique cities")
+        return jsonify({"cities": cities})
+    except Exception as e:
+        print(f"❌ Error in /cities: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/categories", methods=["GET"])
+def get_categories():
+    """Return all unique categories"""
+    try:
+        if 'category' not in df.columns:
+            return jsonify({"error": "Category column not found in dataset"}), 400
+        
+        categories = sorted([str(c).strip() for c in df['category'].unique() if str(c).strip()])
+        print(f"✅ /categories: Returning {len(categories)} unique categories")
+        return jsonify({"categories": categories})
+    except Exception as e:
+        print(f"❌ Error in /categories: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/stats", methods=["GET"])
+def get_stats():
+    """Return dataset statistics"""
+    try:
+        stats = {
+            'total_records': len(df),
+            'unique_colleges': df['college_code'].nunique() if 'college_code' in df.columns else 0,
+            'unique_branches': df['branch_name'].nunique() if 'branch_name' in df.columns else 0,
+            'unique_cities': df['city'].nunique() if 'city' in df.columns else 0,
+            'unique_categories': df['category'].nunique() if 'category' in df.columns else 0,
+        }
+        
+        # Add numeric ranges if columns exist
+        if 'cutoff_rank' in df.columns:
+            stats['cutoff_rank_range'] = {
+                'min': int(df['cutoff_rank'].min()),
+                'max': int(df['cutoff_rank'].max()),
+                'mean': float(df['cutoff_rank'].mean())
+            }
+        
+        if 'cutoff_percentile' in df.columns:
+            stats['cutoff_percentile_range'] = {
+                'min': float(df['cutoff_percentile'].min()),
+                'max': float(df['cutoff_percentile'].max()),
+                'mean': float(df['cutoff_percentile'].mean())
+            }
+        
+        if 'fees' in df.columns:
+            stats['fees_range'] = {
+                'min': float(df['fees'].min()),
+                'max': float(df['fees'].max()),
+                'mean': float(df['fees'].mean())
+            }
+        
+        print(f"✅ /stats: Returning statistics")
+        return jsonify(stats)
+        
+    except Exception as e:
+        print(f"❌ Error in /stats: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/ping", methods=["GET"])
+def ping():
+    """Health check endpoint"""
+    return jsonify({
+        "status": "ok",
+        "message": "College Admission Prediction API is running",
+        "timestamp": datetime.now().isoformat(),
+        "data_records": len(df),
+        "unique_colleges": df['college_code'].nunique() if 'college_code' in df.columns else 0,
+        "version": "2.0.0",
+        "endpoints": [
+            "GET  /colleges - Get all colleges",
+            "POST /predict_admission - Branch-specific predictions",
+            "GET  /college/<code> - College details",
+            "GET  /branches - All unique branches",
+            "GET  /cities - All unique cities",
+            "GET  /categories - All unique categories",
+            "GET  /stats - Dataset statistics",
+            "GET  /ping - Health check"
+        ]
+    })
+
+# ✅ Main entry point
+if __name__ == "__main__":
+    print("\n" + "="*70)
+    print("🚀 COLLEGE ADMISSION PREDICTION API")
+    print("="*70)
+    print(f"📊 Dataset Statistics:")
+    print(f"   • Total records: {len(df):,}")
+    print(f"   • Unique colleges: {df['college_code'].nunique() if 'college_code' in df.columns else 'N/A'}")
+    print(f"   • Unique branches: {df['branch_name'].nunique() if 'branch_name' in df.columns else 'N/A'}")
+    print(f"   • Unique cities: {df['city'].nunique() if 'city' in df.columns else 'N/A'}")
+    print(f"\n🎯 Available Endpoints:")
+    print(f"   • GET  /ping - Health check")
+    print(f"   • GET  /colleges - All colleges (no limit)")
+    print(f"   • POST /predict_admission - Main prediction endpoint")
+    print(f"   • GET  /college/<code> - College details")
+    print(f"   • GET  /branches - All branches")
+    print(f"   • GET  /cities - All cities")
+    print(f"   • GET  /categories - All categories")
+    print(f"   • GET  /stats - Dataset statistics")
+    print(f"\n🔧 Features:")
+    print(f"   • Branch-specific predictions")
+    print(f"   • Smart category matching")
+    print(f"   • Flexible filtering")
+    print(f"   • Safe data conversion")
+    print(f"   • Detailed error handling")
+    print("="*70)
+    print(f"\n🌐 Starting server on http://0.0.0.0:5001")
+    print("="*70)
+    
+    app.run(host="0.0.0.0", port=5001, debug=True, threaded=True)

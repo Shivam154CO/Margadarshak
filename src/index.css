@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/* Fix blur on text and images */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fix blur on transformed elements */
+.transform,
+[class*="transform"],
+[class*="motion"] {
+  backface-visibility: hidden;
+  -webkit-backfaceVisibility: hidden;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Ensure crisp image rendering */
+img {
+  image-rendering: -webkit-optimize-contrast;
+}
+
+html,
+body,
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex-grow: 1;
+}
+
+/* Skeleton loader gradient animation */
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  animation: gradient 3s ease infinite;
+}
