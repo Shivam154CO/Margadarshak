@@ -21,6 +21,7 @@ import {
   Star,
   Heart,
   School,
+  LayoutDashboard,
 } from "lucide-react";
 
 interface UserProfile {
@@ -53,22 +54,28 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile }) =>
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
-  const navItems = [
+const navItems = [
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      path: "/dashboard",
+    },
     {
       id: "search",
-      label: "Search College",
+      label: "Colleges",
       icon: Search,
       path: "/college-explorer",
     },
     {
       id: "map",
-      label: "College Map",
+      label: "Map",
       icon: MapPin,
       path: "/college-map",
     },
     {
       id: "compare",
-      label: "Compare College",
+      label: "Compare",
       path: "/compare-college",
     },
     {
@@ -85,7 +92,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile }) =>
     },
     {
       id: "help",
-      label: "Help & Support",
+      label: "Help",
       icon: HelpCircle,
       path: "/help",
     },
@@ -126,9 +133,9 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile }) =>
               <button
                 key={item.id}
                 onClick={() => navigate(item.path)}
-                className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${item.id === activeTab
+className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${item.id === activeTab
                   ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md"
-                  : "text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700"
+                  : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
                   }`}
               >
                 {item.icon && React.createElement(item.icon, { className: "w-4 h-4" })}
@@ -327,9 +334,9 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile }) =>
                     navigate(item.path);
                     setMobileMenuOpen(false);
                   }}
-                  className={`px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200 flex flex-col items-center justify-center space-y-2 ${item.id === activeTab
+className={`px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200 flex flex-col items-center justify-center space-y-2 ${item.id === activeTab
                     ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md"
-                    : "bg-white text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 border border-gray-200/50"
+                    : "bg-white text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 border border-gray-200/50"
                     }`}
                 >
                   {item.icon && React.createElement(item.icon, { className: "w-4 h-4" })}

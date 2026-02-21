@@ -40,6 +40,8 @@ import {
 import type { LucideIcon } from "lucide-react";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "../lib/supabase";
 
 interface FAQItem {
   id: string;
@@ -63,6 +65,16 @@ export default function Help() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const { data: profile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      const { data } = await supabase.from('users').select('*').eq('id', session.user.id).single();
+      return data;
+    }
+  });
 
   const navItems = [
     {
@@ -253,7 +265,7 @@ export default function Help() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
-      <Navbar activeTab="help" />
+      <Navbar activeTab="help" userProfile={profile} />
 
       {/* ===== Main Content ===== */}
       <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
@@ -299,11 +311,10 @@ export default function Help() {
               <button
                 key={category.id}
                 onClick={() => setActiveCategory(category.id)}
-                className={`px-4 py-3 rounded-xl font-medium transition-all duration-300 transform hover:-translate-y-0.5 flex items-center space-x-2 ${
-                  activeCategory === category.id
+                className={`px-4 py-3 rounded-xl font-medium transition-all duration-300 transform hover:-translate-y-0.5 flex items-center space-x-2 ${activeCategory === category.id
                     ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25"
                     : "bg-white text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 border border-gray-300/50 shadow-sm hover:shadow-md"
-                }`}
+                  }`}
               >
                 <category.icon className="w-4 h-4" />
                 <span>{category.label}</span>
@@ -501,6 +512,7 @@ export default function Help() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

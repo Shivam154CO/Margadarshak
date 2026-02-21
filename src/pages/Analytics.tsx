@@ -29,6 +29,7 @@ import {
     MapPin
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useColleges, type College } from '../context/CollegesContext';
@@ -39,10 +40,20 @@ interface UserProfile {
     id: string;
     name: string;
     email: string;
-    cet_score: string;
+    state: string;
     category: string;
+    exam_type: string;
+    cet_rank: string;
+    cet_score: string;
+    diploma_rank: string;
+    diploma_score: string;
     preferred_branches: string[];
-    [key: string]: any;
+    university_preference: string;
+    address: string;
+    receive_updates: boolean;
+    profile_complete: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 // --- Animation Variants ---
@@ -431,6 +442,7 @@ export default function Analytics() {
                     </>
                 )}
             </motion.div>
+            <Footer />
         </div>
     );
 }

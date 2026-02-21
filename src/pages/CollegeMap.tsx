@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft,
   MapPin,
   Search,
   ExternalLink,
@@ -13,7 +12,6 @@ import {
   TrendingUp,
   Layers,
   Sparkles,
-  Map as MapIcon,
   Globe,
   Brain,
   BarChart3,
@@ -30,11 +28,7 @@ import {
   Home,
   Shield,
   CheckCircle,
-  Users,
-  Menu,
-  GraduationCap,
-  Maximize2,
-  Minimize2
+  Users
 } from "lucide-react";
 import axios from "axios";
 import { supabase } from "../lib/supabase";
@@ -366,16 +360,16 @@ export default function InteractiveCollegeMap() {
   const filteredMarkers = useMemo(() => {
     return mapMarkers.filter(marker => {
       // Filter by search term
-      if (searchTerm && !marker.name.toLowerCase().includes(searchTerm.toLowerCase()) && 
-          !marker.city.toLowerCase().includes(searchTerm.toLowerCase())) {
+      if (searchTerm && !marker.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !marker.city.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
-      
+
       // Filter by state
       if (selectedState !== "All States" && marker.state !== selectedState) {
         return false;
       }
-      
+
       // Filter by type
       if (selectedType !== "All Types") {
         const typeMap: Record<string, string> = {
@@ -387,7 +381,7 @@ export default function InteractiveCollegeMap() {
           return false;
         }
       }
-      
+
       // Filter by admission chance
       if (selectedChance !== "All Chances") {
         const chance = marker.admission_chance;
@@ -406,19 +400,19 @@ export default function InteractiveCollegeMap() {
             break;
         }
       }
-      
+
       // Filter by view mode
       if (viewMode === "predicted" && !marker.is_predicted) {
         return false;
       }
-      
+
       return true;
     });
   }, [mapMarkers, searchTerm, selectedState, selectedType, selectedChance, viewMode]);
 
   // Filtered colleges for details panel
   const filteredColleges = useMemo(() => {
-    return colleges.filter(college => 
+    return colleges.filter(college =>
       filteredMarkers.some(marker => marker.id === college.college_code)
     ).sort((a, b) => {
       const maxA = Math.max(...a.branches.map(b => b.admission_chance));
@@ -472,17 +466,17 @@ export default function InteractiveCollegeMap() {
 
   const handleDrag = (e: React.MouseEvent) => {
     if (!isDragging) return;
-    
+
     const dx = e.clientX - dragStart.x;
     const dy = e.clientY - dragStart.y;
-    
+
     // Convert pixel movement to map coordinates (simplified)
     const scale = 0.1 / zoomLevel;
     setMapCenter(prev => ({
       lat: prev.lat - dy * scale,
       lng: prev.lng + dx * scale,
     }));
-    
+
     setDragStart({ x: e.clientX, y: e.clientY });
   };
 
@@ -492,14 +486,14 @@ export default function InteractiveCollegeMap() {
 
   // Save college
   const toggleSaveCollege = (collegeCode: string) => {
-    setSavedColleges(prev => 
-      prev.includes(collegeCode) 
+    setSavedColleges(prev =>
+      prev.includes(collegeCode)
         ? prev.filter(id => id !== collegeCode)
         : [...prev, collegeCode]
     );
     // Save to localStorage
     localStorage.setItem("savedColleges", JSON.stringify(
-      savedColleges.includes(collegeCode) 
+      savedColleges.includes(collegeCode)
         ? savedColleges.filter(id => id !== collegeCode)
         : [...savedColleges, collegeCode]
     ));
@@ -547,11 +541,11 @@ export default function InteractiveCollegeMap() {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center">
         <div className="text-center space-y-6">
           <motion.div
-            animate={{ 
+            animate={{
               rotate: 360,
               scale: [1, 1.2, 1]
             }}
-            transition={{ 
+            transition={{
               rotate: { duration: 2, repeat: Infinity, ease: "linear" },
               scale: { duration: 1.5, repeat: Infinity }
             }}
@@ -666,11 +660,10 @@ export default function InteractiveCollegeMap() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setSelectedType(type)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                              selectedType === type
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedType === type
                                 ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
                                 : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                            }`}
+                              }`}
                           >
                             {type}
                           </motion.button>
@@ -687,11 +680,10 @@ export default function InteractiveCollegeMap() {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setSelectedChance(level)}
-                            className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${
-                              selectedChance === level
+                            className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${selectedChance === level
                                 ? "bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 text-blue-700"
                                 : "hover:bg-gray-100 text-gray-700"
-                            }`}
+                              }`}
                           >
                             <span>{level}</span>
                             {selectedChance === level && (
@@ -788,11 +780,10 @@ export default function InteractiveCollegeMap() {
                       }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setViewMode("predicted")}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                        viewMode === "predicted"
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "predicted"
                           ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/25"
                           : "hover:bg-gray-100 text-gray-700"
-                      }`}
+                        }`}
                     >
                       <Brain className="w-4 h-4" />
                       AI
@@ -804,11 +795,10 @@ export default function InteractiveCollegeMap() {
                       }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setViewMode("all")}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                        viewMode === "all"
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "all"
                           ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/25"
                           : "hover:bg-gray-100 text-gray-700"
-                      }`}
+                        }`}
                     >
                       <Database className="w-4 h-4" />
                       All
@@ -985,7 +975,7 @@ export default function InteractiveCollegeMap() {
                         { label: "Low (<40%)", color: "#EF4444" }
                       ].map(item => (
                         <div key={item.label} className="flex items-center gap-2">
-                          <div 
+                          <div
                             className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: item.color }}
                           />
@@ -1000,311 +990,310 @@ export default function InteractiveCollegeMap() {
               {/* Colleges List */}
               {!isFullScreen && (
                 <div className="bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 overflow-hidden">
-                <div className="p-4 border-b border-gray-700/50">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Layers className="w-5 h-5 text-indigo-400" />
-                      Colleges ({filteredColleges.length})
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                          type="text"
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          placeholder="Search colleges..."
-                          className="pl-10 pr-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-64"
-                        />
+                  <div className="p-4 border-b border-gray-700/50">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Layers className="w-5 h-5 text-indigo-400" />
+                        Colleges ({filteredColleges.length})
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search colleges..."
+                            className="pl-10 pr-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-64"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="max-h-[300px] overflow-y-auto p-2">
-                  {filteredColleges.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Globe className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                      <p className="text-gray-400">No colleges found with current filters</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {filteredColleges.map((college) => {
-                        const isSaved = savedColleges.includes(college.college_code);
-                        const maxChance = Math.max(...college.branches.map(b => b.admission_chance));
-                        const fitColor = getFitColor(maxChance);
-                        
-                        return (
-                          <motion.div
-                            key={college.college_code}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            whileHover={{ scale: 1.01 }}
-                            onClick={() => setSelectedCollege(college)}
-                            className={`p-3 rounded-xl cursor-pointer transition-all ${
-                              selectedCollege?.college_code === college.college_code 
-                                ? 'bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/50'
-                                : 'hover:bg-gray-800/50'
-                            }`}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className={`w-2 h-2 rounded-full ${fitColor}`} />
-                                  <span className={`text-xs font-medium px-2 py-1 rounded-lg ${fitColor} text-white`}>
-                                    {getChanceLabel(maxChance)} ({Math.round(maxChance)}%)
-                                  </span>
-                                  {college.is_predicted && (
-                                    <span className="text-xs px-2 py-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 rounded-lg flex items-center gap-1">
-                                      <Brain className="w-3 h-3" />
-                                      AI Match
+
+                  <div className="max-h-[300px] overflow-y-auto p-2">
+                    {filteredColleges.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Globe className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                        <p className="text-gray-400">No colleges found with current filters</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {filteredColleges.map((college) => {
+                          const isSaved = savedColleges.includes(college.college_code);
+                          const maxChance = Math.max(...college.branches.map(b => b.admission_chance));
+                          const fitColor = getFitColor(maxChance);
+
+                          return (
+                            <motion.div
+                              key={college.college_code}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              whileHover={{ scale: 1.01 }}
+                              onClick={() => setSelectedCollege(college)}
+                              className={`p-3 rounded-xl cursor-pointer transition-all ${selectedCollege?.college_code === college.college_code
+                                  ? 'bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/50'
+                                  : 'hover:bg-gray-800/50'
+                                }`}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div className={`w-2 h-2 rounded-full ${fitColor}`} />
+                                    <span className={`text-xs font-medium px-2 py-1 rounded-lg ${fitColor} text-white`}>
+                                      {getChanceLabel(maxChance)} ({Math.round(maxChance)}%)
                                     </span>
+                                    {college.is_predicted && (
+                                      <span className="text-xs px-2 py-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 rounded-lg flex items-center gap-1">
+                                        <Brain className="w-3 h-3" />
+                                        AI Match
+                                      </span>
+                                    )}
+                                    <span className="text-xs text-gray-400">
+                                      {college.branches.length} branches
+                                    </span>
+                                  </div>
+
+                                  <h4 className="font-semibold truncate">{college.college_name}</h4>
+                                  <div className="flex items-center text-gray-400 text-sm mt-1">
+                                    <MapPin className="w-3 h-3 mr-1" />
+                                    <span className="truncate">{college.city}, {college.state}</span>
+                                    <span className="mx-2">•</span>
+                                    <span className="flex items-center gap-1">
+                                      <IndianRupee className="w-3 h-3" />
+                                      ₹{college.average_package_lpa}L avg
+                                    </span>
+                                  </div>
+
+                                  <div className="flex flex-wrap gap-1 mt-2">
+                                    {college.branches.slice(0, 3).map((branch, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="px-2 py-1 bg-gray-900/50 text-gray-300 rounded text-xs"
+                                      >
+                                        {branch.branch}
+                                      </span>
+                                    ))}
+                                    {college.branches.length > 3 && (
+                                      <span className="px-2 py-1 bg-gray-900/50 text-gray-400 rounded text-xs">
+                                        +{college.branches.length - 3} more
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleSaveCollege(college.college_code);
+                                  }}
+                                  className="ml-2 text-gray-400 hover:text-yellow-400 transition-colors"
+                                >
+                                  {isSaved ? (
+                                    <BookmarkCheck className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                                  ) : (
+                                    <Bookmark className="w-5 h-5" />
                                   )}
-                                  <span className="text-xs text-gray-400">
-                                    {college.branches.length} branches
-                                  </span>
-                                </div>
-                                
-                                <h4 className="font-semibold truncate">{college.college_name}</h4>
-                                <div className="flex items-center text-gray-400 text-sm mt-1">
-                                  <MapPin className="w-3 h-3 mr-1" />
-                                  <span className="truncate">{college.city}, {college.state}</span>
-                                  <span className="mx-2">•</span>
-                                  <span className="flex items-center gap-1">
-                                    <IndianRupee className="w-3 h-3" />
-                                    ₹{college.average_package_lpa}L avg
-                                  </span>
-                                </div>
-                                
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                  {college.branches.slice(0, 3).map((branch, idx) => (
-                                    <span
-                                      key={idx}
-                                      className="px-2 py-1 bg-gray-900/50 text-gray-300 rounded text-xs"
-                                    >
-                                      {branch.branch}
-                                    </span>
-                                  ))}
-                                  {college.branches.length > 3 && (
-                                    <span className="px-2 py-1 bg-gray-900/50 text-gray-400 rounded text-xs">
-                                      +{college.branches.length - 3} more
-                                    </span>
-                                  )}
-                                </div>
+                                </button>
                               </div>
-                              
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleSaveCollege(college.college_code);
-                                }}
-                                className="ml-2 text-gray-400 hover:text-yellow-400 transition-colors"
-                              >
-                                {isSaved ? (
-                                  <BookmarkCheck className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                                ) : (
-                                  <Bookmark className="w-5 h-5" />
-                                )}
-                              </button>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  )}
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
               )}
 
               {/* Selected College Details */}
               {!isFullScreen && (
                 <AnimatePresence>
                   {selectedCollege && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    className="bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-6"
-                  >
-                    <div className="flex items-start justify-between mb-6">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <h3 className="text-xl font-bold">{selectedCollege.college_name}</h3>
-                          {selectedCollege.is_predicted && (
-                            <span className="px-3 py-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg text-sm font-medium flex items-center gap-2">
-                              <Brain className="w-4 h-4" />
-                              AI Recommended
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-wrap items-center gap-4 text-gray-400">
-                          <span className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4" />
-                            {selectedCollege.city}, {selectedCollege.state}
-                          </span>
-                          <span className="flex items-center gap-2">
-                            <Building2 className="w-4 h-4" />
-                            {selectedCollege.autonomy_status}
-                          </span>
-                          <span className="flex items-center gap-2">
-                            <Shield className="w-4 h-4" />
-                            Placement: {selectedCollege.placement_rate}%
-                          </span>
-                          <span className="flex items-center gap-2">
-                            <Home className="w-4 h-4" />
-                            Hostel: {selectedCollege.hostel_available}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <button
-                        onClick={() => setSelectedCollege(null)}
-                        className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      {/* Admission Chances */}
-                      <div className="space-y-6">
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-300 mb-3">Admission Probability by Branch</h4>
-                          <div className="space-y-3">
-                            {selectedCollege.branches.map((branch, idx) => (
-                              <div key={idx} className="bg-gray-900/50 rounded-xl p-3">
-                                <div className="flex justify-between items-center mb-2">
-                                  <span className="font-medium">{branch.branch}</span>
-                                  <span className={`px-2 py-1 rounded-lg text-sm font-medium ${getFitColor(branch.admission_chance)}`}>
-                                    {Math.round(branch.admission_chance)}%
-                                  </span>
-                                </div>
-                                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                                  <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${branch.admission_chance}%` }}
-                                    transition={{ duration: 1, delay: idx * 0.1 }}
-                                    className={`h-full ${getFitColor(branch.admission_chance)}`}
-                                  />
-                                </div>
-                                <div className="flex justify-between text-xs text-gray-400 mt-2">
-                                  <span>Rank ≤ {branch.cutoff_rank}</span>
-                                  <span>₹{branch.Fees.toLocaleString()} fees</span>
-                                  <span>{branch.seats} seats</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* College Stats */}
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="text-center p-4 bg-gray-900/30 rounded-xl">
-                            <div className="text-2xl font-bold text-emerald-400">
-                              ₹{selectedCollege.average_package_lpa}L
-                            </div>
-                            <div className="text-sm text-gray-400">Avg Package</div>
-                          </div>
-                          <div className="text-center p-4 bg-gray-900/30 rounded-xl">
-                            <div className="text-2xl font-bold text-blue-400">
-                              ₹{selectedCollege.highest_package_lpa}L
-                            </div>
-                            <div className="text-sm text-gray-400">Highest Package</div>
-                          </div>
-                          <div className="text-center p-4 bg-gray-900/30 rounded-xl">
-                            <div className="text-2xl font-bold text-purple-400">
-                              {selectedCollege.branches.length}
-                            </div>
-                            <div className="text-sm text-gray-400">Branches</div>
-                          </div>
-                          <div className="text-center p-4 bg-gray-900/30 rounded-xl">
-                            <div className="text-2xl font-bold text-indigo-400">
-                              {selectedCollege.placement_rate}%
-                            </div>
-                            <div className="text-sm text-gray-400">Placement Rate</div>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-300 mb-3">Quick Actions</h4>
-                          <div className="flex gap-3">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => navigate(`/college/${selectedCollege.college_code}`)}
-                              className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                              Full Details
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => toggleSaveCollege(selectedCollege.college_code)}
-                              className="px-4 py-3 border border-gray-700 rounded-lg font-semibold hover:bg-gray-800 transition-all flex items-center gap-2"
-                            >
-                              {savedColleges.includes(selectedCollege.college_code) ? (
-                                <>
-                                  <BookmarkCheck className="w-4 h-4" />
-                                  Saved
-                                </>
-                              ) : (
-                                <>
-                                  <Bookmark className="w-4 h-4" />
-                                  Save
-                                </>
-                              )}
-                            </motion.button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Location & Map */}
-                      <div className="space-y-6">
-                        <div className="bg-gray-900/30 rounded-xl p-4">
-                          <h4 className="text-sm font-medium text-gray-300 mb-3">Location Details</h4>
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <MapPin className="w-4 h-4 text-gray-400" />
-                              <span>{selectedCollege.city}, {selectedCollege.state}</span>
-                            </div>
-                            {selectedCollege.latitude && selectedCollege.longitude && (
-                              <div className="text-sm text-gray-400">
-                                Coordinates: {selectedCollege.latitude.toFixed(4)}°N, {selectedCollege.longitude.toFixed(4)}°E
-                              </div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      className="bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-6"
+                    >
+                      <div className="flex items-start justify-between mb-6">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <h3 className="text-xl font-bold">{selectedCollege.college_name}</h3>
+                            {selectedCollege.is_predicted && (
+                              <span className="px-3 py-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg text-sm font-medium flex items-center gap-2">
+                                <Brain className="w-4 h-4" />
+                                AI Recommended
+                              </span>
                             )}
                           </div>
+
+                          <div className="flex flex-wrap items-center gap-4 text-gray-400">
+                            <span className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4" />
+                              {selectedCollege.city}, {selectedCollege.state}
+                            </span>
+                            <span className="flex items-center gap-2">
+                              <Building2 className="w-4 h-4" />
+                              {selectedCollege.autonomy_status}
+                            </span>
+                            <span className="flex items-center gap-2">
+                              <Shield className="w-4 h-4" />
+                              Placement: {selectedCollege.placement_rate}%
+                            </span>
+                            <span className="flex items-center gap-2">
+                              <Home className="w-4 h-4" />
+                              Hostel: {selectedCollege.hostel_available}
+                            </span>
+                          </div>
                         </div>
-                        
-                        <div className="bg-gray-900/30 rounded-xl p-4">
-                          <h4 className="text-sm font-medium text-gray-300 mb-3">AI Insights</h4>
-                          <div className="space-y-2">
-                            {selectedCollege.branches
-                              .filter(b => b.is_most_probable)
-                              .map((branch, idx) => (
-                                <div key={idx} className="flex items-center gap-2 p-2 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-lg">
-                                  <Target className="w-4 h-4 text-indigo-400" />
-                                  <span className="text-sm">
-                                    <span className="font-medium">{branch.branch}</span> is your most probable branch
-                                  </span>
+
+                        <button
+                          onClick={() => setSelectedCollege(null)}
+                          className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Admission Chances */}
+                        <div className="space-y-6">
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-300 mb-3">Admission Probability by Branch</h4>
+                            <div className="space-y-3">
+                              {selectedCollege.branches.map((branch, idx) => (
+                                <div key={idx} className="bg-gray-900/50 rounded-xl p-3">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <span className="font-medium">{branch.branch}</span>
+                                    <span className={`px-2 py-1 rounded-lg text-sm font-medium ${getFitColor(branch.admission_chance)}`}>
+                                      {Math.round(branch.admission_chance)}%
+                                    </span>
+                                  </div>
+                                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                    <motion.div
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${branch.admission_chance}%` }}
+                                      transition={{ duration: 1, delay: idx * 0.1 }}
+                                      className={`h-full ${getFitColor(branch.admission_chance)}`}
+                                    />
+                                  </div>
+                                  <div className="flex justify-between text-xs text-gray-400 mt-2">
+                                    <span>Rank ≤ {branch.cutoff_rank}</span>
+                                    <span>₹{branch.Fees.toLocaleString()} fees</span>
+                                    <span>{branch.seats} seats</span>
+                                  </div>
                                 </div>
                               ))}
-                            <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-lg">
-                              <TrendingUp className="w-4 h-4 text-emerald-400" />
-                              <span className="text-sm">
-                                Match score: {selectedCollege.match_score || 4}/5
-                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* College Stats */}
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="text-center p-4 bg-gray-900/30 rounded-xl">
+                              <div className="text-2xl font-bold text-emerald-400">
+                                ₹{selectedCollege.average_package_lpa}L
+                              </div>
+                              <div className="text-sm text-gray-400">Avg Package</div>
+                            </div>
+                            <div className="text-center p-4 bg-gray-900/30 rounded-xl">
+                              <div className="text-2xl font-bold text-blue-400">
+                                ₹{selectedCollege.highest_package_lpa}L
+                              </div>
+                              <div className="text-sm text-gray-400">Highest Package</div>
+                            </div>
+                            <div className="text-center p-4 bg-gray-900/30 rounded-xl">
+                              <div className="text-2xl font-bold text-purple-400">
+                                {selectedCollege.branches.length}
+                              </div>
+                              <div className="text-sm text-gray-400">Branches</div>
+                            </div>
+                            <div className="text-center p-4 bg-gray-900/30 rounded-xl">
+                              <div className="text-2xl font-bold text-indigo-400">
+                                {selectedCollege.placement_rate}%
+                              </div>
+                              <div className="text-sm text-gray-400">Placement Rate</div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-300 mb-3">Quick Actions</h4>
+                            <div className="flex gap-3">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => navigate(`/college/${selectedCollege.college_code}`)}
+                                className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                Full Details
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => toggleSaveCollege(selectedCollege.college_code)}
+                                className="px-4 py-3 border border-gray-700 rounded-lg font-semibold hover:bg-gray-800 transition-all flex items-center gap-2"
+                              >
+                                {savedColleges.includes(selectedCollege.college_code) ? (
+                                  <>
+                                    <BookmarkCheck className="w-4 h-4" />
+                                    Saved
+                                  </>
+                                ) : (
+                                  <>
+                                    <Bookmark className="w-4 h-4" />
+                                    Save
+                                  </>
+                                )}
+                              </motion.button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Location & Map */}
+                        <div className="space-y-6">
+                          <div className="bg-gray-900/30 rounded-xl p-4">
+                            <h4 className="text-sm font-medium text-gray-300 mb-3">Location Details</h4>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-gray-400" />
+                                <span>{selectedCollege.city}, {selectedCollege.state}</span>
+                              </div>
+                              {selectedCollege.latitude && selectedCollege.longitude && (
+                                <div className="text-sm text-gray-400">
+                                  Coordinates: {selectedCollege.latitude.toFixed(4)}°N, {selectedCollege.longitude.toFixed(4)}°E
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="bg-gray-900/30 rounded-xl p-4">
+                            <h4 className="text-sm font-medium text-gray-300 mb-3">AI Insights</h4>
+                            <div className="space-y-2">
+                              {selectedCollege.branches
+                                .filter(b => b.is_most_probable)
+                                .map((branch, idx) => (
+                                  <div key={idx} className="flex items-center gap-2 p-2 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-lg">
+                                    <Target className="w-4 h-4 text-indigo-400" />
+                                    <span className="text-sm">
+                                      <span className="font-medium">{branch.branch}</span> is your most probable branch
+                                    </span>
+                                  </div>
+                                ))}
+                              <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-lg">
+                                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                                <span className="text-sm">
+                                  Match score: {selectedCollege.match_score || 4}/5
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               )}
             </div>
           </div>
