@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabase";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import seatMatrixMap from "../assets/seat_matrix_map.json";
+import seatMatrixPDF from "../assets/2025-26.pdf";
 import {
   ArrowLeft,
   MapPin,
@@ -2046,6 +2048,128 @@ export default function CollegeDetails() {
     );
   };
 
+  // Render Facilities & Scholarships Section (Merged)
+  const renderFacilitiesSection = () => {
+    return (
+      <div className="space-y-8">
+        {/* Scholarship Section */}
+        {renderScholarshipsSection()}
+
+        {/* Hostel Section */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 shadow-sm">
+          <div className="flex items-center space-x-4 mb-8">
+            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+              <Home className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Hostel & Housing</h2>
+              <p className="text-gray-600">On-campus accommodation details</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="p-6 bg-slate-50 rounded-2xl border border-gray-100">
+              <p className="text-sm text-gray-500 mb-1">Hostel Available</p>
+              <p className="text-xl font-bold text-gray-900">{college.hostel_available || "N/A"}</p>
+            </div>
+            <div className="p-6 bg-slate-50 rounded-2xl border border-gray-100">
+              <p className="text-sm text-gray-500 mb-1">Hostel Capacity</p>
+              <p className="text-xl font-bold text-gray-900">{college.hostel_capacity ? `${college.hostel_capacity} Students` : "N/A"}</p>
+            </div>
+            <div className="p-6 bg-slate-50 rounded-2xl border border-gray-100 text-center flex flex-col items-center justify-center">
+              <p className="text-gray-400 text-sm">More details coming soon</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render Ultimate Automation Section (PDF Page Viewer)
+  const renderUltimateAutomation = () => {
+    const code = college.college_code;
+    const branch = college.branch_name;
+    const map = seatMatrixMap as Record<string, Record<string, number>>;
+
+    let pageNumber = 1;
+    if (code && map[code]) {
+      // Find branch match - exact or fuzzy
+      const collegeBranches = map[code];
+      const match = Object.keys(collegeBranches).find(b =>
+        branch.toLowerCase().includes(b.toLowerCase()) ||
+        b.toLowerCase().includes(branch.toLowerCase())
+      );
+
+      if (match) {
+        pageNumber = collegeBranches[match];
+      } else if (Object.keys(collegeBranches).length > 0) {
+        // Fallback to first branch of that college if no direct match
+        pageNumber = Object.values(collegeBranches)[0];
+      }
+    }
+
+    return (
+      <div className="space-y-8">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white relative overflow-hidden shadow-lg">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/20 rounded-full translate-y-24 -translate-x-24 blur-2xl"></div>
+
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div className="flex items-center space-x-5">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 shadow-inner">
+                <Bot className="w-10 h-10 text-white" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-extrabold tracking-tight mb-1">Ultimate Automation</h2>
+                <p className="text-blue-100 font-medium flex items-center gap-2">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                  AI Seat Matrix Analysis Engine 2025-26
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col md:items-end gap-2">
+              <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/30">
+                <span className="text-sm font-semibold">Matched Page: {pageNumber}</span>
+              </div>
+              <p className="text-xs text-blue-200">Automatically syncs with state-wide seat matrix data</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-xl border border-gray-200 overflow-hidden min-h-[800px] flex flex-col">
+          <div className="p-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <FileText className="w-5 h-5 text-gray-500" />
+              <span className="text-sm font-bold text-gray-700">Official Seat Matrix - Round I</span>
+            </div>
+            <a
+              href={`${seatMatrixPDF}#page=${pageNumber}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              Open in New Tab
+            </a>
+          </div>
+
+          <iframe
+            src={`${seatMatrixPDF}#page=${pageNumber}&view=FitH`}
+            className="w-full flex-1 border-none min-h-[750px]"
+            title="Seat Matrix Viewer"
+          />
+
+          <div className="p-4 bg-blue-50 border-t border-blue-100">
+            <p className="text-xs text-blue-700 font-medium text-center">
+              The AI has pinpointed the exact location for <strong>{college.branch_name}</strong> at <strong>{college.college_name}</strong>.
+              The page above shows the specific intake, lateral entry seats, and category-wise distribution.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Render Feedback Section
   const renderFeedbackSection = () => {
     const feedbacks = college.feedbacks || [];
@@ -3279,8 +3403,8 @@ export default function CollegeDetails() {
                 { id: "fees", label: "Fee Structure", icon: CreditCard },
                 { id: "infrastructure", label: "Infrastructure", icon: Building },
                 { id: "placement", label: "Placements", icon: Trophy },
-                { id: "scholarship", label: "Scholarship", icon: Briefcase },
-                { id: "hostel", label: "Hostel", icon: Star },
+                { id: "facilities", label: "Facilities", icon: Home },
+                { id: "automation", label: "Ultimate Automation", icon: Bot },
                 { id: "news", label: "College Info", icon: Newspaper },
               ].map((tab) => (
                 <button
@@ -3314,26 +3438,8 @@ export default function CollegeDetails() {
             {activeTab === "infrastructure" && renderInfrastructure()}
             {activeTab === "placement" && renderPlacement()}
             {activeTab === "news" && renderNewsMedia()}
-            {activeTab === "scholarship" && renderScholarshipsSection()}
-            {activeTab === "hostel" && (
-              <div className="space-y-8">
-                <div className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl p-8 text-white relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-24 translate-x-24"></div>
-                  <div className="flex items-center space-x-4 relative z-10">
-                    <Home className="w-8 h-8" />
-                    <div>
-                      <h2 className="text-2xl font-bold mb-2">Hostel Facilities</h2>
-                      <p className="text-pink-100">Information about hostel accommodation and amenities</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-12 shadow-sm border border-gray-200/50 text-center">
-                  <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Coming Soon</h3>
-                  <p className="text-gray-600">Hostel information will be updated soon</p>
-                </div>
-              </div>
-            )}
+            {activeTab === "facilities" && renderFacilitiesSection()}
+            {activeTab === "automation" && renderUltimateAutomation()}
           </motion.div>
         </AnimatePresence>
       </div>

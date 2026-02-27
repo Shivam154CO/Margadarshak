@@ -36,14 +36,13 @@ export default function Login() {
           .from('users')
           .select('*')
           .eq('email', form.email)
-          .maybeSingle(); // Use maybeSingle instead of single
+          .maybeSingle();
 
         if (fetchError && fetchError.code !== 'PGRST116') {
           throw fetchError;
         }
 
         if (!existingProfile) {
-          // Create a new profile if doesn't exist (for migrated users)
           const { error: createError } = await supabase
             .from('users')
             .insert([
@@ -59,14 +58,12 @@ export default function Login() {
             console.error("Error creating profile:", createError);
           }
 
-          // Redirect to profile setup
           alert(`Welcome! Please complete your profile to continue.`);
           setIsLoading(false);
           navigate("/profile");
           return;
         }
 
-        // Check if profile is complete
         if (!existingProfile.profile_complete) {
           alert(`Welcome ${existingProfile.name || data.user.email}! Please complete your profile.`);
           setIsLoading(false);

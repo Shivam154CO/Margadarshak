@@ -774,26 +774,7 @@ export default function Dashboard() {
             <div className="inline-flex items-center justify-center mb-4">
               <div className="animate-spin rounded-full h-14 w-14 border-b-2 border-indigo-600"></div>
             </div>
-            <p className="text-gray-600 mt-4 text-lg font-medium">
-              Finding your perfect college matches...
-            </p>
-            <p className="text-gray-500 text-sm mt-2">
-              Analyzing {profile?.preferred_branches?.length || 0} preferred branches
-            </p>
-            <div className="mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 max-w-md mx-auto border border-indigo-100 shadow-sm">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
-                  <BarChart3 className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium text-indigo-900">AI-Powered Analysis</p>
-                  <p className="text-xs text-indigo-700">
-                    Using machine learning to predict admission chances
-                  </p>
-                </div>
-              </div>
-            </div>
-
+    
             {/* Skeleton Loader Cards */}
             <div className={`mt-12 grid gap-6 ${viewMode === 'grid-3' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : viewMode === 'grid-4' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>
               {[...Array(9)].map((_, index) => (

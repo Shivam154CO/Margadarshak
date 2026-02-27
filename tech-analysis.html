@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCF - Technology Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a1a;
+            color: #e0e0f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 40%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+            animation: bgFloat 20s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes bgFloat {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            33% {
+                transform: translate(2%, -1%) rotate(1deg);
+            }
+
+            66% {
+                transform: translate(-1%, 2%) rotate(-1deg);
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header .badge {
+            display: inline-block;
+            padding: 6px 18px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #a5b4fc;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 50%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #8b8fa8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 800px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card */
+        .card {
+            background: rgba(15, 15, 35, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.12);
+            border-radius: 20px;
+            padding: 32px;
+            animation: fadeInUp 0.6s ease-out backwards;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 8px 40px rgba(99, 102, 241, 0.08);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #c7c9e0;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title span {
+            font-size: 20px;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 380px;
+            margin: 0 auto;
+        }
+
+        /* Tech list */
+        .tech-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tech-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.3s;
+            cursor: default;
+        }
+
+        .tech-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+
+        .tech-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .tech-info {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tech-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #d0d2e8;
+        }
+
+        .tech-detail {
+            font-size: 12px;
+            color: #6b6f8a;
+            margin-top: 2px;
+        }
+
+        .tech-percent {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            text-align: right;
+        }
+
+        .tech-percent small {
+            font-size: 12px;
+            font-weight: 400;
+            color: #6b6f8a;
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 800px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: rgba(15, 15, 35, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.12);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            animation: fadeInUp 0.6s ease-out backwards;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.1);
+        }
+
+        .stat-card:nth-child(1) {
+            animation-delay: 0.3s;
+        }
+
+        .stat-card:nth-child(2) {
+            animation-delay: 0.4s;
+        }
+
+        .stat-card:nth-child(3) {
+            animation-delay: 0.5s;
+        }
+
+        .stat-card:nth-child(4) {
+            animation-delay: 0.6s;
+        }
+
+        .stat-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b6f8a;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* Libraries Section */
+        .libraries-section {
+            animation: fadeInUp 0.6s ease-out 0.7s backwards;
+        }
+
+        .libraries-section .card-title {
+            margin-bottom: 20px;
+        }
+
+        .lib-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .lib-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .lib-chip:hover {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .lib-chip .lib-icon {
+            font-size: 20px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .lib-chip .lib-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #c7c9e0;
+        }
+
+        .lib-chip .lib-desc {
+            font-size: 11px;
+            color: #6b6f8a;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #4a4d66;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="badge">📊 Project Analysis</div>
+            <h1>SmartCF Tech Stack</h1>
+            <p>Complete technology breakdown of the SmartCF — Ikigai college recommendation platform</p>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon">📄</div>
+                <div class="stat-value">75+</div>
+                <div class="stat-label">Source Files</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💻</div>
+                <div class="stat-value">~27K</div>
+                <div class="stat-label">Lines of Code</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🧠</div>
+                <div class="stat-value">12.8%</div>
+                <div class="stat-label">AI / ML Code</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">�</div>
+                <div class="stat-value">5</div>
+                <div class="stat-label">ML Models + Libs</div>
+            </div>
+        </div>
+
+        <!-- Main Grid: Chart + Legend -->
+        <div class="main-grid">
+            <!-- Pie Chart -->
+            <div class="card">
+                <div class="card-title"><span>📊</span> Code by Technology</div>
+                <div class="chart-container">
+                    <canvas id="langChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tech Breakdown List -->
+            <div class="card">
+                <div class="card-title"><span>⚡</span> Technology Breakdown</div>
+                <ul class="tech-list">
+                    <li class="tech-item">
+                        <div class="tech-dot" style="background: #61DAFB;"></div>
+                        <div style="flex:1">
+                            <div class="tech-name">React (TSX)</div>
+                            <div class="tech-detail">15 Pages · 32 UI Components</div>
+                        </div>
+                        <div class="tech-percent">64.5%<br><small>~17,600 lines</small></div>
+                    </li>
+                    <li class="tech-item">
+                        <div class="tech-dot" style="background: #10B981;"></div>
+                        <div style="flex:1">
+                            <div class="tech-name">🧠 AI / Machine Learning</div>
+                            <div class="tech-detail">Prediction Algos · XGBoost · LightGBM · TF.js · AI Assistant</div>
+                        </div>
+                        <div class="tech-percent">12.8%<br><small>~3,500 lines</small></div>
+                    </li>
+                    <li class="tech-item">
+                        <div class="tech-dot" style="background: #3178C6;"></div>
+                        <div style="flex:1">
+                            <div class="tech-name">TypeScript</div>
+                            <div class="tech-detail">Hooks · Utils · Types · Config</div>
+                        </div>
+                        <div class="tech-percent">10.2%<br><small>~2,780 lines</small></div>
+                    </li>
+                    <li class="tech-item">
+                        <div class="tech-dot" style="background: #3776AB;"></div>
+                        <div style="flex:1">
+                            <div class="tech-name">Python / Flask</div>
+                            <div class="tech-detail">REST API · Data Processing · Supabase</div>
+                        </div>
+                        <div class="tech-percent">4.2%<br><small>~1,150 lines</small></div>
+                    </li>
+                    <li class="tech-item">
+                        <div class="tech-dot" style="background: #06B6D4;"></div>
+                        <div style="flex:1">
+                            <div class="tech-name">CSS / TailwindCSS</div>
+                            <div class="tech-detail">3 Stylesheets + Tailwind v4 utilities</div>
+                        </div>
+                        <div class="tech-percent">2.8%<br><small>~760 lines</small></div>
+                    </li>
+                    <li class="tech-item">
+                        <div class="tech-dot" style="background: #F7DF1E;"></div>
+                        <div style="flex:1">
+                            <div class="tech-name">JavaScript</div>
+                            <div class="tech-detail">ESLint · Tailwind · PostCSS Config</div>
+                        </div>
+                        <div class="tech-percent">1.8%<br><small>~500 lines</small></div>
+                    </li>
+                    <li class="tech-item">
+                        <div class="tech-dot" style="background: #8B5CF6;"></div>
+                        <div style="flex:1">
+                            <div class="tech-name">JSON (Data/Config)</div>
+                            <div class="tech-detail">Lottie · Seat Matrix · Configs</div>
+                        </div>
+                        <div class="tech-percent">2.4%<br><small>~650 lines</small></div>
+                    </li>
+                    <li class="tech-item">
+                        <div class="tech-dot" style="background: #E34F26;"></div>
+                        <div style="flex:1">
+                            <div class="tech-name">HTML + SQL</div>
+                            <div class="tech-detail">Entry point · Database Schema</div>
+                        </div>
+                        <div class="tech-percent">1.3%<br><small>~360 lines</small></div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Libraries & Frameworks Section -->
+        <div class="card libraries-section">
+            <div class="card-title"><span>📚</span> Libraries & Frameworks Used</div>
+            <div class="lib-grid">
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(97,218,251,0.12);color:#61DAFB;">⚛️</div>
+                    <div>
+                        <div class="lib-name">React 19</div>
+                        <div class="lib-desc">UI Framework</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(49,120,198,0.12);color:#3178C6;">🔷</div>
+                    <div>
+                        <div class="lib-name">TypeScript 5.9</div>
+                        <div class="lib-desc">Type Safety</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(168,85,247,0.12);color:#A855F7;">⚡</div>
+                    <div>
+                        <div class="lib-name">Vite 7</div>
+                        <div class="lib-desc">Build Tool</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(6,182,212,0.12);color:#06B6D4;">🎨</div>
+                    <div>
+                        <div class="lib-name">TailwindCSS 4</div>
+                        <div class="lib-desc">Utility CSS</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(55,118,171,0.12);color:#3776AB;">🐍</div>
+                    <div>
+                        <div class="lib-name">Python / Flask</div>
+                        <div class="lib-desc">Backend API</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(60,179,113,0.12);color:#3CB371;">🧠</div>
+                    <div>
+                        <div class="lib-name">Scikit-learn</div>
+                        <div class="lib-desc">ML Framework</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(99,102,241,0.12);color:#6366F1;">🚀</div>
+                    <div>
+                        <div class="lib-name">XGBoost</div>
+                        <div class="lib-desc">ML Boosting</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(234,88,12,0.12);color:#EA580C;">🌿</div>
+                    <div>
+                        <div class="lib-name">LightGBM</div>
+                        <div class="lib-desc">ML Gradient Boosting</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(62,207,142,0.12);color:#3ECF8E;">🗄️</div>
+                    <div>
+                        <div class="lib-name">Supabase</div>
+                        <div class="lib-desc">Database & Auth</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(255,196,0,0.12);color:#FFC400;">🔥</div>
+                    <div>
+                        <div class="lib-name">Firebase</div>
+                        <div class="lib-desc">Auth / Storage</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(236,72,153,0.12);color:#EC4899;">✨</div>
+                    <div>
+                        <div class="lib-name">Framer Motion</div>
+                        <div class="lib-desc">Animations</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(251,146,60,0.12);color:#FB923C;">🎞️</div>
+                    <div>
+                        <div class="lib-name">Lottie React</div>
+                        <div class="lib-desc">JSON Animations</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(255,99,132,0.12);color:#FF6384;">📈</div>
+                    <div>
+                        <div class="lib-name">Chart.js + Recharts</div>
+                        <div class="lib-desc">Data Visualization</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(0,158,96,0.12);color:#009E60;">🗺️</div>
+                    <div>
+                        <div class="lib-name">Leaflet + Google Maps</div>
+                        <div class="lib-desc">Interactive Maps</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(96,165,250,0.12);color:#60A5FA;">🧠</div>
+                    <div>
+                        <div class="lib-name">TensorFlow.js</div>
+                        <div class="lib-desc">Client-side ML</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(163,163,163,0.12);color:#A3A3A3;">🔗</div>
+                    <div>
+                        <div class="lib-name">React Router v6</div>
+                        <div class="lib-desc">Navigation</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(239,68,68,0.12);color:#EF4444;">📊</div>
+                    <div>
+                        <div class="lib-name">React Query</div>
+                        <div class="lib-desc">Data Fetching</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(34,197,94,0.12);color:#22C55E;">📄</div>
+                    <div>
+                        <div class="lib-name">jsPDF</div>
+                        <div class="lib-desc">PDF Generation</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(147,51,234,0.12);color:#9333EA;">🔌</div>
+                    <div>
+                        <div class="lib-name">Axios</div>
+                        <div class="lib-desc">HTTP Client</div>
+                    </div>
+                </div>
+                <div class="lib-chip">
+                    <div class="lib-icon" style="background:rgba(20,184,166,0.12);color:#14B8A6;">💎</div>
+                    <div>
+                        <div class="lib-name">Lucide React</div>
+                        <div class="lib-desc">Icon Library</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            SmartCF — Ikigai · Generated on Feb 25, 2026
+        </div>
+    </div>
+
+    <script>
+        // Doughnut chart data
+        const ctx = document.getElementById('langChart').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    'React (TSX)',
+                    '🧠 AI / Machine Learning',
+                    'TypeScript',
+                    'Python / Flask',
+                    'CSS / TailwindCSS',
+                    'JSON (Data)',
+                    'JavaScript',
+                    'HTML + SQL'
+                ],
+                datasets: [{
+                    data: [64.5, 12.8, 10.2, 4.2, 2.8, 2.4, 1.8, 1.3],
+                    backgroundColor: [
+                        '#61DAFB',
+                        '#10B981',
+                        '#3178C6',
+                        '#3776AB',
+                        '#06B6D4',
+                        '#8B5CF6',
+                        '#F7DF1E',
+                        '#E34F26'
+                    ],
+                    borderColor: '#0a0a1a',
+                    borderWidth: 3,
+                    hoverOffset: 18,
+                    borderRadius: 6,
+                    spacing: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '62%',
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            color: '#8b8fa8',
+                            font: {
+                                family: 'Inter',
+                                size: 12,
+                                weight: '500'
+                            },
+                            padding: 16,
+                            usePointStyle: true,
+                            pointStyle: 'rectRounded'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15,15,35,0.95)',
+                        titleColor: '#fff',
+                        bodyColor: '#a5b4fc',
+                        padding: 14,
+                        cornerRadius: 12,
+                        titleFont: { family: 'Inter', size: 14, weight: '700' },
+                        bodyFont: { family: 'Inter', size: 13 },
+                        borderColor: 'rgba(99,102,241,0.2)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function (context) {
+                                return ' ' + context.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 1500,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
