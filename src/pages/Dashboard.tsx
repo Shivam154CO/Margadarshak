@@ -725,44 +725,31 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Loading State */}
+        {/* Loading State — only skeleton the cards grid; stats & filters already rendered above */}
         {isLoading || predictionsLoading && colleges.length === 0 ? (
-          <>
-            {/* Skeleton stats strip */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="bg-white border border-slate-200 border-l-4 border-l-slate-200 rounded-xl p-4 animate-pulse">
-                  <div className="h-7 bg-gray-200 rounded w-10 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-20 mb-1"></div>
-                  <div className="h-2.5 bg-gray-100 rounded w-16"></div>
-                </div>
-              ))}
-            </div>
-
-            {/* Skeleton filter row */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-9 bg-gray-200 rounded-lg w-28 animate-pulse"></div>
-              ))}
-            </div>
-
-            {/* Skeleton cards grid */}
-            <div className={`grid gap-6 ${viewMode === 'grid-3' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : viewMode === 'grid-4' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>
-              {[...Array(9)].map((_, index) => (
-                <div key={index} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden animate-pulse">
-                  <div className="h-48 bg-gray-100"></div>
-                  <div className="p-5 space-y-3">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-gray-50 rounded-lg p-3"><div className="h-3 bg-gray-200 rounded w-full mb-2"></div><div className="h-4 bg-gray-200 rounded w-2/3"></div></div>
-                      <div className="bg-gray-50 rounded-lg p-3"><div className="h-3 bg-gray-200 rounded w-full mb-2"></div><div className="h-4 bg-gray-200 rounded w-2/3"></div></div>
+          <div className={`grid gap-6 ${viewMode === 'grid-3' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : viewMode === 'grid-4' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>
+            {[...Array(9)].map((_, index) => (
+              <div key={index} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden animate-pulse">
+                <div className="h-48 bg-gray-100"></div>
+                <div className="p-6 space-y-4">
+                  <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                      <div className="h-5 bg-gray-200 rounded w-2/3"></div>
                     </div>
-                    <div className="h-10 bg-gray-100 rounded-xl"></div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                      <div className="h-5 bg-gray-200 rounded w-2/3"></div>
+                    </div>
                   </div>
+                  <div className="h-3 bg-gray-100 rounded w-full"></div>
+                  <div className="h-10 bg-gray-100 rounded-xl"></div>
                 </div>
-              ))}
-            </div>
-          </>
+              </div>
+            ))}
+          </div>
         ) : sortedColleges.length === 0 ? (
           <div className="text-center py-16 bg-white/50 rounded-3xl border-2 border-dashed border-gray-300/50 shadow-sm">
             <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
