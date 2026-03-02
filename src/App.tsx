@@ -3,6 +3,7 @@ import { Suspense, lazy, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import './index.css'
 import { CollegesProvider } from './context/CollegesContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Components
 import ScrollToTop from "./components/ScrollToTop";
@@ -41,8 +42,9 @@ const ScrollToTopOnRoute = () => {
 
 // Simple loading spinner fallback
 const PageLoader = () => (
-  <div className="flex h-screen w-full items-center justify-center bg-slate-50">
-    <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent shadow-md"></div>
+  <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors" role="status" aria-label="Loading page">
+    <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 dark:border-indigo-400 border-t-transparent shadow-md"></div>
+    <span className="sr-only">Loading…</span>
   </div>
 );
 
@@ -96,17 +98,28 @@ import { ReactLenis } from 'lenis/react';
 
 export default function App() {
   return (
-    <ReactLenis root>
-      <CollegesProvider>
-        <Router>
-          <ScrollToTopOnRoute />
-          <NetworkStatus />
-          <ScrollToTop />
-          <Suspense fallback={<PageLoader />}>
-            <AnimatedRoutes />
-          </Suspense>
-        </Router>
-      </CollegesProvider>
-    </ReactLenis>
+    <ThemeProvider>
+      <ReactLenis root>
+        <CollegesProvider>
+          <Router>
+            {/* Accessibility: Skip to main content link */}
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none"
+            >
+              Skip to main content
+            </a>
+            <ScrollToTopOnRoute />
+            <NetworkStatus />
+            <ScrollToTop />
+            <Suspense fallback={<PageLoader />}>
+              <main id="main-content">
+                <AnimatedRoutes />
+              </main>
+            </Suspense>
+          </Router>
+        </CollegesProvider>
+      </ReactLenis>
+    </ThemeProvider>
   );
 }

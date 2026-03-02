@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import {
-    X, Building, IndianRupee, Target, Award, Users, Bot, SearchX, Globe, Mail,
+    X, Building, Target, Award, Users, Bot, SearchX, Globe, Mail,
     MapPin, CheckCircle, Smartphone, ExternalLink, Calendar, Briefcase, Book, Activity, Music
 } from "lucide-react";
 import type { College } from "../../types/college";
@@ -13,7 +13,7 @@ interface CollegeDetailsModalProps {
 }
 
 export const CollegeDetailsModal: React.FC<CollegeDetailsModalProps> = ({
-    college, onClose, getProbabilityColor
+    college, onClose, getProbabilityColor: _getProbabilityColor
 }) => {
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">

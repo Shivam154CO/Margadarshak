@@ -1,5 +1,6 @@
 import React from "react";
 import { Zap, CheckCircle, Target, TrendingUp } from "lucide-react";
+// Building removed - was unused (TS6133)
 
 interface DashboardStatsProps {
     stats: {

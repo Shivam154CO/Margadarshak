@@ -1,0 +1,16 @@
+# SmartCF - Engineering Admission Intelligence
+# https://smartcf.ikigai.com
+
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /signup
+Disallow: /profile
+Disallow: /profile-view
+Disallow: /api/
+
+# Sitemaps
+Sitemap: https://smartcf.ikigai.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1

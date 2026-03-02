@@ -13,7 +13,6 @@ import {
   ChevronDown,
   LogOut,
   Settings,
-  Shield,
   LayoutDashboard,
   FileText,
   Scan,
@@ -124,8 +123,8 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
                   }}
                   aria-label={`Open ${item.label}`}
                   className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${item.id === activeTab || (item.hasDropdown && automationDropdownOpen)
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
                     }`}
                 >
                   {item.icon && <item.icon className="w-4 h-4" />}

@@ -1,5 +1,74 @@
 @import "tailwindcss";
 
+/* ============================================
+   DESIGN SYSTEM: CSS Custom Properties
+   ============================================ */
+
+:root {
+  /* Brand Colors */
+  --color-primary: 99 102 241;
+  /* indigo-500 */
+  --color-primary-dark: 79 70 229;
+  /* indigo-600 */
+  --color-primary-light: 129 140 248;
+  /* indigo-400 */
+  --color-accent: 236 72 153;
+  /* pink-500 */
+
+  /* Surface Colors */
+  --color-bg: 248 250 252;
+  /* slate-50 */
+  --color-surface: 255 255 255;
+  /* white */
+  --color-surface-elevated: 255 255 255;
+  --color-border: 226 232 240;
+  /* slate-200 */
+
+  /* Text Colors */
+  --color-text: 15 23 42;
+  /* slate-900 */
+  --color-text-secondary: 100 116 139;
+  /* slate-500 */
+  --color-text-muted: 148 163 184;
+  /* slate-400 */
+
+  /* Scrollbar */
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
+  --scrollbar-track: transparent;
+
+  /* Code and selection */
+  --color-selection-bg: #6366f1;
+  --color-selection-text: #ffffff;
+}
+
+/* Dark Mode Tokens */
+.dark {
+  --color-bg: 15 23 42;
+  /* slate-900 */
+  --color-surface: 30 41 59;
+  /* slate-800 */
+  --color-surface-elevated: 51 65 85;
+  /* slate-700 */
+  --color-border: 51 65 85;
+  /* slate-700 */
+
+  --color-text: 241 245 249;
+  /* slate-100 */
+  --color-text-secondary: 148 163 184;
+  /* slate-400 */
+  --color-text-muted: 100 116 139;
+  /* slate-500 */
+
+  --scrollbar-thumb: #475569;
+  --scrollbar-thumb-hover: #64748b;
+  --scrollbar-track: transparent;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
 /* Fix blur on text and images */
 * {
   -webkit-font-smoothing: antialiased;
@@ -10,28 +79,27 @@
 
 /* Premium Selection Color */
 ::selection {
-  background-color: #6366f1;
-  /* Indigo 500 */
-  color: #ffffff;
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-text);
 }
 
-/* Custom, sleek scrollbar like Phoenix Dashboard */
+/* Custom, sleek scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: var(--scrollbar-thumb);
   border-radius: 20px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #94a3b8;
+  background-color: var(--scrollbar-thumb-hover);
 }
 
 /* Fix blur on transformed elements */
@@ -56,15 +124,158 @@ body,
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f8fafc;
-  /* Very soft slate background */
-  color: #334155;
-  /* Deep slate base text */
+  background-color: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 main {
   flex-grow: 1;
 }
+
+/* ============================================
+   DARK MODE OVERRIDES
+   ============================================ */
+
+/* Navbar dark mode */
+.dark nav {
+  background-color: rgba(15, 23, 42, 0.9);
+  border-color: rgba(51, 65, 85, 0.6);
+}
+
+/* Footer automatically looks good since it's already dark-themed */
+
+/* Card surfaces in dark mode */
+.dark .bg-white {
+  background-color: rgb(30, 41, 59);
+}
+
+.dark .bg-slate-50,
+.dark .bg-gray-50 {
+  background-color: rgb(15, 23, 42);
+}
+
+/* Text color adjustments in dark mode */
+.dark .text-gray-900,
+.dark .text-slate-900 {
+  color: rgb(241, 245, 249);
+}
+
+.dark .text-gray-800,
+.dark .text-slate-800 {
+  color: rgb(226, 232, 240);
+}
+
+.dark .text-gray-700,
+.dark .text-slate-700 {
+  color: rgb(203, 213, 225);
+}
+
+.dark .text-gray-600,
+.dark .text-slate-600 {
+  color: rgb(148, 163, 184);
+}
+
+.dark .text-gray-500,
+.dark .text-slate-500 {
+  color: rgb(100, 116, 139);
+}
+
+/* Border adjustments */
+.dark .border-gray-200,
+.dark .border-slate-200,
+.dark .border-gray-100,
+.dark .border-slate-100 {
+  border-color: rgba(51, 65, 85, 0.6);
+}
+
+/* Input styling in dark mode */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: rgb(30, 41, 59);
+  border-color: rgb(51, 65, 85);
+  color: rgb(226, 232, 240);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: rgb(100, 116, 139);
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: rgb(99, 102, 241);
+}
+
+/* Shadow adjustments for dark mode */
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-lg,
+.dark .shadow-xl,
+.dark .shadow-2xl {
+  --tw-shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Gradient backgrounds in dark mode */
+.dark .bg-gradient-to-br.from-slate-50,
+.dark .bg-gradient-to-br.from-gray-50 {
+  --tw-gradient-from: rgb(15, 23, 42);
+}
+
+/* ============================================
+   ACCESSIBILITY UTILITIES
+   ============================================ */
+
+/* Screen reader only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+  * {
+    forced-color-adjust: auto;
+  }
+
+  button,
+  a {
+    forced-color-adjust: none;
+  }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
 
 /* Skeleton loader gradient animation */
 @keyframes gradient {
@@ -87,10 +298,109 @@ main {
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
 .animate-gradient {
   animation: gradient 3s ease infinite;
 }
 
 .animate-shimmer {
   animation: shimmer 1.5s infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+
+/* Hide scrollbar but allow scrolling */
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom scrollbar for specific elements */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 20px;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+
+  nav,
+  footer,
+  .no-print,
+  .theme-toggle {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+  }
 }

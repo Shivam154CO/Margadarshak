@@ -5,6 +5,7 @@ import ScrollAnimationWrapper from "../components/ScrollAnimationWrapper";
 import LiveFeatureIcon from "../components/LiveFeatureIcon";
 import IkigaiLogo from "../components/IkigaiLogo";
 import Footer from "../components/Footer";
+import SEO from "../components/SEO";
 import { LiveCastePreview, LiveMatchSimulator, LiveTrendPulse, LiveAIAssistant, LiveDistanceTracker, LiveScholarshipGuide } from "../components/LiveFeatureShowcase";
 import Magnetic from "../components/Magnetic";
 
@@ -71,7 +72,12 @@ export default function Landing() {
   ], []);
 
   return (
-    <div className="min-h-screen bg-white font-sans selection:bg-slate-100 selection:text-slate-900">
+    <div className="min-h-screen bg-white dark:bg-slate-950 font-sans selection:bg-slate-100 selection:text-slate-900 dark:selection:bg-indigo-800 dark:selection:text-white">
+      <SEO
+        title="SmartCF | Maharashtra's #1 Engineering Admission Predictor"
+        description="Predict your engineering college admission chances with 95.7% accuracy. Diploma to Engineering pathway for Maharashtra students — real-time cutoffs, seat matrix, and AI guidance."
+        keywords="engineering admission predictor, Maharashtra diploma, CET cutoff, college finder, seat matrix, placement stats"
+      />
       {/* Navigation */}
       <nav className="fixed w-full z-[100] px-4 py-4 md:px-6 md:py-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center bg-white/80 backdrop-blur-2xl border border-slate-100/50 rounded-2xl px-6 py-4 md:px-10 md:h-20 shadow-[0_20px_50px_rgba(0,0,0,0.05)] relative z-50">

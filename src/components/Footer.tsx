@@ -17,7 +17,7 @@ const Footer: React.FC = React.memo(() => {
   };
 
   return (
-    <footer className="bg-slate-900 text-slate-300 pt-16 pb-8 mt-auto w-full border-t border-slate-800">
+    <footer className="bg-slate-900 text-slate-300 pt-16 pb-8 mt-auto w-full border-t border-slate-800" role="contentinfo" aria-label="Site footer">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-12">
           {/* Brand & Mission */}

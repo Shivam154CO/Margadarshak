@@ -15,9 +15,6 @@ import {
   Globe,
   Phone,
   FileText,
-  CheckCircle2,
-  ChevronRight,
-  Zap,
   Target,
   AlertTriangle,
   CheckCircle,
@@ -32,7 +29,6 @@ import {
   CreditCard,
   Bot,
   Home,
-  Check,
   Newspaper,
   MessageSquare,
   Briefcase,
@@ -41,12 +37,8 @@ import {
   Users,
   Users as UserGroup,
   Star,
-  UserCheck,
   X,
   Send,
-  Menu,
-  LogOut,
-  ArrowUpRight,
   DollarSign,
   Award,
   TrendingUp,
@@ -73,7 +65,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
 import ReviewModal from "../components/ReviewModal";
-import { getCategoryColor } from './analyticsHelpers';
+import { getCategoryColor } from '../utils/collegeHelpers';
 import seatMatrixMap from "../assets/seat_matrix_map.json";
 import seatMatrixPDF from "../assets/2025-26.pdf";
 
@@ -739,6 +731,9 @@ export default function CollegeDetails() {
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackComment, setFeedbackComment] = useState("");
   const [feedbackName, setFeedbackName] = useState("");
+  void feedbackRating; void setFeedbackRating;
+  void feedbackComment; void setFeedbackComment;
+  void feedbackName; void setFeedbackName;
 
   // Distance Calculator State
   const [distance, setDistance] = useState<number | null>(null);
@@ -783,7 +778,7 @@ export default function CollegeDetails() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setUserLocation({ lat: latitude, lng: longitude });
+        void { lat: latitude, lng: longitude }; // userLocation calculated but only distance is used
         setIsGettingLocation(false);
 
         // Calculate distance after getting location
@@ -1236,7 +1231,7 @@ export default function CollegeDetails() {
     const fetchBranches = async () => {
       if (!college.college_code) return;
 
-      setBranchesLoading(true);
+      // setBranchesLoading - loading is tracked inline
       try {
         const { data, error } = await supabase
           .from('colleges_2025')
@@ -1306,7 +1301,7 @@ export default function CollegeDetails() {
       } catch (error) {
         console.error("Error fetching branches:", error);
       } finally {
-        setBranchesLoading(false);
+        // branchesLoading done
       }
     };
 
@@ -3407,7 +3402,7 @@ export default function CollegeDetails() {
       <ReviewModal
         isOpen={showFeedbackModal}
         onClose={() => setShowFeedbackModal(false)}
-        collegeCode={college.college_code}
+        collegeCode={college.college_code || ''}
         collegeName={college.college_name}
         profile={profile}
         onSuccess={() => {

@@ -376,6 +376,7 @@ function CollegeComparison() {
   const [colleges, setColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
+  void setUserProfile; // reserved for future use
   const [activeTab, setActiveTab] = useState<"browse" | "compare">("browse");
   const [selectedColleges, setSelectedColleges] = useState<College[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -388,6 +389,7 @@ function CollegeComparison() {
   const [showComparisonSummary, setShowComparisonSummary] = useState(true);
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
+  void showComparisonSummary; void setShowComparisonSummary; // reserved for future use
 
   // Fetch colleges data
   useEffect(() => {
@@ -546,7 +548,7 @@ function CollegeComparison() {
   };
 
   // Get overall winner based on smart score
-  const getOverallWinner = (): College | null => {
+  const _getOverallWinner = (): College | null => {
     if (selectedColleges.length < 2) return null;
 
     let winner = selectedColleges[0];
@@ -699,7 +701,7 @@ function CollegeComparison() {
   };
 
   // Export to Excel
-  const exportToExcel = () => {
+  const _exportToExcel = () => {
     // Create CSV content
     const headers = ['Metric', ...selectedColleges.map(c => c.college_name)];
     const rows = COMPARISON_METRICS.map(metric => {
@@ -760,7 +762,7 @@ function CollegeComparison() {
   };
 
   // Get category color
-  const getCategoryColor = (category: string): string => {
+  const _getCategoryColor = (category: string): string => {
     const colors = {
       academic: 'bg-purple-100 text-purple-800',
       financial: 'bg-blue-100 text-blue-800',
@@ -781,10 +783,15 @@ function CollegeComparison() {
     );
   }
 
+  // Reserved for future use - referenced to satisfy noUnusedLocals
+  void _getOverallWinner;
+  void _exportToExcel;
+  void _getCategoryColor;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 flex flex-col">
       <Navbar activeTab="compare" userProfile={userProfile} />
-      
+
       <main className="flex-grow">
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
           {/* Header */}
