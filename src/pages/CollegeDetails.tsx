@@ -66,10 +66,12 @@ import {
   Tag,
   PieChart,
   GraduationCap,
-  ExternalLink
+  ExternalLink,
+  ClipboardList
 } from 'lucide-react';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Breadcrumbs from "../components/Breadcrumbs";
 import ReviewModal from "../components/ReviewModal";
 import { getCategoryColor } from './analyticsHelpers';
 import seatMatrixMap from "../assets/seat_matrix_map.json";
@@ -1756,23 +1758,6 @@ export default function CollegeDetails() {
   // Render Admission Process Section
   const renderAdmissionProcess = () => {
     const admissionProcess = college.admission_process || [];
-    const requiredDocs = college.required_documents || [];
-
-    // Default required documents if none from Supabase
-    const defaultRequiredDocs = [
-      "SSC Marksheet",
-      "HSC/Diploma Marksheet",
-      "Category Certificate",
-      "Domicile Certificate",
-      "Aadhar Card",
-      "Passport Size Photos",
-      "Caste Validity (if applicable)",
-      "Non-Creamy Layer Certificate (if applicable)",
-      "Income Certificate (if applicable)",
-      "Gap Certificate (if applicable)"
-    ];
-
-    const displayRequiredDocs = requiredDocs.length > 0 ? requiredDocs : defaultRequiredDocs;
 
     return (
       <div className="space-y-8">
@@ -1873,22 +1858,6 @@ export default function CollegeDetails() {
                 </motion.div>
               ))}
             </div>
-          </div>
-
-          {/* Required Documents */}
-          <div>
-            <h4 className="font-bold text-gray-900 mb-4">Required Documents for Admission</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {displayRequiredDocs.map((doc, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-200">
-                  <FileText className="w-5 h-5 text-gray-500" />
-                  <span className="text-gray-700">{doc}</span>
-                </div>
-              ))}
-            </div>
-            {requiredDocs.length === 0 && (
-              <p className="text-xs text-gray-500 mt-2 italic">* Default documents for Maharashtra DTE admission. Specific college requirements may vary.</p>
-            )}
           </div>
         </div>
 
@@ -2314,7 +2283,8 @@ export default function CollegeDetails() {
       </div>
 
       {feeData.totalFees > 0 ? (
-        <div className="space-y-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <Breadcrumbs />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
@@ -3033,6 +3003,72 @@ export default function CollegeDetails() {
             </div>
           </InfoCard>
 
+          {/* Right Sidebar: Required Documents (Moved from Dashboard) */}
+          <div className="bg-white rounded-[24px] border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2.5 bg-indigo-50 rounded-xl">
+                <ClipboardList className="w-5 h-5 text-indigo-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Admission Docs</h3>
+            </div>
+
+            <div className="space-y-4">
+              {[
+                "SSC (10th) Marksheet",
+                "HSC (12th) Marksheet",
+                "Diploma Marksheet (All Sem)",
+                "Leaving Certificate (LC)",
+                "Domicile Certificate",
+                "Nationality Certificate",
+                "Caste & Validity (if reg.)",
+                "Non-Creamy Layer (NCL)",
+                "Income Certificate (TFWS)"
+              ].map((doc, i) => (
+                <div key={i} className="flex items-start gap-3 group">
+                  <div className="mt-1 w-5 h-5 rounded-md border-2 border-slate-200 flex items-center justify-center group-hover:border-indigo-500 transition-colors">
+                    <div className="w-2.5 h-2.5 bg-indigo-500 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <span className="text-sm font-semibold text-slate-600 group-hover:text-slate-900 transition-colors">{doc}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="w-4 h-4 text-orange-500" />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Important Note</span>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                Ensure all documents are scavenged and scanned as PDFs below 500KB for the CAP portal.
+              </p>
+            </div>
+
+            <button
+              onClick={() => navigate("/help")}
+              className="w-full mt-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-colors flex items-center justify-center gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Documentation Guide
+            </button>
+          </div>
+
+          {/* Admission Timeline Card */}
+          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-[24px] p-6 text-white shadow-lg overflow-hidden relative">
+            <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-white/10 blur-3xl rounded-full" />
+            <div className="relative z-10">
+              <h4 className="font-black text-xs uppercase tracking-[0.2em] opacity-70 mb-4">Live Updates</h4>
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 mt-1.5 animate-pulse" />
+                  <div>
+                    <div className="text-sm font-bold">CAP Round 1</div>
+                    <div className="text-[10px] opacity-70 font-medium whitespace-nowrap">Starting July 2026 Expected</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Distance Calculator */}
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
             <div className="flex items-center justify-between mb-4">
@@ -3140,7 +3176,7 @@ export default function CollegeDetails() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 
   if (loading) {

@@ -81,6 +81,16 @@ main {
   }
 }
 
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .animate-gradient {
   animation: gradient 3s ease infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
 }

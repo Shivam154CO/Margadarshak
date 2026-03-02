@@ -6,6 +6,7 @@ import LiveFeatureIcon from "../components/LiveFeatureIcon";
 import IkigaiLogo from "../components/IkigaiLogo";
 import Footer from "../components/Footer";
 import { LiveCastePreview, LiveMatchSimulator, LiveTrendPulse, LiveAIAssistant, LiveDistanceTracker, LiveScholarshipGuide } from "../components/LiveFeatureShowcase";
+import Magnetic from "../components/Magnetic";
 
 // Import custom illustrations
 import clgImg from "../assets/illustrations/clg.png";
@@ -43,6 +44,15 @@ export default function Landing() {
   }, []);
 
   const heroScrollY = useTransform(scrollYProgress, [0, 0.2], [0, 100]);
+
+  const problemRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: problemScrollY } = useScroll({
+    target: problemRef,
+    offset: ["start end", "end start"]
+  });
+  const parallax1 = useTransform(problemScrollY, [0, 1], [80, -80]);
+  const parallax2 = useTransform(problemScrollY, [0, 1], [-80, 80]);
+  const parallax3 = useTransform(problemScrollY, [0, 1], [80, -80]);
 
   const journeySteps = useMemo(() => [
     { title: "Enter Your Diploma Rank", description: "Share your rank and category details.", icon: "student" as const },
@@ -150,14 +160,16 @@ export default function Landing() {
                   </p>
 
                   <div className="flex flex-col sm:flex-row items-center gap-6 md:gap-10 pt-4 w-full">
-                    <motion.button
-                      onClick={() => navigate("/signup")}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-full md:w-auto px-6 py-4 md:px-10 md:py-5 bg-slate-900 text-white rounded-2xl font-extrabold text-lg md:text-xl shadow-2xl hover:bg-black transition-all flex items-center justify-center gap-3 md:gap-5"
-                    >
-                      Predict Now <span className="text-xl md:text-2xl text-rose-500">→</span>
-                    </motion.button>
+                    <Magnetic>
+                      <motion.button
+                        onClick={() => navigate("/signup")}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-full md:w-auto px-6 py-4 md:px-10 md:py-5 bg-slate-900 text-white rounded-2xl font-extrabold text-lg md:text-xl shadow-2xl hover:bg-black transition-all flex items-center justify-center gap-3 md:gap-5"
+                      >
+                        Predict Now <span className="text-xl md:text-2xl text-rose-500">→</span>
+                      </motion.button>
+                    </Magnetic>
                   </div>
                 </div>
               </div>
@@ -215,7 +227,7 @@ export default function Landing() {
       </section>
 
       {/* Problem Section - The Diploma Struggle */}
-      <section className="py-20 md:py-40 px-6 bg-white relative z-30 overflow-hidden">
+      <section ref={problemRef} className="py-20 md:py-40 px-6 bg-white relative z-30 overflow-hidden">
         <div className="max-w-7xl mx-auto space-y-24 md:space-y-40">
 
           {/* Problem 1: Choice Chaos */}
@@ -243,11 +255,11 @@ export default function Landing() {
 
                 {/* Image Content - Above glass layer */}
                 <div className="relative z-10 flex justify-center py-4">
-                  <img
+                  <motion.img
+                    style={{ y: parallax1 }}
                     src={problemOverwhelmed}
                     alt="Too Many Choices"
-                    className="w-full h-auto rounded-[30px] shadow-lg transform group-hover:scale-105 transition-transform duration-700"
-                    style={{ imageRendering: 'auto' }}
+                    className="w-full h-auto rounded-[30px] shadow-lg transform transition-transform duration-700"
                   />
                 </div>
               </div>
@@ -264,10 +276,11 @@ export default function Landing() {
 
                 {/* Image Content */}
                 <div className="relative z-10 flex justify-center py-4">
-                  <img
+                  <motion.img
+                    style={{ y: parallax2 }}
                     src={dataAnalysis}
                     alt="Complex Cutoffs"
-                    className="w-full h-auto rounded-[30px] shadow-lg transform group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-auto rounded-[30px] shadow-lg transform transition-transform duration-700"
                   />
                 </div>
               </div>
@@ -314,10 +327,11 @@ export default function Landing() {
 
                 {/* Image Content */}
                 <div className="relative z-10 flex justify-center py-4">
-                  <img
+                  <motion.img
+                    style={{ y: parallax3 }}
                     src={problemUncertainty}
                     alt="Uncertain Trends"
-                    className="w-full h-auto rounded-[30px] shadow-lg transform group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-auto rounded-[30px] shadow-lg transform transition-transform duration-700"
                   />
                 </div>
               </div>

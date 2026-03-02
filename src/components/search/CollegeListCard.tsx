@@ -32,9 +32,14 @@ export const CollegeListCard: React.FC<CollegeListCardProps> = ({
 
     return (
         <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{
+                duration: 0.8,
+                delay: index * 0.05,
+                ease: [0.21, 1.11, 0.81, 0.99] // Bouncy/Elastic-like curve
+            }}
             className="group bg-white rounded-3xl p-5 border border-gray-100 hover:border-indigo-200 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 flex flex-col md:flex-row gap-6 items-center"
         >
             {/* Mini Image */}

@@ -1,8 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import './index.css'
 import { CollegesProvider } from './context/CollegesContext';
+
+// Components
+import ScrollToTop from "./components/ScrollToTop";
+import NetworkStatus from "./components/NetworkStatus";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Lazy load all pages for maximum performance (Code Splitting)
 const Landing = lazy(() => import("./pages/Landing"));
@@ -23,6 +28,16 @@ const CapRoundGenerator = lazy(() => import("./pages/CapRoundGenerator"));
 const DataPipeline = lazy(() => import("./pages/DataPipeline"));
 const ScorecardOcr = lazy(() => import("./pages/ScorecardOcr"));
 const Community = lazy(() => import("./pages/Community"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Scroll Restorer component
+const ScrollToTopOnRoute = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
 
 // Simple loading spinner fallback
 const PageLoader = () => (
@@ -36,28 +51,31 @@ const AnimatedRoutes = () => {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
-        <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
-        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-        <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
-        <Route path="/profile-view" element={<PageTransition><ProfileView /></PageTransition>} />
-        <Route path="/favorites" element={<PageTransition><Favorites /></PageTransition>} />
-        <Route path="/analytics" element={<PageTransition><Analytics /></PageTransition>} />
-        <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
-        <Route path="/overview" element={<PageTransition><OverviewScreen /></PageTransition>} />
-        <Route path="/college-details" element={<PageTransition><CollegeDetails /></PageTransition>} />
-        <Route path="/college-map" element={<PageTransition><InteractiveCollegeMap /></PageTransition>} />
-        <Route path="/college-explorer" element={<PageTransition><CollegeExplorer /></PageTransition>} />
-        <Route path="/compare-college" element={<PageTransition><CollegeComparison /></PageTransition>} />
-        <Route path="/cap-generator" element={<PageTransition><CapRoundGenerator /></PageTransition>} />
-        <Route path="/data-pipeline" element={<PageTransition><DataPipeline /></PageTransition>} />
-        <Route path="/scorecard-ocr" element={<PageTransition><ScorecardOcr /></PageTransition>} />
-        <Route path="/help" element={<PageTransition><Help /></PageTransition>} />
-        <Route path="/community" element={<PageTransition><Community /></PageTransition>} />
-      </Routes>
-    </AnimatePresence>
+    <ErrorBoundary>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
+          <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
+          <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+          <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
+          <Route path="/profile-view" element={<PageTransition><ProfileView /></PageTransition>} />
+          <Route path="/favorites" element={<PageTransition><Favorites /></PageTransition>} />
+          <Route path="/analytics" element={<PageTransition><Analytics /></PageTransition>} />
+          <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+          <Route path="/overview" element={<PageTransition><OverviewScreen /></PageTransition>} />
+          <Route path="/college-details" element={<PageTransition><CollegeDetails /></PageTransition>} />
+          <Route path="/college-map" element={<PageTransition><InteractiveCollegeMap /></PageTransition>} />
+          <Route path="/college-explorer" element={<PageTransition><CollegeExplorer /></PageTransition>} />
+          <Route path="/compare-college" element={<PageTransition><CollegeComparison /></PageTransition>} />
+          <Route path="/cap-generator" element={<PageTransition><CapRoundGenerator /></PageTransition>} />
+          <Route path="/data-pipeline" element={<PageTransition><DataPipeline /></PageTransition>} />
+          <Route path="/scorecard-ocr" element={<PageTransition><ScorecardOcr /></PageTransition>} />
+          <Route path="/help" element={<PageTransition><Help /></PageTransition>} />
+          <Route path="/community" element={<PageTransition><Community /></PageTransition>} />
+          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+        </Routes>
+      </AnimatePresence>
+    </ErrorBoundary>
   );
 };
 
@@ -74,14 +92,21 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => (
   </motion.div>
 );
 
+import { ReactLenis } from 'lenis/react';
+
 export default function App() {
   return (
-    <CollegesProvider>
-      <Router>
-        <Suspense fallback={<PageLoader />}>
-          <AnimatedRoutes />
-        </Suspense>
-      </Router>
-    </CollegesProvider>
+    <ReactLenis root>
+      <CollegesProvider>
+        <Router>
+          <ScrollToTopOnRoute />
+          <NetworkStatus />
+          <ScrollToTop />
+          <Suspense fallback={<PageLoader />}>
+            <AnimatedRoutes />
+          </Suspense>
+        </Router>
+      </CollegesProvider>
+    </ReactLenis>
   );
 }
