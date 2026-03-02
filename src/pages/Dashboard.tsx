@@ -515,7 +515,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
-      <Navbar activeTab="search" userProfile={profile} />
+      <Navbar activeTab="dashboard" userProfile={profile} />
 
       <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
         {/* Welcome Section */}
