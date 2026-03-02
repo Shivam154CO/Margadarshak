@@ -1,5 +1,5 @@
 import React from "react";
-import { User, Sparkles, Database } from "lucide-react";
+import { Sparkles, Database } from "lucide-react";
 
 interface ProfileHeaderProps {
     name: string;

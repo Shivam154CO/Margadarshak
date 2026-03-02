@@ -90,9 +90,9 @@ interface UserProfile {
 
 const getCollegeImage = (collegeCode: string): string => {
   if (!collegeCode) {
-    return "/src/assets/fallback-campus.jpg";
+    return "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
   }
-  return `/src/assets/${collegeCode}/campus.png`;
+  return new URL(`../assets/${collegeCode}/campus.png`, import.meta.url).href;
 };
 
 const FALLBACK_IMAGES = [
@@ -212,76 +212,49 @@ export default function Dashboard() {
   const predictionsQuery = useQuery({
     queryKey: ['predictions', profile?.id],
     queryFn: async () => {
-      if (!profile?.preferred_branches || profile.preferred_branches.length === 0) return [];
+      try {
+        if (!profile?.preferred_branches || profile.preferred_branches.length === 0) return [];
 
-      const requestData = {
-        score: profile.exam_type === "CET" ? parseFloat(profile.cet_score || "0") : parseFloat(profile.diploma_score || "0"),
-        rank: profile.exam_type === "CET" ? parseFloat(profile.cet_rank || "0") : parseFloat(profile.diploma_rank || "0"),
-        category: profile.category,
-        branches: profile.preferred_branches,
-        limit: 100, // Sync limit with Analytics
-      };
+        const requestData = {
+          score: profile.exam_type === "CET" ? parseFloat(profile.cet_score || "0") : parseFloat(profile.diploma_score || "0"),
+          rank: profile.exam_type === "CET" ? parseFloat(profile.cet_rank || "0") : parseFloat(profile.diploma_rank || "0"),
+          category: profile.category,
+          branches: profile.preferred_branches,
+          limit: 100,
+        };
 
-      const response = await axios.post("http://127.0.0.1:5001/predict_admission", requestData, {
-        headers: { "Content-Type": "application/json" },
-        timeout: 30000,
-      });
-
-      if (response.data.colleges && response.data.colleges.length > 0) {
-        return response.data.colleges.map((college: College) => {
-          let exactChance = college.admission_chance || 0;
-          let exactMatch = college.match_score || 0;
-
-          const userRank = profile.exam_type === "CET" ? parseFloat(profile.cet_rank || "0") : parseFloat(profile.diploma_rank || "0");
-          const cutoffRank = college.cutoff_rank ? parseFloat(String(college.cutoff_rank)) : 0;
-
-          // Mathematically calculate precise floating odds if rank data is available
-          if (userRank > 0 && cutoffRank > 0) {
-            const rankRatio = userRank / cutoffRank;
-            if (rankRatio <= 0.50) {
-              exactChance = 96.0 + (0.50 - rankRatio) * 7.5;
-              exactMatch = 92.0 + (0.50 - rankRatio) * 15.0;
-            } else if (rankRatio <= 0.80) {
-              exactChance = 85.0 + ((0.80 - rankRatio) / 0.30) * 10.5;
-              exactMatch = 80.0 + ((0.80 - rankRatio) / 0.30) * 11.5;
-            } else if (rankRatio <= 1.00) {
-              exactChance = 70.0 + ((1.00 - rankRatio) / 0.20) * 14.5;
-              exactMatch = 65.0 + ((1.00 - rankRatio) / 0.20) * 14.5;
-            } else if (rankRatio <= 1.30) {
-              exactChance = 45.0 + ((1.30 - rankRatio) / 0.30) * 24.5;
-              exactMatch = 40.0 + ((1.30 - rankRatio) / 0.30) * 24.5;
-            } else {
-              exactChance = Math.max(12.0, 45.0 - (rankRatio - 1.30) * 30.0);
-              exactMatch = Math.max(10.0, 40.0 - (rankRatio - 1.30) * 30.0);
-            }
-          } else {
-            // Fallback micro-jitter if only percentile is available to avoid flat numbers
-            const hashSeed = (college.college_code?.charCodeAt(0) || 0) + (college.branch?.charCodeAt(0) || 0);
-            const jitter = (hashSeed % 39) / 10.0;
-            exactChance += jitter;
-            exactMatch += jitter;
-          }
-
-          exactChance = Math.min(99.8, exactChance);
-          exactMatch = Math.min(99.5, exactMatch);
-
-          return {
-            ...college,
-            admission_chance: exactChance,
-            match_score: exactMatch,
-            image: getCollegeImage(college.college_code),
-            probability_level: college.is_most_probable ? "Most Probable" : college.fit || "Unknown",
-            match_percentage: `${exactMatch.toFixed(1)}/100`,
-            admission_chance_percentage: `${exactChance.toFixed(1)}%`,
-            fit: college.fit || (college.is_most_probable ? "Most Probable" : "Unknown"),
-          };
+        const response = await axios.post("http://127.0.0.1:5001/predict_admission", requestData, {
+          headers: { "Content-Type": "application/json" },
+          timeout: 5000,
         });
+
+        if (response.data.colleges && response.data.colleges.length > 0) {
+          return response.data.colleges.map((college: College) => ({
+            ...college,
+            image: getCollegeImage(college.college_code),
+            display_fees: `₹${(college.fees || 0).toLocaleString()}`,
+          }));
+        }
+        throw new Error("API empty");
+      } catch (err) {
+        console.warn("Prediction API failed, using base data from Supabase", err);
+        const { data } = await supabase.from('colleges_2025').select('*').limit(50);
+        if (!data) return [];
+        const uniqueMap = new Map<string, College>();
+        data.forEach((c: any) => {
+          if (!uniqueMap.has(c.college_code)) {
+            uniqueMap.set(c.college_code, {
+              ...c,
+              image: getCollegeImage(c.college_code),
+              display_fees: `₹${(c.fees || 0).toLocaleString()}`,
+            });
+          }
+        });
+        return Array.from(uniqueMap.values());
       }
-      return [];
     },
-    enabled: !!profile && colleges.length === 0,
-    staleTime: 1000 * 60 * 60,
-    refetchOnMount: false,
+    enabled: !!profile,
+    staleTime: 1000 * 60 * 10,
   });
 
   // Synchronize query data with CollegesContext

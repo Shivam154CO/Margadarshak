@@ -1,36 +1,8 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  MapPin,
-  Search,
-  ExternalLink,
-  Bookmark,
-  BookmarkCheck,
-  ChevronDown,
-  Target,
-  TrendingUp,
-  Layers,
-  Sparkles,
-  Globe,
-  Brain,
-  BarChart3,
-  Satellite,
-  ZoomIn,
-  ZoomOut,
-  RotateCw,
-  Filter as FilterIcon,
-  X,
-  Database,
-  TargetIcon,
-  IndianRupee,
-  Building2,
-  Home,
-  Shield,
-  CheckCircle,
-  Users,
-  Map,
+  LucideMap, Globe, Target, Sparkles, RotateCw, ZoomIn, ZoomOut, Database
 } from "lucide-react";
 import axios from "axios";
 import { supabase } from "../lib/supabase";
@@ -39,7 +11,6 @@ import { MapContainer, TileLayer, Marker as LeafletMarker, Popup as LeafletPopup
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 
 // Fix for default marker icon in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -49,17 +20,35 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+const getCollegeImage = (collegeCode: string): string => {
+  if (!collegeCode) {
+    return "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+  }
+  try {
+    const viteUrl = new URL(`../assets/${collegeCode}/campus.png`, import.meta.url).href;
+    if (viteUrl && !viteUrl.includes('undefined')) return viteUrl;
+    return `/src/assets/${collegeCode}/campus.png`;
+  } catch (e) {
+    return "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+  }
+};
+
+const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  e.currentTarget.src = "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+  e.currentTarget.onerror = null;
+};
+
 // Custom marker icons for Leaflet
 const createLeafletIcon = (chance: number) => {
   let color = "#EF4444";
   if (chance >= 80) color = "#10B981";
   else if (chance >= 60) color = "#3B82F6";
   else if (chance >= 40) color = "#8B5CF6";
-  
+
   return L.divIcon({
     className: "custom-marker",
     html: `<div style="background-color: ${color}; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
-      <span style="color: white; font-size: 10px; font-weight: bold;">${Math.round(chance)}%</span>
+      <span style="color: white; font-size: 10px; font-weight: bold;">${chance.toFixed(1)}%</span>
     </div>`,
     iconSize: [32, 32],
     iconAnchor: [16, 32],
@@ -94,6 +83,7 @@ interface College {
   }>;
   is_predicted?: boolean;
   match_score?: number;
+  image?: string;
 }
 
 interface MapMarker {
@@ -251,7 +241,14 @@ const getCityCoordinates = (city: string): { lat: number; lng: number } => {
     key => key.toLowerCase() === normalizedCity.toLowerCase()
   );
   if (cityKey) return MAHARASHTRA_CITY_COORDS[cityKey];
-  return { lat: 19.75 + (Math.random() - 0.5) * 2, lng: 75.75 + (Math.random() - 0.5) * 2 };
+  // Deterministic random if city not found
+  let hash = 0;
+  for (let i = 0; i < normalizedCity.length; i++) {
+    hash = normalizedCity.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const latOffset = (hash % 200) / 100 - 1;
+  const lngOffset = ((hash >> 8) % 200) / 100 - 1;
+  return { lat: 19.75 + latOffset, lng: 75.75 + lngOffset };
 };
 
 const getStateFromCity = (city: string): string => {
@@ -275,23 +272,12 @@ const getStateFromCity = (city: string): string => {
 };
 
 export default function InteractiveCollegeMap() {
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedState, setSelectedState] = useState("All States");
-  const [selectedType, setSelectedType] = useState("All Types");
-  const [selectedChance, setSelectedChance] = useState("All Chances");
-  const [savedColleges, setSavedColleges] = useState<string[]>([]);
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
-  const [showFilters, setShowFilters] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(8);
   const [mapCenter, setMapCenter] = useState({ lat: 19.75, lng: 75.75 });
   const [colleges, setColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"predicted" | "all">("all");
   const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([]);
-  const [states, setStates] = useState<string[]>([]);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [isFullScreen, setIsFullScreen] = useState(true);
   const [mapProvider, setMapProvider] = useState<"google" | "osm">("osm");
 
   const { data: profile } = useQuery({
@@ -318,11 +304,15 @@ export default function InteractiveCollegeMap() {
             const collegeMap = new Map<string, College>();
             dbColleges.forEach((college: any) => {
               const coords = getCityCoordinates(college.city);
-              if (!collegeMap.has(college.college_code)) {
-                collegeMap.set(college.college_code, {
-                  college_code: college.college_code,
-                  college_name: college.college_name,
-                  city: college.city,
+              const collegeCode = college.college_code?.toString() || college.id?.toString();
+
+              if (!collegeCode) return;
+
+              if (!collegeMap.has(collegeCode)) {
+                collegeMap.set(collegeCode, {
+                  college_code: collegeCode,
+                  college_name: college.college_name || 'Unknown College',
+                  city: college.city || 'Unknown',
                   state: getStateFromCity(college.city),
                   latitude: coords.lat,
                   longitude: coords.lng,
@@ -331,9 +321,25 @@ export default function InteractiveCollegeMap() {
                   average_package_lpa: college.average_package_lpa || 0,
                   highest_package_lpa: college.highest_package_lpa || 0,
                   hostel_available: college.hostel_available || 'No',
+                  image: college.image_url || getCollegeImage(collegeCode),
                   branches: [],
                   is_predicted: false,
                   match_score: 0,
+                });
+              }
+
+              const existingCollege = collegeMap.get(collegeCode)!;
+              const branchCode = college.branch_code?.toString();
+              if (branchCode && !existingCollege.branches.find(b => b.branch_code === branchCode)) {
+                existingCollege.branches.push({
+                  branch: college.branch_name || college.branch || 'Unknown',
+                  branch_code: branchCode,
+                  admission_chance: 50,
+                  probability_level: 'View Details',
+                  is_most_probable: false,
+                  fees: college.fees || 0,
+                  cutoff_rank: college.cutoff_rank || 0,
+                  seats: college.seats || 0,
                 });
               }
             });
@@ -371,6 +377,7 @@ export default function InteractiveCollegeMap() {
                     average_package_lpa: college.average_package_lpa || 0,
                     highest_package_lpa: college.highest_package_lpa || 0,
                     hostel_available: college.hostel_available || 'No',
+                    image: college.image || getCollegeImage(college.college_code),
                     branches: [],
                     is_predicted: true,
                     match_score: college.match_score || 0,
@@ -409,9 +416,6 @@ export default function InteractiveCollegeMap() {
         const finalColleges = Array.from(finalCollegeMap.values());
         if (isMounted) {
           setColleges(finalColleges);
-          const uniqueStates = Array.from(new Set(finalColleges.map(c => c.state))).sort();
-          setStates(["All States", ...uniqueStates]);
-
           const markers = finalColleges.map(college => {
             const coords = getCityCoordinates(college.city);
             return {
@@ -439,35 +443,9 @@ export default function InteractiveCollegeMap() {
     loadColleges();
   }, [profile]);
 
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("savedColleges") || "[]");
-    setSavedColleges(saved);
-  }, []);
-
   const filteredMarkers = useMemo(() => {
-    return mapMarkers.filter(marker => {
-      if (searchTerm && !marker.name.toLowerCase().includes(searchTerm.toLowerCase()) && !marker.city.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-      if (selectedState !== "All States" && marker.state !== selectedState) return false;
-      if (selectedType !== "All Types" && marker.type !== selectedType) return false;
-      if (selectedChance !== "All Chances") {
-        const chance = marker.admission_chance;
-        if (selectedChance === "High (80%+)" && chance < 80) return false;
-        if (selectedChance === "Good (60-79%)" && (chance < 60 || chance >= 80)) return false;
-        if (selectedChance === "Average (40-59%)" && (chance < 40 || chance >= 60)) return false;
-        if (selectedChance === "Low (<40%)" && chance >= 40) return false;
-      }
-      if (viewMode === "predicted" && !marker.is_predicted) return false;
-      return true;
-    });
-  }, [mapMarkers, searchTerm, selectedState, selectedType, selectedChance, viewMode]);
-
-  const filteredColleges = useMemo(() => {
-    return colleges.filter(college => filteredMarkers.some(marker => marker.id === college.college_code)).sort((a, b) => {
-      const maxA = a.branches.length > 0 ? Math.max(...a.branches.map(b => b.admission_chance)) : 0;
-      const maxB = b.branches.length > 0 ? Math.max(...b.branches.map(b => b.admission_chance)) : 0;
-      return maxB - maxA;
-    });
-  }, [colleges, filteredMarkers]);
+    return mapMarkers;
+  }, [mapMarkers]);
 
   const getMarkerColor = (chance: number) => {
     if (chance >= 80) return "#10B981";
@@ -476,43 +454,79 @@ export default function InteractiveCollegeMap() {
     return "#EF4444";
   };
 
-  const getChanceLabel = (chance: number) => {
-    if (chance >= 80) return "High Chance";
-    if (chance >= 60) return "Best Chance";
-    if (chance >= 40) return "Good Chance";
-    return "Low Chance";
-  };
-
-  const getFitColor = (chance: number) => {
-    if (chance >= 80) return "bg-gradient-to-r from-emerald-500 to-green-600";
-    if (chance >= 60) return "bg-gradient-to-r from-blue-500 to-cyan-600";
-    if (chance >= 40) return "bg-gradient-to-r from-indigo-500 to-purple-600";
-    return "bg-gradient-to-r from-rose-500 to-pink-600";
-  };
-
   const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY, libraries: LIBRARIES });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center">
-        <div className="text-center space-y-6">
-          <motion.div animate={{ rotate: 360, scale: [1, 1.2, 1] }} transition={{ rotate: { duration: 2, repeat: Infinity, ease: "linear" }, scale: { duration: 1.5, repeat: Infinity } }} className="w-20 h-20 mx-auto">
-            <Globe className="w-full h-full text-indigo-500" />
-          </motion.div>
-          <div>
-            <h3 className="text-2xl font-bold text-white mb-2">Loading Interactive Map</h3>
-            <p className="text-gray-400">Visualizing colleges across Maharashtra...</p>
+      <div className="flex flex-col h-screen bg-[#f8fafc] overflow-hidden">
+        <Navbar activeTab="map" userProfile={profile} />
+        <main className="flex-1 relative w-full overflow-hidden flex flex-col items-center justify-center">
+          {/* Subtle themed background elements */}
+          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-40">
+            <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-100 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-50 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
           </div>
-        </div>
+
+          <div className="relative z-10 text-center space-y-8 max-w-md px-6">
+            <div className="relative mx-auto w-24 h-24">
+              <motion.div
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.1, 0.2, 0.1],
+                }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute inset-0 bg-blue-500 rounded-full blur-3xl"
+              />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                className="relative w-full h-full border-2 border-dashed border-blue-200 rounded-full flex items-center justify-center"
+              >
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl rotate-12 shadow-xl flex items-center justify-center">
+                  <Globe className="w-8 h-8 text-white -rotate-12" />
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-2xl font-black text-gray-900 tracking-tight">Syncing Live Map</h3>
+              <p className="text-gray-500 text-sm font-medium leading-relaxed">
+                Aggregating real-time database results for over 13,000 engineering colleges...
+              </p>
+            </div>
+
+            {/* Skeleton Loading Bar */}
+            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: "100%" }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                className="w-1/2 h-full bg-gradient-to-r from-transparent via-blue-600 to-transparent"
+              />
+            </div>
+
+            <div className="flex justify-center gap-8 pt-4">
+              <div className="text-center">
+                <div className="text-lg font-bold text-gray-900">13K+</div>
+                <div className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Colleges</div>
+              </div>
+              <div className="w-px h-8 bg-gray-200" />
+              <div className="text-center">
+                <div className="text-lg font-bold text-blue-600">LIVE</div>
+                <div className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Database</div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
   // Render OpenStreetMap (Leaflet)
   const renderOpenStreetMap = () => (
-    <MapContainer 
-      center={[mapCenter.lat, mapCenter.lng]} 
-      zoom={zoomLevel} 
+    <MapContainer
+      center={[mapCenter.lat, mapCenter.lng]}
+      zoom={zoomLevel}
       style={{ width: '100%', height: '100%' }}
       className="z-0"
     >
@@ -521,8 +535,8 @@ export default function InteractiveCollegeMap() {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {filteredMarkers.map(marker => (
-        <LeafletMarker 
-          key={marker.id} 
+        <LeafletMarker
+          key={marker.id}
           position={[marker.lat, marker.lng]}
           icon={createLeafletIcon(marker.admission_chance)}
           eventHandlers={{
@@ -533,25 +547,34 @@ export default function InteractiveCollegeMap() {
           }}
         >
           <LeafletPopup>
-            <div className="p-2 min-w-[200px]">
-              <div className="font-bold text-gray-900 truncate">{marker.name}</div>
-              <div className="text-sm text-gray-600 mb-2">{marker.city}, {marker.state}</div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="flex items-center gap-1">
-                  <Target className="w-3 h-3 text-green-600" />
-                  {Math.round(marker.admission_chance)}% chance
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="w-3 h-3 text-blue-600" />
-                  {marker.branch_count} branches
-                </span>
+            <div className="p-0 min-w-[220px]">
+              <div className="relative h-24 w-full overflow-hidden rounded-t-lg mb-2">
+                <img
+                  src={getCollegeImage(marker.id)}
+                  alt={marker.name}
+                  onError={handleImageError}
+                  className="w-full h-full object-cover"
+                />
+                {marker.is_predicted && (
+                  <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5" /> AI RECOMMENDED
+                  </div>
+                )}
               </div>
-              {marker.is_predicted && (
-                <div className="flex items-center gap-1 mt-2">
-                  <Sparkles className="w-3 h-3 text-yellow-600" />
-                  <span className="text-xs text-yellow-600 font-medium">AI Recommended</span>
+              <div className="px-2 pb-2">
+                <div className="font-bold text-gray-900 truncate leading-tight mb-1">{marker.name}</div>
+                <div className="text-[11px] text-gray-600 mb-2 flex items-center gap-1">
+                  <Globe className="w-3 h-3" /> {marker.city}, {marker.state}
                 </div>
-              )}
+                <div className="flex items-center justify-between text-[11px] font-medium border-t border-gray-100 pt-2">
+                  <span className="flex items-center gap-1 text-emerald-600">
+                    <Target className="w-3 h-3" /> {marker.admission_chance.toFixed(1)}% Chance
+                  </span>
+                  <span className="flex items-center gap-1 text-blue-600">
+                    <Database className="w-3 h-3" /> {marker.branch_count} Branches
+                  </span>
+                </div>
+              </div>
             </div>
           </LeafletPopup>
         </LeafletMarker>
@@ -574,50 +597,56 @@ export default function InteractiveCollegeMap() {
     }
 
     return (
-      <GoogleMap 
-        mapContainerStyle={{ width: '100%', height: '100%' }} 
-        center={mapCenter} 
-        zoom={zoomLevel} 
+      <GoogleMap
+        mapContainerStyle={{ width: '100%', height: '100%' }}
+        center={mapCenter}
+        zoom={zoomLevel}
         options={{ zoomControl: true, streetViewControl: false, mapTypeControl: false, fullscreenControl: false, minZoom: 4, maxZoom: 18 }}
       >
         {filteredMarkers.map(marker => {
           const color = getMarkerColor(marker.admission_chance);
           return (
-            <Marker 
-              key={marker.id} 
-              position={{ lat: marker.lat, lng: marker.lng }} 
-              onClick={() => { const college = colleges.find(c => c.college_code === marker.id); if (college) setSelectedCollege(college); }} 
-              icon={{ url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="14" fill="${color}" stroke="white" stroke-width="3"/><circle cx="16" cy="16" r="8" fill="white"/><text x="16" y="20" text-anchor="middle" fill="${color}" font-size="10" font-weight="bold">${Math.round(marker.admission_chance)}%</text></svg>`)}`, scaledSize: new google.maps.Size(32, 32), anchor: new google.maps.Point(16, 32) }} 
+            <Marker
+              key={marker.id}
+              position={{ lat: marker.lat, lng: marker.lng }}
+              onClick={() => { const college = colleges.find(c => c.college_code === marker.id); if (college) setSelectedCollege(college); }}
+              icon={{ url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="14" fill="${color}" stroke="white" stroke-width="3"/><circle cx="16" cy="16" r="8" fill="white"/><text x="16" y="20" text-anchor="middle" fill="${color}" font-size="10" font-weight="bold">${Math.round(marker.admission_chance)}%</text></svg>`)}`, scaledSize: new google.maps.Size(32, 32), anchor: new google.maps.Point(16, 32) }}
             />
           );
         })}
         {selectedCollege && (
-          <InfoWindow 
-            position={{ lat: selectedCollege.latitude || getCityCoordinates(selectedCollege.city).lat, lng: selectedCollege.longitude || getCityCoordinates(selectedCollege.city).lng }} 
+          <InfoWindow
+            position={{ lat: selectedCollege.latitude || getCityCoordinates(selectedCollege.city).lat, lng: selectedCollege.longitude || getCityCoordinates(selectedCollege.city).lng }}
             onCloseClick={() => setSelectedCollege(null)}
           >
-            <div className="p-3 max-w-sm">
-              <div className="flex items-start gap-3">
-                <div className="w-4 h-4 rounded-full flex-shrink-0 mt-1" style={{ backgroundColor: getMarkerColor(selectedCollege.branches.length > 0 ? Math.max(...selectedCollege.branches.map(b => b.admission_chance)) : 50) }} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold text-gray-900 truncate">{selectedCollege.college_name}</div>
-                  <div className="text-xs text-gray-600 mb-2">{selectedCollege.city}, {selectedCollege.state}</div>
-                  <div className="flex items-center gap-3 text-xs">
-                    <span className="flex items-center gap-1">
-                      <Target className="w-3 h-3 text-green-600" />
-                      {selectedCollege.branches.length > 0 ? Math.round(Math.max(...selectedCollege.branches.map(b => b.admission_chance))) : 50}% chance
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3 h-3 text-blue-600" />
-                      {selectedCollege.branches.length} branches
-                    </span>
+            <div className="p-0 min-w-[240px]">
+              <div className="relative h-28 w-full overflow-hidden rounded-t-lg mb-2">
+                <img
+                  src={getCollegeImage(selectedCollege.college_code)}
+                  alt={selectedCollege.college_name}
+                  onError={handleImageError}
+                  className="w-full h-full object-cover"
+                />
+                {selectedCollege.is_predicted && (
+                  <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5" /> AI RECOMMENDED
                   </div>
-                  {selectedCollege.is_predicted && (
-                    <div className="flex items-center gap-1 mt-2">
-                      <Sparkles className="w-3 h-3 text-yellow-600" />
-                      <span className="text-xs text-yellow-600 font-medium">AI Recommended</span>
-                    </div>
-                  )}
+                )}
+              </div>
+              <div className="px-3 pb-3">
+                <div className="font-bold text-gray-900 truncate mb-1">{selectedCollege.college_name}</div>
+                <div className="text-[11px] text-gray-600 mb-3 flex items-center gap-1">
+                  <Globe className="w-3 h-3" /> {selectedCollege.city}, {selectedCollege.state}
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-bold border-t border-gray-100 pt-3">
+                  <span className="flex items-center gap-1 text-emerald-600">
+                    <Target className="w-3.5 h-3.5" />
+                    {selectedCollege.branches.length > 0 ? Math.max(...selectedCollege.branches.map(b => b.admission_chance)).toFixed(1) : "50.0"}% Chance
+                  </span>
+                  <span className="flex items-center gap-1 text-blue-600">
+                    <Database className="w-3.5 h-3.5" />
+                    {selectedCollege.branches.length} Branches
+                  </span>
                 </div>
               </div>
             </div>
@@ -628,218 +657,75 @@ export default function InteractiveCollegeMap() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-blue-50 text-gray-900">
+    <div className="flex flex-col h-screen bg-gray-950 overflow-hidden">
       <Navbar activeTab="map" userProfile={profile} />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-[320px_1fr] gap-6 lg:gap-8">
-          <AnimatePresence>
-            {showFilters && !isFullScreen && (
-              <motion.aside initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="xl:w-80 space-y-6 order-2 xl:order-1">
-                <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-6 shadow-lg">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900">
-                      <FilterIcon className="w-5 h-5 text-blue-500" />Filters
-                    </h3>
-                    <button 
-                      onClick={() => { setSelectedState("All States"); setSelectedType("All Types"); setSelectedChance("All Chances"); setSearchTerm(""); }} 
-                      className="text-sm text-gray-600 hover:text-blue-600 flex items-center gap-1"
-                    >
-                      <RotateCw className="w-4 h-4" />Reset
-                    </button>
-                  </div>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Search Colleges</label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
-                        <input 
-                          type="text" 
-                          value={searchTerm} 
-                          onChange={(e) => setSearchTerm(e.target.value)} 
-                          placeholder="Type college or city..." 
-                          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder-gray-500" 
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
-                      <div className="relative">
-                        <select 
-                          value={selectedState} 
-                          onChange={(e) => setSelectedState(e.target.value)} 
-                          className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none"
-                        >
-                          {states.map(state => <option key={state} value={state} className="bg-white">{state}</option>)}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">College Type</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {["All Types", "Government", "Private", "Autonomous"].map(type => (
-                          <motion.button 
-                            key={type} 
-                            whileHover={{ scale: 1.05 }} 
-                            whileTap={{ scale: 0.95 }} 
-                            onClick={() => setSelectedType(type)} 
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedType === type ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
-                          >
-                            {type}
-                          </motion.button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Admission Chance</label>
-                      <div className="space-y-2">
-                        {["All Chances", "High (80%+)", "Good (60-79%)", "Average (40-59%)", "Low (<40%)"].map(level => (
-                          <motion.button 
-                            key={level} 
-                            whileHover={{ scale: 1.02 }} 
-                            whileTap={{ scale: 0.98 }} 
-                            onClick={() => setSelectedChance(level)} 
-                            className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${selectedChance === level ? "bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}
-                          >
-                            <span>{level}</span>
-                            {selectedChance === level && <CheckCircle className="w-4 h-4 text-blue-500" />}
-                          </motion.button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-6 shadow-lg">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
-                    <BarChart3 className="w-5 h-5 text-emerald-500" />Statistics
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm text-gray-600 mb-1">
-                        <span>Showing</span>
-                        <span className="font-medium text-gray-900">{filteredMarkers.length}</span>
-                      </div>
-                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <motion.div 
-                          initial={{ width: 0 }} 
-                          animate={{ width: `${(filteredMarkers.length / mapMarkers.length) * 100}%` }} 
-                          className="h-full bg-gradient-to-r from-blue-500 to-cyan-500" 
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="text-center p-3 bg-blue-50 rounded-xl">
-                        <div className="text-2xl font-bold text-blue-600">{colleges.filter(c => c.is_predicted).length}</div>
-                        <div className="text-xs text-gray-600">AI Matches</div>
-                      </div>
-                      <div className="text-center p-3 bg-emerald-50 rounded-xl">
-                        <div className="text-2xl font-bold text-emerald-600">{savedColleges.length}</div>
-                        <div className="text-xs text-gray-600">Saved</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.aside>
-            )}
-          </AnimatePresence>
+      <main className="flex-1 relative w-full overflow-hidden">
+        {/* Map Rendering */}
+        {mapProvider === "osm" ? renderOpenStreetMap() : renderGoogleMap()}
 
-          <div className="flex-1">
-            <div className="flex flex-col gap-6">
-              <div className={`${isFullScreen ? 'fixed inset-0 z-50' : 'bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 overflow-hidden relative h-[600px] shadow-lg'}`}>
-                
-                {/* Map Provider Toggle */}
-                <div className="absolute top-4 right-36 z-10">
-                  <div className="flex gap-1 p-1 bg-white/90 backdrop-blur-sm rounded-xl border border-gray-300 shadow-md">
-                    <motion.button 
-                      whileHover={{ scale: 1.05 }} 
-                      whileTap={{ scale: 0.95 }} 
-                      onClick={() => setMapProvider("osm")} 
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${mapProvider === "osm" ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg" : "hover:bg-gray-100 text-gray-700"}`}
-                    >
-                      <Map className="w-4 h-4" />OSM
-                    </motion.button>
-                    <motion.button 
-                      whileHover={{ scale: 1.05 }} 
-                      whileTap={{ scale: 0.95 }} 
-                      onClick={() => setMapProvider("google")} 
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${mapProvider === "google" ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg" : "hover:bg-gray-100 text-gray-700"}`}
-                    >
-                      <Globe className="w-4 h-4" />Google
-                    </motion.button>
-                  </div>
-                </div>
-
-                <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setZoomLevel(prev => Math.min(prev + 1, 18))} className="p-2 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors shadow-md">
-                    <ZoomIn className="w-5 h-5 text-gray-700" />
-                  </motion.button>
-                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setZoomLevel(prev => Math.max(prev - 1, 4))} className="p-2 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors shadow-md">
-                    <ZoomOut className="w-5 h-5 text-gray-700" />
-                  </motion.button>
-                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => { setZoomLevel(8); setMapCenter({ lat: 19.75, lng: 75.75 }); }} className="p-2 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors shadow-md">
-                    <RotateCw className="w-5 h-5 text-gray-700" />
-                  </motion.button>
-                </div>
-
-                <div className="absolute top-4 right-56 z-10">
-                  <div className="flex gap-1 p-1 bg-white/90 backdrop-blur-sm rounded-xl border border-gray-300 shadow-md">
-                    <motion.button 
-                      whileHover={{ scale: 1.05 }} 
-                      whileTap={{ scale: 0.95 }} 
-                      onClick={() => setViewMode("predicted")} 
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "predicted" ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg" : "hover:bg-gray-100 text-gray-700"}`}
-                    >
-                      <Brain className="w-4 h-4" />AI
-                    </motion.button>
-                    <motion.button 
-                      whileHover={{ scale: 1.05 }} 
-                      whileTap={{ scale: 0.95 }} 
-                      onClick={() => setViewMode("all")} 
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === "all" ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg" : "hover:bg-gray-100 text-gray-700"}`}
-                    >
-                      <Database className="w-4 h-4" />All
-                    </motion.button>
-                  </div>
-                </div>
-
-                <div className="absolute top-4 left-4 z-10">
-                  <div className="flex items-center gap-3">
-                    <div className="px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-300 shadow-md">
-                      <span className="text-sm font-medium text-gray-900">{filteredMarkers.length} colleges</span>
-                    </div>
-                    <div className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-cyan-50 backdrop-blur-sm rounded-lg border border-blue-200 shadow-md">
-                      <span className="text-sm font-medium flex items-center gap-2 text-blue-700">
-                        <Satellite className="w-4 h-4" />Zoom: {zoomLevel}x
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Map Rendering - Switch between OSM and Google */}
-                {mapProvider === "osm" ? renderOpenStreetMap() : renderGoogleMap()}
-
-                <div className="absolute bottom-4 left-4 z-10">
-                  <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl border border-gray-700 p-4">
-                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                      <TargetIcon className="w-4 h-4" />Admission Chance
-                    </h4>
-                    <div className="space-y-2">
-                      {[{ label: "High (80%+)", color: "#10B981" }, { label: "Good (60-79%)", color: "#3B82F6" }, { label: "Average (40-59%)", color: "#8B5CF6" }, { label: "Low (<40%)", color: "#EF4444" }].map(item => (
-                        <div key={item.label} className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                          <span className="text-sm text-gray-300">{item.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+        {/* Floating Controls Overlay */}
+        <div className="absolute inset-x-0 top-0 pointer-events-none p-4 flex flex-col gap-4">
+          <div className="flex items-center justify-between pointer-events-auto">
+            <div className="flex items-center gap-3">
+              <div className="px-4 py-2 bg-white/90 backdrop-blur-md rounded-xl border border-gray-200 shadow-xl flex items-center gap-2">
+                <LucideMap className="w-5 h-5 text-indigo-600" />
+                <span className="text-sm font-bold text-gray-900">{filteredMarkers.length} Colleges Found</span>
               </div>
+            </div>
+
+            <div className="flex gap-2 p-1.5 bg-white/90 backdrop-blur-md rounded-2xl border border-gray-200 shadow-xl">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setMapProvider("osm")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${mapProvider === "osm" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200" : "hover:bg-gray-100 text-gray-600"}`}
+              >
+                OSM
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setMapProvider("google")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${mapProvider === "google" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200" : "hover:bg-gray-100 text-gray-600"}`}
+              >
+                Google
+              </motion.button>
             </div>
           </div>
         </div>
-      </div>
-      <Footer />
+
+        {/* Action Controls - Right Side */}
+        <div className="absolute right-4 top-24 z-10 flex flex-col gap-2">
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setZoomLevel(prev => Math.min(prev + 1, 18))} className="p-3 bg-white/90 backdrop-blur-md rounded-xl border border-gray-200 hover:bg-gray-50 shadow-xl">
+            <ZoomIn className="w-6 h-6 text-gray-700" />
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setZoomLevel(prev => Math.max(prev - 1, 4))} className="p-3 bg-white/90 backdrop-blur-md rounded-xl border border-gray-200 hover:bg-gray-50 shadow-xl">
+            <ZoomOut className="w-6 h-6 text-gray-700" />
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => { setZoomLevel(8); setMapCenter({ lat: 19.75, lng: 75.75 }); }} className="p-3 bg-white/90 backdrop-blur-md rounded-xl border border-gray-200 hover:bg-gray-50 shadow-xl">
+            <RotateCw className="w-6 h-6 text-gray-700" />
+          </motion.button>
+        </div>
+
+        {/* Legend - Bottom */}
+        <div className="absolute bottom-6 left-6 z-10">
+          <div className="bg-gray-950/90 backdrop-blur-md rounded-2xl border border-gray-800 p-5 shadow-2xl">
+            <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
+              <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+              Admission Chance
+            </h4>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              {[{ label: "Very High", color: "#10B981" }, { label: "High", color: "#3B82F6" }, { label: "Moderate", color: "#8B5CF6" }, { label: "Low", color: "#EF4444" }].map(item => (
+                <div key={item.label} className="flex items-center gap-3">
+                  <div className="w-3.5 h-3.5 rounded-full shadow-inner" style={{ backgroundColor: item.color }} />
+                  <span className="text-xs font-bold text-gray-300">{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

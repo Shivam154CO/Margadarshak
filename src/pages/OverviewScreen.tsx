@@ -150,7 +150,7 @@ export default function OverviewScreen() {
             ...c,
             image: getCollegeImage(c.college_code),
             probability_level: c.is_most_probable ? "Most Probable" : c.fit ?? "Unknown",
-            admission_chance_percentage: c.admission_chance_percentage ?? `${Math.round(c.admission_chance ?? 0)}%`,
+            admission_chance_percentage: c.admission_chance_percentage ?? `${(c.admission_chance ?? 0).toFixed(1)}%`,
           })));
         }
       } catch (e) { console.error("Prediction error:", e); }

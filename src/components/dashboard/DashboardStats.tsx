@@ -1,5 +1,5 @@
 import React from "react";
-import { Zap, CheckCircle, Target, TrendingUp, Building } from "lucide-react";
+import { Zap, CheckCircle, Target, TrendingUp } from "lucide-react";
 
 interface DashboardStatsProps {
     stats: {
@@ -30,8 +30,8 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, activeFil
                         key={f.id}
                         onClick={() => onFilterChange(f.id)}
                         className={`p-6 rounded-[2rem] border transition-all text-left group relative overflow-hidden ${activeFilter === f.id
-                                ? `${f.color} border-transparent text-white shadow-2xl`
-                                : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300 shadow-sm'
+                            ? `${f.color} border-transparent text-white shadow-2xl`
+                            : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300 shadow-sm'
                             }`}
                     >
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 ${activeFilter === f.id ? 'bg-white/20' : 'bg-slate-50 text-slate-400'

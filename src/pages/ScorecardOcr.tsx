@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import axios from "axios";
 import {
-    Upload, FileText, CheckCircle, AlertCircle, ScanLine, ArrowRight, User
+    Upload, FileText, CheckCircle, AlertCircle, ScanLine, User
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";

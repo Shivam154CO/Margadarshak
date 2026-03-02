@@ -5,7 +5,6 @@ import { supabase } from "../lib/supabase";
 import axios from "axios";
 import {
   ChevronRight,
-  ChevronLeft,
   Check,
   AlertCircle,
   Award,

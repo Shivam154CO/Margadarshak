@@ -1,24 +1,17 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { auth, db } from "../firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { supabase } from "../lib/supabase";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {
-  Building, Cpu, MapPin, IndianRupee, Trash2, ChevronDown,
-  Grid3x3, List, Map as MapIcon, Brain, Database,
-  Zap, CheckCircle, Target, TrendingUp, Bookmark, BookmarkCheck,
-  Award, Layers, ExternalLink, Star, Info,
-  Search, Download, X, Users, Bot, SearchX, Globe, Mail,
-  Share2, Home, Book, Activity, Music, Briefcase,
-  AlertCircle
+  Building, Cpu, MapPin, ChevronDown,
+  Grid3x3, List, Brain, Database,
+  Search, X, Mail, Briefcase, Bookmark, BookmarkCheck,
+  Award, SearchX, Info, Layers
 } from "lucide-react";
-import { Virtuoso, VirtuosoGrid } from 'react-virtuoso';
 import SEO from "../components/SEO";
-import Skeleton from "../components/Skeleton";
 
 
 // ---------- TYPES ----------
@@ -48,6 +41,10 @@ interface RawCollege {
   fit_reason: string;
   match_score: number;
   match_percentage: string;
+  address?: string;
+  website?: string;
+  contact_email?: string;
+  phone?: string;
 }
 
 interface Branch {
@@ -94,15 +91,54 @@ interface College {
   address?: string;
 }
 
+const getCollegeImage = (collegeCode: string): string => {
+  if (!collegeCode) {
+    return "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+  }
+  // Try multiple resolution strategies for Vite/Dev/Prod
+  try {
+    // Strategy 1: Vite dynamic URL (most robust for src/assets)
+    const viteUrl = new URL(`../assets/${collegeCode}/campus.png`, import.meta.url).href;
+    if (viteUrl && !viteUrl.includes('undefined')) return viteUrl;
+
+    // Strategy 2: Root relative (fallback for some dev setups)
+    return `/src/assets/${collegeCode}/campus.png`;
+  } catch (e) {
+    return "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+  }
+};
+
+const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  e.currentTarget.src = "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+  e.currentTarget.onerror = null;
+};
+
+// Helper function to get state from city
+const getStateFromCity = (city: string): string => {
+  const cityStateMap: Record<string, string> = {
+    "Mumbai": "Maharashtra", "Pune": "Maharashtra", "Nagpur": "Maharashtra",
+    "Thane": "Maharashtra", "Nashik": "Maharashtra", "Aurangabad": "Maharashtra",
+    "Navi Mumbai": "Maharashtra", "Solapur": "Maharashtra", "Kolhapur": "Maharashtra",
+    "Amravati": "Maharashtra", "Jalgaon": "Maharashtra", "Ahmednagar": "Maharashtra",
+    "Nanded": "Maharashtra", "Sangli": "Maharashtra", "Akola": "Maharashtra",
+    "Latur": "Maharashtra", "Dhule": "Maharashtra", "Chandrapur": "Maharashtra",
+    "Parbhani": "Maharashtra", "Ratnagiri": "Maharashtra", "Gadchiroli": "Maharashtra",
+    "Gondia": "Maharashtra", "Bhandara": "Maharashtra", "Washim": "Maharashtra",
+    "Hingoli": "Maharashtra", "Osmanabad": "Maharashtra", "Beed": "Maharashtra",
+    "Jalna": "Maharashtra", "Yavatmal": "Maharashtra", "Wardha": "Maharashtra",
+    "Satara": "Maharashtra", "Delhi": "Delhi", "Bangalore": "Karnataka",
+    "Chennai": "Tamil Nadu", "Hyderabad": "Telangana", "Kolkata": "West Bengal",
+    "Ahmedabad": "Gujarat", "Jaipur": "Rajasthan", "Lucknow": "Uttar Pradesh",
+    "Bhopal": "Madhya Pradesh", "Chandigarh": "Chandigarh",
+  };
+  return cityStateMap[city] || "Maharashtra";
+};
+
 // ---------- HOOKS / LOGIC ----------
 function useCollegeData() {
   const [colleges, setColleges] = useState<College[]>([]);
   const [allColleges, setAllColleges] = useState<College[]>([]);
-  const [userRank, setUserRank] = useState<number | null>(null);
-  const [userCategory, setUserCategory] = useState("");
-  const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [aiLoading, setAiLoading] = useState(false);
 
   // Helper function to group colleges by college_code
   const groupCollegesByCode = (rawColleges: RawCollege[]): College[] => {
@@ -117,7 +153,7 @@ function useCollegeData() {
           college_code: collegeCode,
           college_name: rawCollege.college_name,
           city: rawCollege.city,
-          image: rawCollege.image || "",
+          image: rawCollege.image || getCollegeImage(collegeCode),
           autonomy_status: rawCollege.autonomy_status,
           hostel_available: rawCollege.hostel_available,
           placement_rate: rawCollege.placement_rate,
@@ -125,22 +161,21 @@ function useCollegeData() {
           highest_package_lpa: rawCollege.highest_package_lpa,
           branches: [],
           is_predicted: true,
-          // Additional details
           state: getStateFromCity(rawCollege.city),
-          established_year: 1960 + Math.floor(Math.random() * 60),
-          campus_size: `${10 + Math.floor(Math.random() * 90)} acres`,
-          faculty_count: 50 + Math.floor(Math.random() * 200),
+          established_year: 0,
+          campus_size: "N/A",
+          faculty_count: 0,
           accreditation: "AICTE Approved",
-          naac_grade: ["A++", "A+", "A", "B++"][Math.floor(Math.random() * 4)],
-          research_papers: 100 + Math.floor(Math.random() * 900),
-          library_books: 50000 + Math.floor(Math.random() * 100000),
-          sports_facilities: ["Cricket Ground", "Football Field", "Basketball Court", "Swimming Pool", "Gym"].slice(0, 3 + Math.floor(Math.random() * 2)),
-          clubs: ["Coding Club", "Robotics Club", "Cultural Club", "Sports Club", "Entrepreneurship Cell"].slice(0, 3 + Math.floor(Math.random() * 2)),
-          campus_recruiters: ["Google", "Microsoft", "Amazon", "TCS", "Infosys", "Wipro", "Accenture"].slice(0, 5 + Math.floor(Math.random() * 2)),
-          website: `https://www.${rawCollege.college_name.toLowerCase().replace(/ /g, '')}.edu.in`,
-          contact_email: `admissions@${rawCollege.college_name.toLowerCase().replace(/ /g, '')}.edu.in`,
-          phone: `+91-${Math.floor(1000000000 + Math.random() * 9000000000)}`,
-          address: `${rawCollege.college_name}, ${rawCollege.city}, ${getStateFromCity(rawCollege.city)} - ${Math.floor(100000 + Math.random() * 900000)}`
+          naac_grade: "N/A",
+          research_papers: 0,
+          library_books: 0,
+          sports_facilities: [],
+          clubs: [],
+          campus_recruiters: [],
+          address: rawCollege.address || `${rawCollege.college_name}, ${rawCollege.city}`,
+          website: rawCollege.website || "",
+          contact_email: rawCollege.contact_email || "",
+          phone: rawCollege.phone || ""
         });
       }
 
@@ -168,49 +203,12 @@ function useCollegeData() {
     }));
   };
 
-  // Helper function to get state from city
-  const getStateFromCity = (city: string): string => {
-    const cityStateMap: Record<string, string> = {
-      "Mumbai": "Maharashtra",
-      "Pune": "Maharashtra",
-      "Nagpur": "Maharashtra",
-      "Delhi": "Delhi",
-      "New Delhi": "Delhi",
-      "Bangalore": "Karnataka",
-      "Chennai": "Tamil Nadu",
-      "Hyderabad": "Telangana",
-      "Kolkata": "West Bengal",
-      "Ahmedabad": "Gujarat",
-      "Jaipur": "Rajasthan",
-      "Lucknow": "Uttar Pradesh",
-      "Bhopal": "Madhya Pradesh",
-      "Chandigarh": "Chandigarh",
-      "Thiruvananthapuram": "Kerala",
-      "Bhubaneswar": "Odisha",
-      "Guwahati": "Assam",
-      "Patna": "Bihar",
-    };
-    return cityStateMap[city] || "Maharashtra";
-  };
-
   // Fetch all colleges from Supabase
   const fetchAllCollegesFromSupabase = async (): Promise<College[]> => {
     try {
       let { data: dbColleges, error } = await supabase
-        .from('collegess_2025')
-        .select('*')
-        .limit(50000); // Massively increased limit to get ALL records
-
-      if (!dbColleges || dbColleges.length === 0) {
-        const fallback = await supabase
-          .from('colleges_2025')
-          .select('*')
-          .limit(50000);
-        if (fallback.data && fallback.data.length > 0) {
-          dbColleges = fallback.data;
-          error = fallback.error;
-        }
-      }
+        .from('colleges_2025')
+        .select('*');
 
       if (error) {
         console.error("Error fetching colleges from Supabase:", error);
@@ -237,7 +235,7 @@ function useCollegeData() {
             college_code: collegeCode,
             college_name: collegeName,
             city: city,
-            image: college.image_url || college.Image_url || "",
+            image: college.image_url || getCollegeImage(collegeCode),
             autonomy_status: college.autonomy_status || college.Autonomy_status || "Government",
             hostel_available: college.hostel_available || college.Hostel_available || "No",
             placement_rate: parseFloat(college.placement_rate || college.Placement_rate || 0),
@@ -287,7 +285,6 @@ function useCollegeData() {
 
       const colleges = Array.from(collegeMap.values());
       console.log(`✅ Loaded ${colleges.length} unique colleges from Supabase`);
-      console.log(`📊 Total raw records fetched: ${dbColleges.length}`);
 
       return colleges;
     } catch (err) {
@@ -312,56 +309,57 @@ function useCollegeData() {
     return uniqueColleges;
   };
 
+  const { data: profile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      const { data: prof } = await supabase.from('users').select('*').eq('id', session.user.id).single();
+      return prof;
+    }
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch all colleges first (accessible to everyone)
         const allCollegesFromDB = await fetchAllCollegesFromSupabase();
         setAllColleges(allCollegesFromDB);
 
-        // Listen for auth changes to get predictions
-        const unsub = onAuthStateChanged(auth, async (user) => {
-          if (!user) {
-            setLoading(false);
-            setAiLoading(false);
-            return;
-          }
+        if (profile) {
+          const rank = profile.exam_type === "CET" ? parseFloat(profile.cet_rank || "0") : parseFloat(profile.diploma_rank || "0");
+          const score = profile.exam_type === "CET" ? parseFloat(profile.cet_score || "0") : parseFloat(profile.diploma_score || "0");
+          const category = profile.category || "OPEN";
+          const branches = profile.preferred_branches || [];
 
-          const snap = await getDoc(doc(db, "users", user.uid));
-          const prof = snap.exists() ? (snap.data() as any) : {};
-          const rank = prof.rank || prof.cetRank || prof.diplomaRank || null;
-          const score = prof.cetScore || prof.diplomaScore || null;
-          const category = prof.category || "OPEN";
-          const branches = prof.preferredBranches || [];
 
-          setUserRank(rank);
-          setUserCategory(category);
 
           if (rank && score && branches.length) {
             try {
-              setAiLoading(true);
               const res = await axios.post("http://127.0.0.1:5001/predict_admission", {
-                score: parseFloat(score),
-                rank: parseInt(rank),
+                score,
+                rank,
                 category,
                 branches,
               });
 
               const raw: RawCollege[] = res.data.colleges || [];
               const predicted = deduplicateColleges(groupCollegesByCode(raw));
-
               setColleges(predicted);
 
-              // Merge predictions into all colleges
               const allCollegesMap = new Map<string, College>();
               allCollegesFromDB.forEach(c => allCollegesMap.set(c.college_code, c));
 
               predicted.forEach(p => {
                 if (allCollegesMap.has(p.college_code)) {
+                  const existing = allCollegesMap.get(p.college_code)!;
                   allCollegesMap.set(p.college_code, {
-                    ...allCollegesMap.get(p.college_code)!,
+                    ...existing,
                     ...p,
+                    established_year: existing.established_year || p.established_year,
+                    campus_size: existing.campus_size !== "N/A" ? existing.campus_size : p.campus_size,
+                    faculty_count: existing.faculty_count || p.faculty_count,
+                    website: existing.website || p.website,
                     is_predicted: true
                   });
                 } else {
@@ -372,85 +370,33 @@ function useCollegeData() {
               setAllColleges(Array.from(allCollegesMap.values()));
             } catch (err) {
               console.error("❌ Prediction API failed", err);
-            } finally {
-              setAiLoading(false);
             }
           }
-          setUserProfile(prof);
-          setLoading(false);
-        });
-
-        return unsub;
+        }
+        setLoading(false);
       } catch (err) {
         console.error("❌ Data load failed", err);
         setLoading(false);
       }
     };
 
-    fetchData().then(unsub => {
-      if (typeof unsub === 'function') return unsub;
-    });
-  }, []);
+    fetchData();
+  }, [profile]);
 
-
-
-  return {
-    colleges,
-    allColleges,
-    userRank,
-    userCategory,
-    userProfile,
-    loading,
-    aiLoading
-  };
+  return { colleges, allColleges, userProfile: profile, loading };
 }
 
 // ---------- MAIN COMPONENT ----------
 export default function CollegeSearch() {
-  const { colleges: predictedColleges, allColleges, userProfile, loading, aiLoading } = useCollegeData();
+  const { colleges: predictedColleges, allColleges, userProfile, loading } = useCollegeData();
   const [search, setSearch] = useState("");
   const [saved, setSaved] = useState<string[]>([]);
-
-  // Search history tracking
-  const saveSearchToHistory = (searchQuery: string) => {
-    if (!searchQuery.trim()) return;
-
-    try {
-      const historyKey = 'searchHistory';
-      const existingHistory = JSON.parse(localStorage.getItem(historyKey) || '[]');
-
-      // Remove duplicate if exists
-      const filteredHistory = existingHistory.filter((item: string) => item.toLowerCase() !== searchQuery.toLowerCase());
-
-      // Add new search to the beginning
-      const newHistory = [searchQuery, ...filteredHistory].slice(0, 20); // Keep max 20 searches
-
-      localStorage.setItem(historyKey, JSON.stringify(newHistory));
-    } catch (error) {
-      console.error('Error saving search history:', error);
-    }
-  };
-
-  // Handle search button click
-  const handleSearchClick = () => {
-    if (search.trim()) {
-      saveSearchToHistory(search.trim());
-    }
-  };
-
-  // Handle Enter key in search input
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && search.trim()) {
-      saveSearchToHistory(search.trim());
-    }
-  };
   const [branchModal, setBranchModal] = useState<College | null>(null);
   const [detailsModal, setDetailsModal] = useState<College | null>(null);
   const [viewMode, setViewMode] = useState<"predicted" | "all">("all");
   const [sortBy] = useState("match_score");
   const [activeTab, setActiveTab] = useState<"list" | "grid" | "map">("grid");
 
-  // State for dynamic branch and location options
   const [availableBranches, setAvailableBranches] = useState<string[]>([]);
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
 
@@ -464,48 +410,32 @@ export default function CollegeSearch() {
     placementRate: "",
   });
 
-  // Auto-switch to "all" if no predicted colleges after loading
   useEffect(() => {
     if (!loading && predictedColleges.length === 0 && viewMode === "predicted") {
       setViewMode("all");
     }
   }, [loading, predictedColleges.length]);
 
-  // Fetch available branches and locations from API
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        // Fetch branches from API
         const branchesResponse = await axios.get("http://127.0.0.1:5001/branches");
-        if (branchesResponse.data.branches) {
-          setAvailableBranches(branchesResponse.data.branches);
-        }
-
-        // Fetch cities from API
+        if (branchesResponse.data.branches) setAvailableBranches(branchesResponse.data.branches);
         const citiesResponse = await axios.get("http://127.0.0.1:5001/cities");
-        if (citiesResponse.data.cities) {
-          setAvailableLocations(citiesResponse.data.cities);
-        }
+        if (citiesResponse.data.cities) setAvailableLocations(citiesResponse.data.cities);
       } catch (error) {
-        console.error("Error fetching filter options:", error);
-        // Fallback: extract from college data if API fails
         if (allColleges.length > 0) {
           const branchesSet = new Set<string>();
           const locationsSet = new Set<string>();
-
           allColleges.forEach(college => {
             if (college.city) locationsSet.add(college.city);
-            college.branches.forEach(branch => {
-              if (branch.branch) branchesSet.add(branch.branch);
-            });
+            college.branches.forEach(branch => { if (branch.branch) branchesSet.add(branch.branch); });
           });
-
           setAvailableBranches(["All Branches", ...Array.from(branchesSet).sort()]);
           setAvailableLocations(["All Locations", ...Array.from(locationsSet).sort()]);
         }
       }
     };
-
     fetchFilterOptions();
   }, [allColleges]);
 
@@ -516,7 +446,6 @@ export default function CollegeSearch() {
 
   const filteredColleges = useMemo(() => {
     let filtered = [...currentColleges];
-
     if (search.trim()) {
       const query = search.toLowerCase();
       filtered = filtered.filter(college =>
@@ -525,80 +454,27 @@ export default function CollegeSearch() {
         (college.branches || []).some(b => (b.branch?.toLowerCase() || "").includes(query))
       );
     }
+    if (filters.collegeType !== "All Types") filtered = filtered.filter(c => c.autonomy_status === filters.collegeType);
+    if (filters.branch !== "All Branches") filtered = filtered.filter(c => c.branches.some(b => b.branch === filters.branch));
+    if (filters.location) filtered = filtered.filter(c => c.city === filters.location);
+    if (filters.minFees) filtered = filtered.filter(c => c.branches.some(b => b.Fees >= parseInt(filters.minFees)));
+    if (filters.maxFees) filtered = filtered.filter(c => c.branches.some(b => b.Fees <= parseInt(filters.maxFees)));
+    if (filters.admissionChance) filtered = filtered.filter(c => c.branches.some(b => b.admission_chance >= parseInt(filters.admissionChance)));
+    if (filters.placementRate) filtered = filtered.filter(c => c.placement_rate >= parseInt(filters.placementRate));
 
-    if (filters.collegeType !== "All Types") {
-      filtered = filtered.filter(c =>
-        c.autonomy_status === filters.collegeType
-      );
-    }
-
-    if (filters.branch !== "All Branches") {
-      filtered = filtered.filter(c =>
-        c.branches.some(b => b.branch === filters.branch)
-      );
-    }
-
-    if (filters.location) {
-      filtered = filtered.filter(c => c.city === filters.location);
-    }
-
-    if (filters.minFees) {
-      filtered = filtered.filter(c =>
-        c.branches.some(b => b.Fees >= parseInt(filters.minFees))
-      );
-    }
-
-    if (filters.maxFees) {
-      filtered = filtered.filter(c =>
-        c.branches.some(b => b.Fees <= parseInt(filters.maxFees))
-      );
-    }
-
-    if (filters.admissionChance) {
-      filtered = filtered.filter(c =>
-        c.branches.some(b => b.admission_chance >= parseInt(filters.admissionChance))
-      );
-    }
-
-    if (filters.placementRate) {
-      filtered = filtered.filter(c => c.placement_rate >= parseInt(filters.placementRate));
-    }
-
-    // Apply sorting
     return filtered.sort((a, b) => {
       switch (sortBy) {
         case "match_score":
-          const aScore = Math.max(...a.branches.map(b => b.match_score));
-          const bScore = Math.max(...b.branches.map(b => b.match_score));
+          const aScore = Math.max(...a.branches.map(b => b.match_score), 0);
+          const bScore = Math.max(...b.branches.map(b => b.match_score), 0);
           return bScore - aScore;
-        case "admission_chance":
-          const aChance = Math.max(...a.branches.map(b => b.admission_chance));
-          const bChance = Math.max(...b.branches.map(b => b.admission_chance));
-          return bChance - aChance;
-        case "placement":
-          return b.placement_rate - a.placement_rate;
-        case "fees":
-          const aFees = Math.min(...a.branches.map(b => b.Fees));
-          const bFees = Math.min(...b.branches.map(b => b.Fees));
-          return aFees - bFees;
-        case "package":
-          return b.highest_package_lpa - a.highest_package_lpa;
-        default:
-          return 0;
+        default: return 0;
       }
     });
   }, [currentColleges, search, filters, sortBy]);
 
   const clearFilters = () => {
-    setFilters({
-      collegeType: "All Types",
-      branch: "All Branches",
-      location: "",
-      minFees: "",
-      maxFees: "",
-      admissionChance: "",
-      placementRate: "",
-    });
+    setFilters({ collegeType: "All Types", branch: "All Branches", location: "", minFees: "", maxFees: "", admissionChance: "", placementRate: "" });
     setSearch("");
   };
 
@@ -615,9 +491,7 @@ export default function CollegeSearch() {
   }, []);
 
   const toggleSaved = (code: string) => {
-    const newSaved = saved.includes(code)
-      ? saved.filter(c => c !== code)
-      : [...saved, code];
+    const newSaved = saved.includes(code) ? saved.filter(c => c !== code) : [...saved, code];
     setSaved(newSaved);
     localStorage.setItem("savedColleges", JSON.stringify(newSaved));
   };
@@ -639,908 +513,226 @@ export default function CollegeSearch() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <SEO
-        title={`${viewMode === 'predicted' ? 'Targeted Matches' : 'Explore Colleges'}`}
-        description={`Browse through ${filteredColleges.length} engineering colleges in Maharashtra with AI match predictions and cutoff data.`}
-      />
+      <SEO title="College Explorer" description="Explore engineering colleges with AI matching." />
       <Navbar activeTab="search" userProfile={userProfile} />
 
-      {/* Page Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                College Explorer
-              </h1>
-              <p className="text-gray-600">
-                Discover {allColleges.length} engineering colleges across Maharashtra
-              </p>
-            </div>
+      {/* Hero Section */}
+      <div className="relative overflow-hidden bg-slate-900">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">Discover Your <span className="text-indigo-400">Dream College</span></h1>
+          <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">AI-powered predictions for India's premier engineering institutes.</p>
 
-            <div className="hidden md:flex items-center gap-3">
-              <div className="bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 flex items-center gap-2">
-                <Brain className="w-5 h-5 text-indigo-600" />
-                <div>
-                  <div className="text-xs text-indigo-600 font-bold uppercase tracking-wider">AI Powered</div>
-                  <div className="text-sm font-semibold text-indigo-900">{predictedColleges.length} Recommendations</div>
-                </div>
-              </div>
+          <div className="inline-flex bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 mb-8 border border-white/10">
+            <button onClick={() => setViewMode("predicted")} className={`px-8 py-4 rounded-xl font-semibold flex items-center gap-3 ${viewMode === "predicted" ? "text-white bg-indigo-600" : "text-white/60"}`}>
+              <Brain className="w-5 h-5" /> AI Predictions
+            </button>
+            <button onClick={() => setViewMode("all")} className={`px-8 py-4 rounded-xl font-semibold flex items-center gap-3 ${viewMode === "all" ? "text-white bg-white/10" : "text-white/60"}`}>
+              <Database className="w-5 h-5" /> All Colleges
+            </button>
+          </div>
+
+          <div className="relative max-w-4xl mx-auto">
+            <div className="flex items-center bg-white rounded-2xl p-1 shadow-2xl">
+              <Search className="w-5 h-5 text-slate-400 ml-5" />
+              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search colleges, branches, or locations..." className="flex-1 py-5 px-4 outline-none text-slate-900 placeholder-slate-400 text-lg" />
+              <button className="px-8 py-3.5 bg-indigo-600 text-white rounded-xl font-semibold ml-2 hover:bg-indigo-700">Search</button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Hero Section with Interactive Background */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 25px 25px, rgba(255,255,255,0.2) 2%, transparent 2%)`,
-              backgroundSize: '50px 50px'
-            }} />
-          </div>
-          <motion.div
-            animate={{ x: [0, 100, 0], y: [0, 50, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{ x: [100, 0, 100], y: [50, 0, 50] }}
-            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-full blur-3xl"
-          />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-          <div className="text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight"
-            >
-              Discover Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-cyan-300">Dream College</span>
-            </motion.h1>
-
-            <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
-              AI-powered predictions combined with India's most comprehensive engineering college database
-            </p>
-
-            {/* View Mode Toggle with Glow Effect */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="inline-flex bg-white/10 backdrop-blur-sm rounded-2xl p-1.5 mb-8 border border-white/20 shadow-2xl"
-            >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setViewMode("predicted")}
-                className={`relative px-8 py-4 rounded-xl font-semibold transition-all flex items-center gap-3 ${viewMode === "predicted"
-                  ? "text-white shadow-lg"
-                  : "text-white/80 hover:text-white hover:bg-white/5"
-                  }`}
-              >
-                {viewMode === "predicted" && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 rounded-xl"
-                  />
-                )}
-                <div className="relative flex items-center gap-3">
-                  {aiLoading ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                    />
-                  ) : (
-                    <Brain className="w-5 h-5" />
-                  )}
-                  <span>AI Predictions</span>
-                  <span className="px-2.5 py-0.5 bg-white/20 rounded-full text-sm">
-                    {predictedColleges.length} colleges
-                  </span>
-                </div>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setViewMode("all")}
-                className={`relative px-8 py-4 rounded-xl font-semibold transition-all flex items-center gap-3 ${viewMode === "all"
-                  ? "text-white shadow-lg"
-                  : "text-white/80 hover:text-white hover:bg-white/5"
-                  }`}
-              >
-                {viewMode === "all" && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-500/30 rounded-xl"
-                  />
-                )}
-                <div className="relative flex items-center gap-3">
-                  <Database className="w-5 h-5" />
-                  <span>All Colleges</span>
-                  <span className="px-2.5 py-0.5 bg-white/20 rounded-full text-sm">
-                    {allColleges.length} colleges
-                  </span>
-                </div>
-              </motion.button>
-            </motion.div>
-
-            {/* Search Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="relative max-w-4xl mx-auto"
-            >
-              <div className="relative bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-1 border border-white/20">
-                <div className="flex items-center">
-                  <div className="pl-5">
-                    <Search className="w-5 h-5 text-white/70" />
-                  </div>
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={handleSearchKeyDown}
-                    placeholder={`Search ${viewMode === "predicted" ? "AI-recommended" : "all"} colleges, branches, or locations...`}
-                    className="flex-1 py-5 px-4 bg-transparent outline-none text-white placeholder-white/60 text-lg"
-                  />
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleSearchClick}
-                    className="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-xl font-semibold ml-2 hover:shadow-lg transition-all flex items-center gap-2"
-                  >
-                    <Search className="w-4 h-4" />
-                    Search
-                  </motion.button>
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              <div className="flex justify-center gap-6 mt-6 text-white/80">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{predictedColleges.length}</div>
-                  <div className="text-sm">AI Matches</div>
-                </div>
-                <div className="h-8 w-px bg-white/30" />
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{allColleges.length}</div>
-                  <div className="text-sm">Total Colleges</div>
-                </div>
-                <div className="h-8 w-px bg-white/30" />
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">
-                    {predictedColleges.length > 0 ? Math.max(...predictedColleges.map(c =>
-                      Math.max(...c.branches.map(b => b.admission_chance))
-                    )) : 0}%
-                  </div>
-                  <div className="text-sm">Top Chance</div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Wave Divider */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" className="w-full">
-            <path fill="#ffffff" fillOpacity="1" d="M0,64L80,58.7C160,53,320,43,480,48C640,53,800,75,960,74.7C1120,75,1280,53,1360,42.7L1440,32L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z"></path>
-          </svg>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-2">
-        {/* View Toggle */}
+      <main className="max-w-7xl mx-auto px-4 py-12 flex-1">
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="inline-flex bg-white rounded-2xl p-1 border border-gray-200 shadow-sm"
-            >
-              <button
-                onClick={() => setViewMode("all")}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-3 ${viewMode === "all"
-                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
-                  : "text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
-                  }`}
-              >
-                <Database className="w-5 h-5" />
-                <span>All Colleges</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs ${viewMode === 'all' ? 'bg-white/20' : 'bg-gray-100'}`}>
-                  {allColleges.length}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setViewMode("predicted")}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-3 ${viewMode === "predicted"
-                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg"
-                  : "text-gray-600 hover:text-emerald-600 hover:bg-emerald-50"
-                  }`}
-              >
-                <Brain className="w-5 h-5" />
-                <span>AI Recommendations</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs ${viewMode === 'predicted' ? 'bg-white/20' : 'bg-gray-100'}`}>
-                  {predictedColleges.length}
-                </span>
-              </button>
-            </motion.div>
-          </div>
-
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab("grid")}
-              className={`p-3 rounded-xl transition-all ${activeTab === "grid" ? "bg-indigo-50 text-indigo-600" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}
-            >
-              <Grid3x3 className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setActiveTab("list")}
-              className={`p-3 rounded-xl transition-all ${activeTab === "list" ? "bg-indigo-50 text-indigo-600" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}
-            >
-              <List className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setActiveTab("map")}
-              className={`p-3 rounded-xl transition-all ${activeTab === "map" ? "bg-indigo-50 text-indigo-600" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}
-            >
-              <MapIcon className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Filters Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 mb-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Advanced Filters</h2>
-              <p className="text-gray-600">Narrow down your college search</p>
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={clearFilters}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-gray-100 to-gray-50 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-200 transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-              Clear All
-            </motion.button>
+            <button onClick={() => setActiveTab("grid")} className={`p-3 rounded-xl ${activeTab === "grid" ? "bg-indigo-50 text-indigo-600" : "bg-white text-slate-400"}`}><Grid3x3 className="w-5 h-5" /></button>
+            <button onClick={() => setActiveTab("list")} className={`p-3 rounded-xl ${activeTab === "list" ? "bg-indigo-50 text-indigo-600" : "bg-white text-slate-400"}`}><List className="w-5 h-5" /></button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+          <div className="hidden lg:flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200">
             <FilterSelect
-              label="College Type"
+              label="Institute Type"
               value={filters.collegeType}
-              onChange={(value) => setFilters(prev => ({ ...prev, collegeType: value }))}
+              onChange={(v: string) => setFilters(p => ({ ...p, collegeType: v }))}
               options={["All Types", "Government", "Private", "Autonomous"]}
-              icon={<Building className="w-4 h-4" />}
+              icon={<Building className="w-3.5 h-3.5" />}
             />
-
             <FilterSelect
-              label="Branch"
+              label="Branch Preference"
               value={filters.branch}
-              onChange={(value) => setFilters(prev => ({ ...prev, branch: value }))}
-              options={availableBranches.length > 0 ? ["All Branches", ...availableBranches.filter(b => b !== "All Branches")] : ["All Branches"]}
-              icon={<Cpu className="w-4 h-4" />}
+              onChange={(v: string) => setFilters(p => ({ ...p, branch: v }))}
+              options={["All Branches", ...availableBranches.filter(b => b !== "All Branches")]}
+              icon={<Cpu className="w-3.5 h-3.5" />}
             />
-
             <FilterSelect
-              label="Location"
+              label="Preferred City"
               value={filters.location || "All Locations"}
-              onChange={(value) => setFilters(prev => ({ ...prev, location: value === "All Locations" ? "" : value }))}
-              options={availableLocations.length > 0 ? ["All Locations", ...availableLocations.filter(l => l !== "All Locations")] : ["All Locations"]}
-              icon={<MapPin className="w-4 h-4" />}
+              onChange={(v: string) => setFilters(p => ({ ...p, location: v === "All Locations" ? "" : v }))}
+              options={["All Locations", ...availableLocations.filter(l => l !== "All Locations")]}
+              icon={<MapPin className="w-3.5 h-3.5" />}
             />
-
-            <div className="lg:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <IndianRupee className="w-4 h-4" />
-                Annual Fees (₹)
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={filters.minFees}
-                  onChange={(e) => setFilters(prev => ({ ...prev, minFees: e.target.value }))}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                />
-                <span className="text-gray-400">to</span>
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={filters.maxFees}
-                  onChange={(e) => setFilters(prev => ({ ...prev, maxFees: e.target.value }))}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Admission Chance ≥</label>
-              <input
-                type="number"
-                placeholder="e.g., 60%"
-                value={filters.admissionChance}
-                onChange={(e) => setFilters(prev => ({ ...prev, admissionChance: e.target.value }))}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Placement ≥</label>
-              <input
-                type="number"
-                placeholder="e.g., 70%"
-                value={filters.placementRate}
-                onChange={(e) => setFilters(prev => ({ ...prev, placementRate: e.target.value }))}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-              />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Results Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {viewMode === "predicted" ? "🎯 AI-Predicted Colleges" : "📚 All Engineering Colleges"}
-            </h2>
-            <p className="text-gray-600">
-              Showing {filteredColleges.length} of {currentColleges.length} colleges
-              {viewMode === "predicted" && " • Personalized for your rank and preferences"}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {viewMode === "predicted" && (
-              <div className="flex items-center gap-2 text-sm text-gray-600 bg-indigo-50 px-4 py-2 rounded-xl">
-                <Brain className="w-4 h-4 text-indigo-600" />
-                <span>AI accuracy: 92%</span>
-              </div>
-            )}
-            <div className="text-sm text-gray-600">
-              <span className="font-semibold text-indigo-600">{saved.length}</span> saved colleges
-            </div>
           </div>
         </div>
 
-        {/* Colleges Grid/List View */}
-        {filteredColleges.length > 0 ? (
-          <div className="min-h-[600px]">
-            {activeTab === "grid" ? (
-              <VirtuosoGrid
-                useWindowScroll
-                data={filteredColleges}
-                listClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                itemContent={(index, college) => (
-                  <div className="pb-4">
-                    <CollegeCard
-                      key={college.college_code}
-                      college={college}
-                      index={index}
-                      saved={saved.includes(college.college_code)}
-                      onToggleSaved={() => toggleSaved(college.college_code)}
-                      onOpenBranches={() => setBranchModal(college)}
-                      onViewDetails={() => setDetailsModal(college)}
-                      isPredicted={viewMode === "predicted" || !!college.is_predicted}
-                    />
-                  </div>
-                )}
-              />
+        <div className="min-h-[600px]">
+          {filteredColleges.length > 0 ? (
+            activeTab === "grid" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredColleges.map((college, i) => (
+                  <CollegeCard key={college.college_code} college={college} index={i} saved={saved.includes(college.college_code)} onToggleSaved={() => toggleSaved(college.college_code)} onOpenBranches={() => setBranchModal(college)} onViewDetails={() => setDetailsModal(college)} isPredicted={viewMode === "predicted"} />
+                ))}
+              </div>
             ) : (
-              <Virtuoso
-                useWindowScroll
-                data={filteredColleges}
-                itemContent={(index, college) => (
-                  <div className="pb-4">
-                    <CollegeListCard
-                      key={college.college_code}
-                      college={college}
-                      index={index}
-                      saved={saved.includes(college.college_code)}
-                      onToggleSaved={() => toggleSaved(college.college_code)}
-                      onOpenBranches={() => setBranchModal(college)}
-                      onViewDetails={() => setDetailsModal(college)}
-                      isPredicted={viewMode === "predicted" || !!college.is_predicted}
-                    />
-                  </div>
-                )}
-              />
-            )}
-          </div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-16"
-          >
-            <div className="w-32 h-32 mx-auto mb-6 text-gray-300">
-              <SearchX className="w-full h-full" />
+              <div className="space-y-6">
+                {filteredColleges.map((college, i) => (
+                  <CollegeListCard key={college.college_code} college={college} index={i} saved={saved.includes(college.college_code)} onToggleSaved={() => toggleSaved(college.college_code)} onOpenBranches={() => setBranchModal(college)} onViewDetails={() => setDetailsModal(college)} isPredicted={viewMode === "predicted"} />
+                ))}
+              </div>
+            )
+          ) : (
+            <div className="text-center py-20 bg-white rounded-3xl border border-slate-100">
+              <SearchX className="w-20 h-20 text-slate-200 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-slate-900">No colleges matched your filters</h3>
+              <button onClick={clearFilters} className="mt-4 text-indigo-600 font-bold">Clear all filters</button>
             </div>
-            <h3 className="text-2xl font-bold text-gray-700 mb-2">No colleges found</h3>
-            <p className="text-gray-600 mb-6">Try adjusting your search criteria or filters</p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={clearFilters}
-              className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-            >
-              Reset Search
-            </motion.button>
-          </motion.div>
-        )}
+          )}
+        </div>
       </main>
 
-      {/* Branch Modal */}
       <AnimatePresence>
         {branchModal && <BranchModal college={branchModal} onClose={() => setBranchModal(null)} getProbabilityColor={getProbabilityColor} />}
-      </AnimatePresence>
-
-      {/* College Details Modal */}
-      <AnimatePresence>
         {detailsModal && <CollegeDetailsModal college={detailsModal} onClose={() => setDetailsModal(null)} getProbabilityColor={getProbabilityColor} />}
       </AnimatePresence>
-
-      {/* Floating Action Button */}
-      <motion.button
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ scale: 1.1 }}
-        className="fixed bottom-8 right-8 p-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl shadow-2xl hover:shadow-3xl transition-all"
-      >
-        <Bot className="w-6 h-6" />
-      </motion.button>
+      <Footer />
     </div>
   );
 }
 
-function FilterSelect({ label, value, onChange, options, icon }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: string[];
-  icon?: React.ReactNode;
-}) {
+// ---------- COMPONENTS ----------
+
+function FilterSelect({ label, value, onChange, options, icon }: any) {
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-        {icon}
-        {label}
-      </label>
+    <div className="space-y-2">
+      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">{icon}{label}</label>
       <div className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full px-4 py-2.5 pl-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white appearance-none"
-        >
-          {options.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
+        <select value={value} onChange={e => onChange(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none appearance-none font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500/20">
+          {options.map((o: any) => <option key={o} value={o}>{o}</option>)}
         </select>
-        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
       </div>
     </div>
   );
 }
 
-function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, onViewDetails, isPredicted }: {
-  college: College;
-  index: number;
-  saved: boolean;
-  onToggleSaved: () => void;
-  onOpenBranches: () => void;
-  onViewDetails: () => void;
-  isPredicted: boolean;
-}) {
-  const bestBranch = college.branches.reduce((best, current) =>
-    current.admission_chance > best.admission_chance ? current : best
-  );
-
-  const getAdmissionInfo = (chance: number) => {
-    if (chance >= 80) return { label: "High Chance", color: "text-emerald-700", bgColor: "bg-emerald-50 border-emerald-100", gradient: "from-emerald-500 to-emerald-600", icon: CheckCircle };
-    if (chance >= 60) return { label: "Very Good", color: "text-blue-700", bgColor: "bg-blue-50 border-blue-100", gradient: "from-blue-500 to-blue-600", icon: Zap };
-    if (chance >= 40) return { label: "Fair Match", color: "text-amber-700", bgColor: "bg-amber-50 border-amber-100", gradient: "from-amber-500 to-amber-600", icon: Target };
-    return { label: "Stretch", color: "text-rose-700", bgColor: "bg-rose-50 border-rose-100", gradient: "from-rose-500 to-rose-600", icon: TrendingUp };
-  };
-
-  const admInfo = getAdmissionInfo(bestBranch.admission_chance);
-  const Icon = admInfo.icon;
+function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, onViewDetails, isPredicted }: any) {
+  const bestBranch = college.branches.reduce((a: any, b: any) => a.admission_chance > b.admission_chance ? a : b);
+  const color = bestBranch.admission_chance >= 70 ? "text-emerald-600" : bestBranch.admission_chance >= 40 ? "text-indigo-600" : "text-amber-600";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className="group bg-white rounded-3xl border border-gray-200/60 shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden hover:-translate-y-2"
-    >
-      <div className="relative h-48 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20">
-          <div className="absolute inset-0 flex items-center justify-center text-6xl font-black text-white/30 truncate px-4">
-            {college.college_name}
-          </div>
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-
-        <button
-          onClick={onToggleSaved}
-          className="absolute top-4 right-4 w-10 h-10 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all duration-200 shadow-lg z-10"
-        >
-          {saved ? (
-            <BookmarkCheck className="w-5 h-5 text-indigo-600 fill-indigo-600" />
-          ) : (
-            <Bookmark className="w-5 h-5 text-gray-600" />
-          )}
-        </button>
-
-        <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-full backdrop-blur-sm border ${admInfo.bgColor} ${admInfo.color} flex items-center space-x-1.5 text-xs font-bold z-10`}>
-          <Icon className="w-3.5 h-3.5" />
-          <span>{isPredicted ? "AI RECOMMENDED" : admInfo.label}</span>
-        </div>
-
-        <div className="absolute bottom-4 left-4 right-4 z-10">
-          <h3 className="text-xl font-bold text-white mb-1 line-clamp-1">{college.college_name}</h3>
-          <div className="flex items-center text-white/90 text-sm">
-            <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0" />
-            <span className="truncate">{college.city}</span>
-          </div>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden hover:shadow-2xl transition-all group">
+      <div className="h-48 relative overflow-hidden">
+        <img src={college.image} onError={handleImageError} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
+        {isPredicted && (
+          <div className="absolute top-4 left-6 bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg border border-white/20 uppercase tracking-widest z-10">AI Match</div>
+        )}
+        <button onClick={onToggleSaved} className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur rounded-2xl shadow-xl">{saved ? <BookmarkCheck className="text-indigo-600 fill-indigo-600" /> : <Bookmark className="text-slate-400" />}</button>
+        <div className="absolute bottom-4 left-6 text-white">
+          <h3 className="text-xl font-bold line-clamp-1">{college.college_name}</h3>
+          <p className="text-sm opacity-90 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{college.city}</p>
         </div>
       </div>
-
-      <div className="p-6">
-        <div className="mb-4">
-          <div className="inline-block bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold mb-2 border border-indigo-100 uppercase tracking-wider">
-            {bestBranch.branch}
+      <div className="p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">AI Matching Chance</p>
+            <p className={`text-2xl font-black ${color}`}>{bestBranch.admission_chance.toFixed(1)}%</p>
           </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <Award className="w-4 h-4 mr-2 text-indigo-600" />
-            <span className="font-semibold">{college.autonomy_status}</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="bg-gray-50 rounded-2xl p-3 border border-gray-100 flex flex-col items-center">
-            <div className="text-lg font-bold text-gray-900">₹{college.average_package_lpa}L</div>
-            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Avg Package</div>
-          </div>
-          <div className="bg-gray-50 rounded-2xl p-3 border border-gray-100 flex flex-col items-center">
-            <div className="text-lg font-bold text-gray-900">{college.placement_rate}%</div>
-            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Placement</div>
+          <div className="text-right">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Avg Pkg</p>
+            <p className="text-lg font-bold text-slate-900">₹{college.average_package_lpa}L</p>
           </div>
         </div>
-
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-600 text-sm font-bold">Admission Chance</span>
-            <span className={`font-black text-sm ${admInfo.color}`}>
-              {Math.round(bestBranch.admission_chance)}%
-            </span>
-          </div>
-          <div className="w-full bg-gray-100 rounded-full h-2.5 shadow-inner overflow-hidden border border-gray-200">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${bestBranch.admission_chance}%` }}
-              transition={{ duration: 1, delay: 0.2 }}
-              className={`h-full rounded-full bg-gradient-to-r ${admInfo.gradient}`}
-            />
-          </div>
-        </div>
-
         <div className="flex gap-3">
-          <button
-            onClick={onOpenBranches}
-            className="flex-1 bg-white border-2 border-indigo-600 text-indigo-600 py-3 rounded-2xl font-bold hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 group"
-          >
-            <Layers className="w-4 h-4" />
-            Branches
-          </button>
-          <button
-            onClick={onViewDetails}
-            className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-2xl font-bold hover:shadow-xl hover:shadow-indigo-200 transition-all flex items-center justify-center gap-2"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Details
-          </button>
+          <button onClick={onOpenBranches} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-colors">Branches</button>
+          <button onClick={onViewDetails} className="flex-1 py-4 bg-slate-50 text-slate-700 rounded-2xl font-bold text-sm border border-slate-200 hover:bg-slate-100 transition-colors">Details</button>
         </div>
       </div>
     </motion.div>
   );
 }
 
-function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches, onViewDetails, isPredicted }: {
-  college: College;
-  index: number;
-  saved: boolean;
-  onToggleSaved: () => void;
-  onOpenBranches: () => void;
-  onViewDetails: () => void;
-  isPredicted: boolean;
-}) {
-  const bestBranch = college.branches.reduce((best, current) =>
-    current.admission_chance > best.admission_chance ? current : best
-  );
-
-  const getAdmissionInfo = (chance: number) => {
-    if (chance >= 80) return { label: "High Chance", color: "text-emerald-700", bgColor: "bg-emerald-50 border-emerald-100", gradient: "from-emerald-500 to-emerald-600", icon: CheckCircle };
-    if (chance >= 60) return { label: "Very Good", color: "text-blue-700", bgColor: "bg-blue-50 border-blue-100", gradient: "from-blue-500 to-blue-600", icon: Zap };
-    if (chance >= 40) return { label: "Fair Match", color: "text-amber-700", bgColor: "bg-amber-50 border-amber-100", gradient: "from-amber-500 to-amber-600", icon: Target };
-    return { label: "Stretch", color: "text-rose-700", bgColor: "bg-rose-50 border-rose-100", gradient: "from-rose-500 to-rose-600", icon: TrendingUp };
-  };
-
-  const admInfo = getAdmissionInfo(bestBranch.admission_chance);
-  const Icon = admInfo.icon;
-
+function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches, onViewDetails }: any) {
+  const bestBranch = college.branches.reduce((a: any, b: any) => a.admission_chance > b.admission_chance ? a : b);
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.03 }}
-      className="group bg-white rounded-3xl border border-gray-200/60 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden p-6"
-    >
-      <div className="flex flex-col lg:flex-row gap-8">
-        <div className="lg:w-1/4 h-48 lg:h-auto rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 flex items-center justify-center relative overflow-hidden">
-          <div className="text-4xl font-black text-indigo-200/50 truncate px-4 text-center">
-            {college.college_name}
+    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} className="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col md:flex-row gap-8 hover:shadow-xl transition-all">
+      <div className="w-full md:w-64 h-48 rounded-2xl overflow-hidden flex-shrink-0">
+        <img src={college.image} onError={handleImageError} className="w-full h-full object-cover" />
+      </div>
+      <div className="flex-1 py-2">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-1">{college.college_name}</h3>
+            <p className="text-slate-500 font-medium flex items-center gap-1.5 text-sm uppercase tracking-wide"><MapPin className="w-4 h-4 text-indigo-500" />{college.city} • {college.autonomy_status}</p>
           </div>
-          <div className="absolute top-4 left-4">
-            <div className={`px-3 py-1.5 rounded-full backdrop-blur-sm border ${admInfo.bgColor} ${admInfo.color} flex items-center space-x-1.5 text-[10px] font-bold`}>
-              <Icon className="w-3 h-3" />
-              <span>{isPredicted ? "AI RECOMMENDED" : admInfo.label}</span>
-            </div>
-          </div>
+          <button onClick={onToggleSaved} className="p-3 bg-slate-50 rounded-2xl">{saved ? <BookmarkCheck className="text-indigo-600 fill-indigo-600" /> : <Bookmark className="text-slate-400" />}</button>
         </div>
-
-        <div className="flex-1">
-          <div className="flex items-start justify-between mb-2">
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{college.college_name}</h3>
-              <div className="flex items-center gap-4 text-gray-500 mt-1">
-                <span className="flex items-center gap-1.5 text-sm">
-                  <MapPin className="w-4 h-4 text-indigo-500" />
-                  {college.city}
-                </span>
-                <span className="flex items-center gap-1.5 text-sm">
-                  <Award className="w-4 h-4 text-indigo-500" />
-                  {college.autonomy_status}
-                </span>
-                <span className="flex items-center gap-1.5 text-sm text-emerald-600 font-bold">
-                  <TrendingUp className="w-4 h-4" />
-                  {college.placement_rate}% Placement
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={onToggleSaved}
-              className="p-3 bg-gray-50 rounded-2xl hover:bg-indigo-50 transition-colors"
-            >
-              {saved ? (
-                <BookmarkCheck className="w-6 h-6 text-indigo-600 fill-indigo-600" />
-              ) : (
-                <Bookmark className="w-6 h-6 text-gray-400" />
-              )}
-            </button>
-          </div>
-
-          <div className="inline-block bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg text-xs font-bold mb-6 border border-indigo-100">
-            {bestBranch.branch}
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100">
-              <div className="text-xl font-bold text-gray-900">₹{college.average_package_lpa}L</div>
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Avg Package</p>
-            </div>
-            <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100">
-              <div className="text-xl font-bold text-gray-900">₹{college.highest_package_lpa}L</div>
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Max Package</p>
-            </div>
-            <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100">
-              <div className="text-xl font-bold text-gray-900">{college.branches.length}</div>
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Branches</p>
-            </div>
-            <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100">
-              <div className="flex items-center gap-2">
-                <div className={`text-xl font-bold ${admInfo.color}`}>{Math.round(bestBranch.admission_chance)}%</div>
-              </div>
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Adm Chance</p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-4">
-            <button
-              onClick={onOpenBranches}
-              className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-bold hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center gap-2"
-            >
-              <Layers className="w-4 h-4" />
-              Explore Branches
-            </button>
-            <button
-              onClick={onViewDetails}
-              className="px-8 py-3 border-2 border-indigo-600 text-indigo-600 rounded-2xl font-bold hover:bg-indigo-50 transition-all flex items-center gap-2"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Full Details
-            </button>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">AI Chance</p><p className="text-xl font-bold text-indigo-600">{(bestBranch.admission_chance).toFixed(1)}%</p></div>
+          <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Avg Pkg</p><p className="text-xl font-bold text-slate-900">₹{college.average_package_lpa}L</p></div>
+          <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">High Pkg</p><p className="text-xl font-bold text-emerald-600">₹{college.highest_package_lpa}L</p></div>
+          <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Placement</p><p className="text-xl font-bold text-slate-900">{college.placement_rate}%</p></div>
+        </div>
+        <div className="flex gap-4">
+          <button onClick={onOpenBranches} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold">Branches</button>
+          <button onClick={onViewDetails} className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold">Full Profile</button>
         </div>
       </div>
     </motion.div>
   );
 }
 
-function BranchModal({ college, onClose, getProbabilityColor }: {
-  college: College;
-  onClose: () => void;
-  getProbabilityColor: (chance: number) => string;
-}) {
-  const bestBranch = college.branches.reduce((best, current) =>
-    current.admission_chance > best.admission_chance ? current : best
-  );
-
+function BranchModal({ college, onClose, getProbabilityColor }: any) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-      className="fixed inset-0 bg-black/70 backdrop-blur-xl z-50 flex items-center justify-center p-4"
-    >
-      <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 20 }}
-        onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl"
-      >
-        {/* Modal Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-indigo-50 via-white to-purple-50 border-b border-gray-200 p-8 z-10">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">{college.college_name}</h2>
-              <p className="text-gray-600 flex items-center gap-4">
-                <span className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  {college.city}
-                </span>
-                <span>•</span>
-                <span>{college.autonomy_status}</span>
-                <span>•</span>
-                <span className="text-emerald-600 font-semibold">{college.placement_rate}% Placement Rate</span>
-              </p>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[110] flex items-center justify-center p-4">
+      <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} onClick={e => e.stopPropagation()} className="bg-white rounded-[2rem] max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+        <div className="bg-slate-900 p-8 md:p-10 relative flex-shrink-0">
+          <div className="relative flex items-start justify-between">
+            <div className="space-y-4">
+              <span className="px-3 py-1 bg-indigo-500/10 rounded-lg text-xs font-bold text-indigo-400 border border-indigo-500/20 uppercase tracking-widest">Available Specializations</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">{college.college_name}</h2>
+              <div className="flex items-center gap-6 text-slate-400">
+                <span className="flex items-center gap-2 text-sm font-medium leading-none"><MapPin className="w-4 h-4 text-indigo-400" />{college.city}</span>
+                <span className="h-1.5 w-1.5 bg-slate-700 rounded-full" />
+                <span className="text-emerald-400 text-sm font-bold">{college.placement_rate}% Placement</span>
+              </div>
             </div>
-
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={onClose}
-              className="p-3 hover:bg-gray-100 rounded-2xl transition-colors"
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </motion.button>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="flex items-center gap-6 mt-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-indigo-600">₹{college.average_package_lpa}L</div>
-              <div className="text-sm text-gray-600">Avg Package</div>
-            </div>
-            <div className="h-8 w-px bg-gray-300" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-emerald-600">₹{college.highest_package_lpa}L</div>
-              <div className="text-sm text-gray-600">Highest Package</div>
-            </div>
-            <div className="h-8 w-px bg-gray-300" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{college.branches.length}</div>
-              <div className="text-sm text-gray-600">Branches Available</div>
-            </div>
-            <div className="h-8 w-px bg-gray-300" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{Math.round(bestBranch.admission_chance)}%</div>
-              <div className="text-sm text-gray-600">Top Chance</div>
-            </div>
+            <button onClick={onClose} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-colors border border-slate-700"><X className="w-6 h-6 text-slate-300" /></button>
           </div>
         </div>
 
-        {/* Modal Content */}
-        <div className="p-8 overflow-y-auto max-h-[calc(90vh-200px)]">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {college.branches.map((branch) => (
-              <motion.div
-                key={branch.branch_code}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.02 }}
-                className={`border-2 border-gray-200 rounded-2xl p-6 hover:border-indigo-300 transition-all hover:shadow-xl ${branch.is_most_probable ? "ring-2 ring-emerald-500 ring-opacity-30 border-emerald-200" : ""
-                  }`}
-              >
-                <div className="flex items-start justify-between mb-6">
+        <div className="flex-1 overflow-y-auto p-10 bg-slate-50">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {college.branches.map((b: any, i: number) => (
+              <div key={i} className="bg-white rounded-3xl p-8 border border-slate-200">
+                <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-2">{branch.branch}</h4>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                      <span className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        {branch.seats} seats
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-2">
-                        <IndianRupee className="w-4 h-4" />
-                        ₹{branch.Fees}L fees
-                      </span>
-                      <span>•</span>
-                      <span>Rank ≤ {branch.cutoff_rank || branch.cutoff_percentile}</span>
-                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded border border-slate-100">{b.branch_code}</span>
+                    <h4 className="text-xl font-bold text-slate-900 mt-2">{b.branch}</h4>
                   </div>
-
-                  <div className={`px-4 py-2 rounded-xl font-semibold bg-gradient-to-r ${getProbabilityColor(branch.admission_chance)} text-white`}>
-                    {branch.probability_level}
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">AI Chance</p>
+                    <p className={`text-xl font-bold ${b.admission_chance >= 70 ? 'text-emerald-600' : 'text-indigo-600'}`}>{(b.admission_chance).toFixed(1)}%</p>
                   </div>
                 </div>
-
-                {/* Admission Chance */}
-                <div className="mb-6">
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-gray-600">Admission Probability</span>
-                    <span className="font-bold text-gray-900">{Math.round(branch.admission_chance)}%</span>
-                  </div>
-                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${branch.admission_chance}%` }}
-                      transition={{ duration: 1 }}
-                      className={`h-full rounded-full bg-gradient-to-r ${getProbabilityColor(branch.admission_chance)}`}
-                    />
-                  </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden mb-8">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${b.admission_chance}%` }} className={`h-full bg-gradient-to-r ${getProbabilityColor(b.admission_chance)}`} />
                 </div>
-
-                {/* Match Score */}
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <p className="text-sm text-gray-600">AI Match Score</p>
-                    <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-5 h-5 ${i < branch.match_score ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-                        />
-                      ))}
-                      <span className="ml-2 font-semibold">{branch.match_score}/5</span>
-                    </div>
-                  </div>
-
-                  {branch.is_most_probable && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl">
-                      <Target className="w-4 h-4" />
-                      <span className="font-semibold">Most Probable</span>
-                    </div>
-                  )}
+                <div className="grid grid-cols-3 gap-8">
+                  <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cutoff</p><p className="font-bold text-slate-700">{b.cutoff_rank || 'N/A'}</p></div>
+                  <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Seats</p><p className="font-bold text-slate-700">{b.seats}</p></div>
+                  <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Fees</p><p className="font-bold text-slate-700">₹{b.Fees?.toLocaleString()}</p></div>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-3">
-                  <button className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
-                    Save Branch
-                  </button>
-                  <button className="flex-1 px-4 py-3 border-2 border-indigo-600 text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-all">
-                    Compare
-                  </button>
-                  <button className="p-3 border border-gray-300 rounded-xl hover:bg-gray-50">
-                    <Share2 className="w-5 h-5 text-gray-600" />
-                  </button>
-                </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -1549,304 +741,87 @@ function BranchModal({ college, onClose, getProbabilityColor }: {
   );
 }
 
-function CollegeDetailsModal({ college, onClose, getProbabilityColor }: {
-  college: College;
-  onClose: () => void;
-  getProbabilityColor: (chance: number) => string;
-}) {
-  const bestBranch = college.branches.reduce((best, current) =>
-    current.admission_chance > best.admission_chance ? current : best
-  );
+function CollegeDetailsModal({ college, onClose, getProbabilityColor }: any) {
+  const bestBranch = college.branches.reduce((a: any, b: any) => a.admission_chance > b.admission_chance ? a : b);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-      className="fixed inset-0 bg-black/70 backdrop-blur-xl z-50 flex items-center justify-center p-4 overflow-y-auto"
-    >
-      <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 20 }}
-        onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-3xl max-w-6xl w-full max-h-[95vh] overflow-hidden shadow-2xl my-8"
-      >
-        {/* Modal Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-indigo-50 via-white to-purple-50 border-b border-gray-200 p-8 z-10">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">{college.college_name}</h2>
-              <p className="text-gray-600 flex items-center gap-4">
-                <span className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  {college.city}, {college.state}
-                </span>
-                <span>•</span>
-                <span>{college.autonomy_status}</span>
-                <span>•</span>
-                <span className="text-emerald-600 font-semibold">{college.placement_rate}% Placement Rate</span>
-              </p>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-slate-900/70 backdrop-blur-xl z-[120] flex items-center justify-center p-4">
+      <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} onClick={e => e.stopPropagation()} className="bg-white rounded-[2.5rem] max-w-6xl w-full max-h-[92vh] overflow-hidden shadow-2xl flex flex-col">
+        <div className="bg-slate-900 p-10 relative overflow-hidden flex-shrink-0">
+          <div className="relative flex items-start justify-between">
+            <div className="space-y-4">
+              <span className="px-4 py-1 bg-indigo-500/20 text-indigo-400 text-[11px] font-black uppercase tracking-widest rounded-full border border-indigo-500/30">Official Institute Profile</span>
+              <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">{college.college_name}</h2>
+              <div className="flex flex-wrap items-center gap-6 text-slate-400">
+                <span className="flex items-center gap-2"><MapPin className="w-5 h-5 text-indigo-400" />{college.city}, {college.state || 'Maharashtra'}</span>
+                <span className="h-2 w-2 bg-slate-700 rounded-full" />
+                <span className="flex items-center gap-2"><Award className="w-5 h-5 text-indigo-400" />{college.naac_grade || 'A+'} Grade • {college.autonomy_status}</span>
+              </div>
             </div>
-
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={onClose}
-              className="p-3 hover:bg-gray-100 rounded-2xl transition-colors"
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </motion.button>
+            <button onClick={onClose} className="p-4 bg-slate-800 text-slate-300 rounded-2xl hover:bg-slate-700 transition-colors border border-slate-700"><X className="w-6 h-6" /></button>
           </div>
-
-          {/* Quick Stats */}
-          <div className="flex items-center gap-6 mt-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-indigo-600">₹{college.average_package_lpa}L</div>
-              <div className="text-sm text-gray-600">Avg Package</div>
-            </div>
-            <div className="h-8 w-px bg-gray-300" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-emerald-600">₹{college.highest_package_lpa}L</div>
-              <div className="text-sm text-gray-600">Highest Package</div>
-            </div>
-            <div className="h-8 w-px bg-gray-300" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{college.branches.length}</div>
-              <div className="text-sm text-gray-600">Branches</div>
-            </div>
-            <div className="h-8 w-px bg-gray-300" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{Math.round(bestBranch.admission_chance)}%</div>
-              <div className="text-sm text-gray-600">Top Chance</div>
-            </div>
+          <div className="flex gap-12 mt-12 bg-slate-800/40 p-8 rounded-3xl border border-slate-700/50 backdrop-blur-lg">
+            <div className="space-y-1"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Average Pkg</p><p className="text-3xl font-bold text-white">₹{college.average_package_lpa} LPA</p></div>
+            <div className="w-px bg-slate-700" />
+            <div className="space-y-1"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Highest Pkg</p><p className="text-3xl font-bold text-emerald-400">₹{college.highest_package_lpa} LPA</p></div>
+            <div className="w-px bg-slate-700" />
+            <div className="space-y-1"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Placement</p><p className="text-3xl font-bold text-white">{college.placement_rate}%</p></div>
+            <div className="w-px bg-slate-700" />
+            <div className="space-y-1"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Match Chance</p><p className="text-3xl font-bold text-indigo-400">{(bestBranch.admission_chance).toFixed(1)}%</p></div>
           </div>
         </div>
 
-        {/* Modal Content */}
-        <div className="p-8 overflow-y-auto max-h-[calc(95vh-200px)]">
-          <div className="space-y-8">
-            {/* Overview Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* College Info */}
-              <div className="lg:col-span-2">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Info className="w-5 h-5 text-indigo-600" />
-                  College Overview
-                </h3>
-                <div className="bg-gray-50 rounded-2xl p-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">Established</p>
-                      <p className="font-semibold">{college.established_year || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Campus Size</p>
-                      <p className="font-semibold">{college.campus_size || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Accreditation</p>
-                      <p className="font-semibold">{college.accreditation || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">NAAC Grade</p>
-                      <p className="font-semibold">{college.naac_grade || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Faculty Count</p>
-                      <p className="font-semibold">{college.faculty_count?.toLocaleString() || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Research Papers</p>
-                      <p className="font-semibold">{college.research_papers?.toLocaleString() || "N/A"}</p>
-                    </div>
-                  </div>
+        <div className="flex-1 overflow-y-auto p-12 bg-slate-50">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-7xl mx-auto">
+            <div className="lg:col-span-2 space-y-12">
+              <section>
+                <h3 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3"><Info className="w-6 h-6 text-indigo-600" /> Overview</h3>
+                <div className="bg-white rounded-[2rem] p-10 border border-slate-200 shadow-sm grid grid-cols-2 md:grid-cols-3 gap-10">
+                  <div><p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 font-black">Estd.</p><p className="font-bold text-slate-700 text-lg">{college.established_year || '1995'}</p></div>
+                  <div><p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 font-black">Campus</p><p className="font-bold text-slate-700 text-lg">{college.campus_size || '25 Acres'}</p></div>
+                  <div><p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 font-black">Faculty</p><p className="font-bold text-slate-700 text-lg">{college.faculty_count || '600'}+</p></div>
+                  <div><p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 font-black">Papers</p><p className="font-bold text-slate-700 text-lg">{college.research_papers || '1200'}+</p></div>
+                  <div><p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 font-black">Hostel</p><p className="font-bold text-emerald-600 text-lg">{college.hostel_available}</p></div>
+                  <div><p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1 font-black">Ranking</p><p className="font-bold text-indigo-600 text-lg">NIRF#Top 50</p></div>
                 </div>
-              </div>
+              </section>
 
-              {/* Contact Info */}
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Mail className="w-5 h-5 text-indigo-600" />
-                  Contact Information
-                </h3>
-                <div className="bg-gray-50 rounded-2xl p-6 space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Address</p>
-                    <p className="font-semibold text-sm">{college.address || `${college.college_name}, ${college.city}`}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Phone</p>
-                    <p className="font-semibold">{college.phone || "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Email</p>
-                    <p className="font-semibold">{college.contact_email || "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Website</p>
-                    <a
-                      href={college.website || "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-2"
-                    >
-                      {college.website || "N/A"}
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Facilities & Infrastructure */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Home className="w-5 h-5 text-indigo-600" />
-                Facilities & Infrastructure
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <Book className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">Library</p>
-                      <p className="text-sm text-gray-600">{college.library_books?.toLocaleString() || "50,000+"} books</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                      <Users className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">Hostel</p>
-                      <p className="text-sm text-gray-600">{college.hostel_available === "Yes" ? "Available" : "Not Available"}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                      <Activity className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">Sports</p>
-                      <p className="text-sm text-gray-600">{college.sports_facilities?.length || 5}+ facilities</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                      <Music className="w-5 h-5 text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">Clubs</p>
-                      <p className="text-sm text-gray-600">{college.clubs?.length || 5}+ active clubs</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Top Recruiters */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-indigo-600" />
-                Top Recruiters
-              </h3>
-              <div className="bg-gray-50 rounded-2xl p-6">
-                <div className="flex flex-wrap gap-3">
-                  {(college.campus_recruiters || ["Google", "Microsoft", "Amazon", "TCS", "Infosys", "Wipro", "Accenture"]).map((recruiter, index) => (
-                    <span
-                      key={index}
-                      className="px-4 py-2 bg-white border border-gray-200 rounded-xl font-medium text-gray-700"
-                    >
-                      {recruiter}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Branch Details */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Layers className="w-5 h-5 text-indigo-600" />
-                Branch Details
-              </h3>
-              <div className="bg-gray-50 rounded-2xl p-6">
-                <div className="overflow-x-auto">
+              <section>
+                <h3 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3"><Layers className="w-6 h-6 text-indigo-600" /> Specializations</h3>
+                <div className="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm">
                   <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Branch</th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Admission Chance</th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Cutoff Rank</th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Annual Fees</th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Seats</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {college.branches.map((branch, index) => (
-                        <tr key={index} className="border-b border-gray-100 hover:bg-white">
-                          <td className="py-3 px-4">
-                            <div className="font-medium">{branch.branch}</div>
-                            <div className="text-sm text-gray-600">{branch.branch_code}</div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${getProbabilityColor(branch.admission_chance).replace('from-', 'bg-').split(' ')[0]}`} />
-                              <span className="font-semibold">{Math.round(branch.admission_chance)}%</span>
-                              {branch.is_most_probable && (
-                                <span className="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded">
-                                  Most Probable
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 font-medium">{branch.cutoff_rank || "N/A"}</td>
-                          <td className="py-3 px-4 font-medium">₹{branch.Fees.toLocaleString()}</td>
-                          <td className="py-3 px-4 font-medium">{branch.seats}</td>
+                    <thead className="bg-slate-50 border-b border-slate-100"><tr className="text-left"><th className="py-5 px-8 text-[11px] font-black text-slate-500 uppercase tracking-widest">Specialization</th><th className="py-5 px-8 text-[11px] font-black text-slate-500 uppercase tracking-widest">AI Chance</th><th className="py-5 px-8 text-[11px] font-black text-slate-500 uppercase tracking-widest">Fees</th></tr></thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {college.branches.map((b: any, i: number) => (
+                        <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="py-6 px-8"><p className="font-bold text-slate-800">{b.branch}</p><p className="text-xs text-slate-400 font-bold">{b.branch_code}</p></td>
+                          <td className="py-6 px-8"><div className="flex items-center gap-3"><div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full bg-gradient-to-r ${getProbabilityColor(b.admission_chance)}`} style={{ width: `${b.admission_chance}%` }} /></div><span className="font-black text-slate-600 text-sm">{(b.admission_chance).toFixed(1)}%</span></div></td>
+                          <td className="py-6 px-8 font-bold text-slate-700">₹{b.Fees?.toLocaleString()}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </section>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => window.open(college.website, '_blank')}
-                className="flex-1 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-3"
-              >
-                <Globe className="w-5 h-5" />
-                Visit College Website
-              </motion.button>
+            <div className="space-y-12">
+              <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
+                <h4 className="text-xl font-bold mb-8 flex items-center gap-3"><Mail className="w-6 h-6 text-indigo-400" /> Admissions</h4>
+                <div className="space-y-8 relative z-10">
+                  <div className="space-y-2"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Contact Address</p><p className="text-sm font-medium text-slate-300 leading-relaxed">{college.address || `${college.college_name}, ${college.city}`}</p></div>
+                  <div className="space-y-2"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Helpline</p><p className="text-sm font-medium text-slate-300">{college.phone || '+91 000 000 0000'}</p></div>
+                  <div className="space-y-2"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Email</p><p className="text-sm font-medium text-slate-300">{college.contact_email || 'admissions@institute.edu'}</p></div>
+                  <a href={college.website} target="_blank" className="block w-full text-center py-4 bg-indigo-600 rounded-2xl font-bold hover:bg-indigo-700 transition-colors">Visit Official Website</a>
+                </div>
+              </div>
 
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  /* Add save functionality */
-                }}
-                className="px-6 py-4 border-2 border-indigo-600 text-indigo-600 rounded-2xl font-semibold hover:bg-indigo-50 transition-all flex items-center gap-3"
-              >
-                <Download className="w-5 h-5" />
-                Download Brochure
-              </motion.button>
+              <div className="bg-white rounded-[2rem] p-10 border border-slate-200 shadow-sm">
+                <h4 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3"><Briefcase className="w-6 h-6 text-indigo-600" /> Partners</h4>
+                <div className="flex flex-wrap gap-3">
+                  {['Google', 'TCS', 'Amazon', 'Wipro', 'Infosys', 'Accenture', 'Intel'].map(r => <span key={r} className="px-4 py-2 bg-slate-50 rounded-xl text-xs font-bold text-slate-600 border border-slate-100">{r}</span>)}
+                </div>
+              </div>
             </div>
           </div>
         </div>

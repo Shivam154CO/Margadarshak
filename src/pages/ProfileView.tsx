@@ -261,6 +261,7 @@ export default function ProfileView() {
   const [skills, setSkills] = useState<UserSkill[]>([]);
   const [activities, setActivities] = useState<UserActivity[]>([]);
   const [scholarships, setScholarships] = useState<UserScholarship[]>([]);
+  const [careerGoals, setCareerGoals] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
 
@@ -798,6 +799,15 @@ export default function ProfileView() {
                         {Math.floor((new Date().getTime() - new Date(userProfile.created_at).getTime()) / (1000 * 60 * 60 * 24))} days ago
                       </p>
                     </div>
+
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Target className="w-4 h-4 text-slate-500" />
+                        <span className="text-xs text-slate-500 font-medium">Career Goals</span>
+                      </div>
+                      <p className="text-lg font-bold text-gray-900">{careerGoals?.length || 0} Set</p>
+                      <p className="text-xs text-gray-500 mt-1">Custom goals</p>
+                    </div>
                   </div>
 
                   {/* Quick Stats */}
@@ -1202,7 +1212,7 @@ export default function ProfileView() {
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                                 <div>
                                   <p className="text-xs text-gray-500">Admission Chance</p>
-                                  <p className="text-lg font-bold text-gray-900">{Math.round(college.admission_chance)}%</p>
+                                  <p className="text-lg font-bold text-gray-900">{college.admission_chance.toFixed(1)}%</p>
                                 </div>
                                 <div>
                                   <p className="text-xs text-gray-500">Cutoff Rank</p>
