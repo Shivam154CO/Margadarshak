@@ -726,7 +726,7 @@ export default function Dashboard() {
         </div>
 
         {/* Loading State — only skeleton the cards grid; stats & filters already rendered above */}
-        {isLoading || predictionsLoading && colleges.length === 0 ? (
+        {(isLoading || predictionsLoading) && sortedColleges.length === 0 ? (
           <div className={`grid gap-6 ${viewMode === 'grid-3' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : viewMode === 'grid-4' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>
             {[...Array(9)].map((_, index) => (
               <div key={index} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden animate-pulse">
