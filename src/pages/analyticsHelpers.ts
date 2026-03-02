@@ -1,5 +1,14 @@
 import type { College } from '../context/CollegesContext';
 
+export const getCategoryColor = (category: string) => {
+    const map: Record<string, string> = {
+        'OPEN': '#3B82F6',
+        'OBC': '#10B981',
+        'SC': '#F59E0B',
+        'ST': '#EF4444',
+    };
+    return map[category] || '#6B7280';
+};
 export function computeBI(colleges: College[], _profile: any) {
     if (!colleges.length) return null;
     const pred = colleges.filter(c => c.probability_level || c.fit || c.is_most_probable);

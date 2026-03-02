@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState } from "react";
 import {
     Database, RefreshCw, CheckCircle,
     AlertCircle, FileText, Activity, Server, Clock
@@ -10,8 +9,6 @@ import Footer from "../components/Footer";
 export default function DataPipeline() {
     const [isSyncing, setIsSyncing] = useState(false);
     const [lastSync, setLastSync] = useState("Just now");
-    const [pipelineStatus, setPipelineStatus] = useState("active");
-
     const handleManualSync = () => {
         setIsSyncing(true);
         // Simulate background sync with DTE

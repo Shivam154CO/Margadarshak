@@ -38,7 +38,7 @@ export default function Landing() {
 
   useEffect(() => {
     collegesCount.set(340);
-    studentsCount.set(52843);
+    studentsCount.set(13600);
     accuracyCount.set(95.7);
   }, []);
 
@@ -198,7 +198,7 @@ export default function Landing() {
               <div className="text-3xl md:text-5xl font-extrabold text-white tracking-tighter">
                 <motion.span>{studentsDisplay}</motion.span>+
               </div>
-              <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.4em]">Students Placed</div>
+              <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.4em]">Real Time Data</div>
             </div>
             <div className="space-y-1">
               <div className="text-3xl md:text-5xl font-extrabold text-rose-600 tracking-tighter">
@@ -208,7 +208,7 @@ export default function Landing() {
             </div>
             <div className="space-y-1">
               <div className="text-3xl md:text-5xl font-extrabold text-white tracking-tighter">Live</div>
-              <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.4em]">CAP DATA 2026</div>
+              <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.4em]">Diploma DATA 2026</div>
             </div>
           </div>
         </div>

@@ -17,6 +17,7 @@ import {
   LayoutDashboard,
   FileText,
   Scan,
+  MessageSquare,
 } from "lucide-react";
 
 interface UserProfile {
@@ -78,6 +79,12 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
       label: "Colleges",
       icon: Search,
       path: "/college-explorer",
+    },
+    {
+      id: "community",
+      label: "Community",
+      icon: MessageSquare,
+      path: "/community",
     },
     {
       id: "map",

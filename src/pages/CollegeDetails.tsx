@@ -2,65 +2,78 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabase";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import seatMatrixMap from "../assets/seat_matrix_map.json";
-import seatMatrixPDF from "../assets/2025-26.pdf";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
-  MapPin,
-  Users,
-  DollarSign,
-  Award,
-  Building,
-  TrendingUp,
   Bookmark,
-  Phone,
-  Mail,
-  Globe,
-  Calendar,
-  Home,
-  BookOpen,
-  Wifi,
-  Car,
-  Library,
   Share2,
-  Eye,
-  Newspaper,
-  X,
-  Image as ImageIcon,
-  Layers,
+  MapPin,
+  BookOpen,
+  Clock,
+  Building,
   Trophy,
-  CreditCard,
-  School,
-  GraduationCap,
-  Tag,
-  AlertCircle,
-  RefreshCw,
-  ExternalLink,
-  Star,
-  Briefcase,
+  Globe,
+  Phone,
+  FileText,
+  CheckCircle2,
+  ChevronRight,
+  Zap,
   Target,
+  AlertTriangle,
+  CheckCircle,
   Cpu,
   ShieldCheck,
   Brain,
-  PieChart,
-  Users as UserGroup,
-  FileText,
-  Clock,
-  Download,
+  RefreshCw,
+  AlertCircle,
+  School,
+  Eye,
+  Layers,
+  CreditCard,
+  Bot,
+  Home,
+  Check,
+  Newspaper,
   MessageSquare,
+  Briefcase,
+  ChevronDown,
+  Download,
+  Users,
+  Users as UserGroup,
+  Star,
+  UserCheck,
+  X,
+  Send,
+  Menu,
+  LogOut,
+  ArrowUpRight,
+  DollarSign,
+  Award,
+  TrendingUp,
+  Mail,
+  Calendar,
+  Wifi,
+  Car,
+  Library,
   ThumbsUp,
   Percent,
   Navigation,
-  Send,
-  Bot,
   Route,
   Locate,
   MapPinned,
-  ChevronDown,
   ChevronUp,
-} from "lucide-react";
+  Image as ImageIcon,
+  Tag,
+  PieChart,
+  GraduationCap,
+  ExternalLink
+} from 'lucide-react';
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import ReviewModal from "../components/ReviewModal";
+import { getCategoryColor } from './analyticsHelpers';
+import seatMatrixMap from "../assets/seat_matrix_map.json";
+import seatMatrixPDF from "../assets/2025-26.pdf";
 
 // Add new interfaces
 interface BranchInfo {
@@ -222,7 +235,7 @@ const getCollegeImage = (collegeCode: string): string => {
     return "/src/assets/fallback-campus.jpg";
   }
 
-  const imagePath = `/src/assets/${collegeCode}/campus.png`;
+  const imagePath = `/ src / assets / ${collegeCode}/campus.png`;
   return imagePath;
 };
 
@@ -490,38 +503,6 @@ const formatPercentage = (value: number) => {
   if (!value || value === 0) return "N/A";
   return `${value}%`;
 };
-
-const getCategoryColor = (category: string) => {
-  const colors: { [key: string]: string } = {
-    'GOPEN': '#FF6384',
-    'GST': '#36A2EB',
-    'GOBC': '#FFCE56',
-    'LOPEN': '#4BC0C0',
-    'LSC': '#9966FF',
-    'LSEBC': '#FF9F40',
-    'EWS': '#FF6384',
-    'LOBC': '#36A2EB',
-    'LST': '#FFCE56',
-    'LNT': '#4BC0C0',
-    'LNTC': '#9966FF',
-    'PWDR-SC': '#FF9F40',
-    'PWDR-ST': '#FF6384',
-    'GNTA': '#36A2EB',
-    'GNTB': '#FFCE56',
-    'GNTC': '#4BC0C0',
-    'GNTD': '#9966FF',
-    'GSEBC': '#FF9F40',
-    'GSC': '#FF6384',
-    'GNT1': '#36A2EB',
-    'GNT2': '#FFCE56',
-    'GNT3': '#4BC0C0',
-    'LNT1': '#9966FF',
-    'LNT2': '#FF9F40',
-    'LNT3': '#FF6384'
-  };
-  return colors[category] || '#FF6384';
-};
-
 // Helper function to get city coordinates (from CollegeMap.tsx)
 const getCityCoordinates = (city: string): { lat: number; lng: number } => {
   const cityCoords: Record<string, { lat: number; lng: number }> = {
@@ -715,13 +696,49 @@ export default function CollegeDetails() {
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
-  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+
+  const { data: profile } = useQuery<any>({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      const { data } = await supabase.from('users').select('*').eq('id', session.user.id).single();
+      return data;
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [collegeReviews, setCollegeReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCollegeReviews = async () => {
+      if (!college.college_code) return;
+      setReviewsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('college_reviews_with_profiles')
+          .select('*')
+          .eq('college_code', college.college_code)
+          .order('created_at', { ascending: false });
+
+        if (error) console.error("Error fetching reviews:", error);
+        else setCollegeReviews(data || []);
+      } catch (err) {
+        console.error("Error fetching reviews list:", err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+    fetchCollegeReviews();
+  }, [college.college_code]);
+
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackComment, setFeedbackComment] = useState("");
   const [feedbackName, setFeedbackName] = useState("");
 
   // Distance Calculator State
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -735,7 +752,6 @@ export default function CollegeDetails() {
   const [isAIThinking, setIsAIThinking] = useState(false);
 
   // Expand/Collapse State
-  const [isSeatDistributionExpanded, setIsSeatDistributionExpanded] = useState(true);
   const [isAvailableBranchesExpanded, setIsAvailableBranchesExpanded] = useState(true);
   const [isSeatMatrixExpanded, setIsSeatMatrixExpanded] = useState(true);
 
@@ -751,9 +767,6 @@ export default function CollegeDetails() {
         : [...prev, stepNumber]
     );
   };
-
-  // Loading states for async data
-  const [branchesLoading, setBranchesLoading] = useState(false);
 
   // Handle getting user's location
   const handleGetLocation = () => {
@@ -1357,7 +1370,9 @@ export default function CollegeDetails() {
           .eq('college_code', college.college_code);
 
         if (error) {
-          console.error("Error fetching scholarships:", error);
+          if (error.code !== 'PGRST205') {
+            console.error("Error fetching scholarships:", error);
+          }
           return;
         }
 
@@ -1387,7 +1402,9 @@ export default function CollegeDetails() {
           .eq('college_code', college.college_code);
 
         if (error) {
-          console.error("Error fetching required documents:", error);
+          if (error.code !== 'PGRST205') {
+            console.error("Error fetching required documents:", error);
+          }
           return;
         }
 
@@ -1469,64 +1486,7 @@ export default function CollegeDetails() {
     }
   };
 
-  const handleSubmitFeedback = async () => {
-    if (!feedbackRating || !feedbackComment.trim()) {
-      alert("Please provide both rating and comment");
-      return;
-    }
 
-    try {
-      const response = await fetch("http://localhost:5001/submit_feedback", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          college_code: college.college_code,
-          branch_name: selectedBranch || college.branch_name,
-          rating: feedbackRating,
-          comment: feedbackComment,
-          user_name: feedbackName || "Anonymous",
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          // Update local state with new feedback
-          const newFeedback: Feedback = {
-            id: Date.now().toString(),
-            rating: feedbackRating,
-            comment: feedbackComment,
-            user_name: feedbackName || "Anonymous",
-            date: new Date().toISOString().split('T')[0],
-            verified: false,
-            helpful_count: 0
-          };
-
-          setCollege(prev => ({
-            ...prev,
-            feedbacks: [newFeedback, ...(prev.feedbacks || [])],
-            total_feedbacks: (prev.total_feedbacks || 0) + 1,
-            average_rating: prev.feedbacks
-              ? ((prev.average_rating || 0) * (prev.feedbacks.length) + feedbackRating) / (prev.feedbacks.length + 1)
-              : feedbackRating
-          }));
-
-          // Reset form
-          setFeedbackRating(0);
-          setFeedbackComment("");
-          setFeedbackName("");
-          setShowFeedbackForm(false);
-
-          alert("Thank you for your feedback!");
-        }
-      }
-    } catch (error) {
-      console.error("Error submitting feedback:", error);
-      alert("Failed to submit feedback. Please try again.");
-    }
-  };
 
   const handleBranchSelect = (branchName: string) => {
     setSelectedBranch(branchName);
@@ -2092,7 +2052,7 @@ export default function CollegeDetails() {
     const map = seatMatrixMap as Record<string, Record<string, number>>;
 
     let pageNumber = 1;
-    if (code && map[code]) {
+    if (code && map[code] && branch) {
       // Find branch match - exact or fuzzy
       const collegeBranches = map[code];
       const match = Object.keys(collegeBranches).find(b =>
@@ -2172,203 +2132,167 @@ export default function CollegeDetails() {
 
   // Render Feedback Section
   const renderFeedbackSection = () => {
-    const feedbacks = college.feedbacks || [];
-    const averageRating = college.average_rating || 0;
-    const totalFeedbacks = college.total_feedbacks || 0;
+    const feedbacks = collegeReviews;
+    const totalFeedbacks = feedbacks.length;
+    const averageRating = totalFeedbacks > 0
+      ? feedbacks.reduce((acc, r: any) => acc + r.overall_rating, 0) / totalFeedbacks
+      : 0;
 
     return (
       <div className="space-y-8">
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div>
               <h3 className="text-xl font-bold text-gray-900">Student Feedback & Reviews</h3>
               <p className="text-gray-600">Real feedback from current and former students</p>
             </div>
-            <div className="text-right">
-              <div className="flex items-center space-x-2">
-                <div className="text-3xl font-bold text-gray-900">{averageRating.toFixed(1)}</div>
-                <div>
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-5 h-5 ${star <= Math.round(averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                          }`}
-                      />
-                    ))}
+            {totalFeedbacks > 0 && (
+              <div className="text-right flex-shrink-0">
+                <div className="flex items-center space-x-2 bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-xl">
+                  <div className="text-3xl font-black text-indigo-700">{averageRating.toFixed(1)}</div>
+                  <div>
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-4 h-4 ${star <= Math.round(averageRating) ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-50'
+                            }`}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-xs text-indigo-600 font-bold mt-0.5">{totalFeedbacks} reviews</div>
                   </div>
-                  <div className="text-sm text-gray-600">{totalFeedbacks} reviews</div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-8 pb-8 border-b border-gray-100">
             <button
-              onClick={() => setShowFeedbackForm(true)}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity hover:shadow-lg flex items-center space-x-2"
+              onClick={() => {
+                if (!profile) alert("Please log in to submit a review.");
+                else setShowFeedbackModal(true);
+              }}
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-3"
             >
-              <MessageSquare className="w-5 h-5" />
-              <span>Submit Your Feedback</span>
+              <MessageSquare className="w-5 h-5 fill-white/20" />
+              <span>Submit Your Own Review</span>
             </button>
           </div>
 
           <div className="space-y-6">
-            {feedbacks.slice(0, 5).map((feedback, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="p-5 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200/50"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <div className="flex items-center space-x-2 mb-1">
-                      <div className="font-medium text-gray-900">{feedback.user_name}</div>
-                      {feedback.verified && (
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Verified</span>
-                      )}
+            {reviewsLoading ? (
+              <div className="text-center py-10 font-medium text-slate-500 animate-pulse">Loading verified student reviews...</div>
+            ) : totalFeedbacks > 0 ? (
+              feedbacks.map((review: any) => (
+                <motion.div
+                  key={review.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 sm:p-8 bg-gradient-to-br from-white to-slate-50 rounded-2xl border border-slate-200/60 shadow-sm"
+                >
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center font-black text-indigo-700 text-xl border border-indigo-200/50 shadow-inner">
+                        {review.reviewer_name?.charAt(0) || 'S'}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-slate-900">{review.reviewer_name || 'Alumnus'}</h4>
+                          {review.is_verified_student && (
+                            <span className="flex items-center gap-1 bg-sky-50 text-sky-700 border border-sky-200/50 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-extrabold">
+                              <CheckCircle className="w-3 h-3" /> Verified Student
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs font-medium text-slate-500 mt-0.5">{new Date(review.created_at).toLocaleDateString()}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-4 h-4 ${star <= feedback.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                            }`}
-                        />
-                      ))}
-                      <span className="text-sm text-gray-600 ml-2">{feedback.date}</span>
+
+                    <div className="flex items-center gap-2 bg-amber-50 border border-amber-200/50 px-3 py-1.5 rounded-lg shrink-0">
+                      <span className="text-amber-500 text-lg leading-none">★</span>
+                      <span className="font-bold text-amber-700">{review.overall_rating.toFixed(1)}</span>
                     </div>
                   </div>
-                  <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700">
-                    <ThumbsUp className="w-4 h-4" />
-                    <span className="text-sm">Helpful ({feedback.helpful_count})</span>
-                  </button>
+
+                  {/* Micro Ratings */}
+                  <div className="grid grid-cols-5 gap-2 mb-6">
+                    <div className="text-center bg-white border border-slate-100 p-2 rounded-lg">
+                      <div className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase">Acad</div>
+                      <div className="font-black text-slate-700">{review.academics_rating}</div>
+                    </div>
+                    <div className="text-center bg-white border border-slate-100 p-2 rounded-lg">
+                      <div className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase">Place</div>
+                      <div className="font-black text-slate-700">{review.placement_rating}</div>
+                    </div>
+                    <div className="text-center bg-white border border-slate-100 p-2 rounded-lg">
+                      <div className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase">Life</div>
+                      <div className="font-black text-slate-700">{review.campus_rating}</div>
+                    </div>
+                    <div className="text-center bg-white border border-slate-100 p-2 rounded-lg">
+                      <div className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase">Infra</div>
+                      <div className="font-black text-slate-700">{review.infrastructure_rating}</div>
+                    </div>
+                    <div className="text-center bg-white border border-slate-100 p-2 rounded-lg">
+                      <div className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase">ROI</div>
+                      <div className="font-black text-slate-700">{review.roi_rating}</div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <h5 className="flex items-center gap-2 text-sm font-bold text-emerald-600 uppercase tracking-widest mb-2">
+                        <ThumbsUp className="w-4 h-4 text-emerald-500" /> The Best Thing
+                      </h5>
+                      <p className="text-sm font-medium text-slate-700 leading-relaxed bg-emerald-50/50 block p-4 rounded-xl border border-emerald-100/50">
+                        {review.best_thing}
+                      </p>
+                    </div>
+                    <div>
+                      <h5 className="flex items-center gap-2 text-sm font-bold text-rose-600 uppercase tracking-widest mb-2">
+                        <AlertTriangle className="w-4 h-4 text-rose-500" /> The Reality Check
+                      </h5>
+                      <p className="text-sm font-medium text-slate-700 leading-relaxed bg-rose-50/50 block p-4 rounded-xl border border-rose-100/50">
+                        {review.reality_check}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
+                    <button className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors group">
+                      <div className="p-1.5 rounded bg-slate-100 group-hover:bg-indigo-50 transition-colors">
+                        <ThumbsUp className="w-3.5 h-3.5" />
+                      </div>
+                      Helpful ({review.upvotes?.length || 0})
+                    </button>
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              <div className="text-center py-16 px-4">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                  <MessageSquare className="w-8 h-8 text-slate-300" />
                 </div>
-                <p className="text-gray-700">{feedback.comment}</p>
-              </motion.div>
-            ))}
+                <h4 className="text-lg font-bold text-slate-800 mb-2">No reviews for this college yet</h4>
+                <p className="text-slate-500 max-w-sm mx-auto mb-6">Your insights matter! Be the first to share your honest experience about placements, infrastructure, and campus life here.</p>
+                <button
+                  onClick={() => {
+                    if (!profile) alert("Please log in to submit a review.");
+                    else setShowFeedbackModal(true);
+                  }}
+                  className="px-6 py-2 bg-indigo-50 text-indigo-700 font-bold rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors"
+                >
+                  Write the First Review
+                </button>
+              </div>
+            )}
           </div>
-
-          {feedbacks.length > 5 && (
-            <div className="text-center mt-6">
-              <button className="text-blue-600 hover:text-blue-700 font-medium">
-                View all {feedbacks.length} reviews →
-              </button>
-            </div>
-          )}
-
-          {feedbacks.length === 0 && (
-            <div className="text-center py-12">
-              <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600 mb-4">No feedback yet. Be the first to review!</p>
-              <button
-                onClick={() => setShowFeedbackForm(true)}
-                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:opacity-90"
-              >
-                Write a Review
-              </button>
-            </div>
-          )}
         </div>
       </div>
     );
   };
 
-  // Render Feedback Form Modal
-  const renderFeedbackForm = () => (
-    <AnimatePresence>
-      {showFeedbackForm && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
-          onClick={() => setShowFeedbackForm(false)}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="relative bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="absolute top-4 right-4">
-              <button
-                onClick={() => setShowFeedbackForm(false)}
-                className="p-2 text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Submit Your Feedback</h3>
-            <p className="text-gray-600 mb-6">Share your experience with {college.college_name}</p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Your Rating</label>
-                <div className="flex space-x-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setFeedbackRating(star)}
-                      className="text-2xl"
-                    >
-                      <Star
-                        className={`${star <= feedbackRating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                          }`}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Your Name (Optional)</label>
-                <input
-                  type="text"
-                  value={feedbackName}
-                  onChange={(e) => setFeedbackName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Anonymous"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Your Feedback</label>
-                <textarea
-                  value={feedbackComment}
-                  onChange={(e) => setFeedbackComment(e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Share your experience, pros and cons, suggestions..."
-                />
-              </div>
-
-              <div className="flex space-x-3 pt-4">
-                <button
-                  onClick={handleSubmitFeedback}
-                  disabled={!feedbackRating || !feedbackComment.trim()}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Submit Feedback
-                </button>
-                <button
-                  onClick={() => setShowFeedbackForm(false)}
-                  className="px-4 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+  // The manual basic feedback form block has been deleted in favor of the full modal component
 
   // Render other tabs (simplified versions)
   const renderFeeStructure = () => (
@@ -3444,7 +3368,18 @@ export default function CollegeDetails() {
         </AnimatePresence>
       </div>
 
-      {renderFeedbackForm()}
+      <ReviewModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        collegeCode={college.college_code}
+        collegeName={college.college_name}
+        profile={profile}
+        onSuccess={() => {
+          // Re-fetch reviews or update state directly after success
+          setShowFeedbackModal(false);
+          window.location.reload();
+        }}
+      />
       {renderImageModal()}
 
       {/* AI Assistant Floating Button */}
