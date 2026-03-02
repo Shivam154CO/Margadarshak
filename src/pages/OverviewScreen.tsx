@@ -271,11 +271,38 @@ export default function OverviewScreen() {
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+      <div className="min-h-screen flex flex-col bg-slate-50">
         <Navbar activeTab="overview" />
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <div className="relative w-14 h-14"><div className="absolute inset-0 rounded-full border-4 border-indigo-100" /><div className="absolute inset-0 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin" /></div>
-          <p className="text-slate-500 font-medium text-sm">Loading your profile...</p>
+        <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between mb-6 animate-pulse">
+            <div>
+              <div className="h-9 bg-gray-200 rounded w-64 mb-2"></div>
+              <div className="h-4 bg-gray-100 rounded w-48"></div>
+            </div>
+            <div className="flex gap-3">
+              <div className="h-10 bg-gray-200 rounded-xl w-28"></div>
+              <div className="h-10 bg-gray-200 rounded-xl w-32"></div>
+            </div>
+          </div>
+          {/* Profile bar skeleton */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5 mb-8 animate-pulse">
+            <div className="flex gap-4">
+              <div className="h-5 bg-gray-200 rounded w-32"></div>
+              <div className="h-5 bg-gray-200 rounded w-16"></div>
+              <div className="h-5 bg-gray-200 rounded w-16"></div>
+              <div className="h-5 bg-gray-200 rounded w-48 ml-auto"></div>
+            </div>
+          </div>
+          {/* Stats grid skeleton */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 animate-pulse">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white border border-slate-200 border-l-4 border-l-slate-200 rounded-xl p-5">
+                <div className="h-8 bg-gray-200 rounded w-14 mb-2"></div>
+                <div className="h-4 bg-gray-100 rounded w-20"></div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

@@ -227,10 +227,33 @@ export default function Analytics() {
 
     if (!colleges.length || loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 flex items-center justify-center">
-                <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="text-indigo-600 font-medium animate-pulse">Analyzing Market Data...</p>
+            <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+                <Navbar activeTab='analytics' userProfile={profile} />
+                <div className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+                    {/* Header skeleton */}
+                    <div className="mb-10 animate-pulse">
+                        <div className="h-10 bg-gray-200 rounded w-64 mb-3"></div>
+                        <div className="h-5 bg-gray-100 rounded w-96"></div>
+                    </div>
+                    {/* Stat card grid skeleton */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 animate-pulse">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6">
+                                <div className="h-4 bg-gray-200 rounded w-24 mb-3"></div>
+                                <div className="h-9 bg-gray-200 rounded w-16 mb-2"></div>
+                                <div className="h-3 bg-gray-100 rounded w-20"></div>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Chart skeleton */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+                        {[...Array(2)].map((_, i) => (
+                            <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6">
+                                <div className="h-5 bg-gray-200 rounded w-40 mb-4"></div>
+                                <div className="h-48 bg-gray-100 rounded-xl"></div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         );
@@ -239,7 +262,7 @@ export default function Analytics() {
     const cardClass = "bg-white/70 backdrop-blur-xl border border-white/50 shadow-xl rounded-3xl p-6 relative overflow-hidden group hover:shadow-2xl hover:bg-white/90 transition-all duration-300";
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 flex flex-col font-sans">
+        <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
             <Navbar activeTab='analytics' userProfile={profile} />
 
             <motion.div
@@ -251,7 +274,7 @@ export default function Analytics() {
                 {/* === Header Section === */}
                 <motion.div variants={itemVariants} className="mb-10 flex flex-col md:flex-row items-center justify-between">
                     <div className="mb-6 md:mb-0">
-                        <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 mb-2">
+                        <h1 className="text-4xl font-bold text-slate-900 mb-2">
                             Market Intelligence
                         </h1>
                         <p className="text-gray-600 text-lg">

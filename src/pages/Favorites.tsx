@@ -157,7 +157,7 @@ const CollegeImage: React.FC<CollegeImageProps> = ({
 
 export default function Favorites() {
   const navigate = useNavigate();
-  const { colleges } = useColleges();
+  useColleges();
   const [savedColleges, setSavedColleges] = useState<College[]>([]);
   const [search, setSearch] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("");
