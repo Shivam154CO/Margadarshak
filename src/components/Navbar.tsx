@@ -50,14 +50,20 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [automationDropdownOpen, setAutomationDropdownOpen] = useState(false);
 
-  // Read from shared React Query cache — same key used by all pages
+  // Always have access to the profile — fetches once, then reads from shared cache
   const { data: cachedProfile } = useQuery<UserProfile | null>({
     queryKey: ['userProfile'],
-    enabled: false, // never refetch here — just read from cache
-    staleTime: Infinity,
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      const { data } = await supabase.from('users').select('*').eq('id', session.user.id).single();
+      return data as UserProfile;
+    },
+    staleTime: 1000 * 60 * 10, // 10 min — avoids refetching on every nav
+    refetchOnMount: false,
   });
 
-  // Prefer cached data over prop (cache is always up-to-date)
+  // Prefer cached data over prop
   const userProfile = cachedProfile ?? propProfile;
 
   const navItems: any[] = [

@@ -8,7 +8,7 @@ import {
 import {
     TrendingUp, TrendingDown, Minus, ArrowUpRight, Zap, Target, Building, Award,
     DollarSign, GraduationCap, MapPin, BarChart2, Activity, Brain, Shield,
-    CheckCircle, Star, Globe, Layers, BookOpen, AlertTriangle
+    CheckCircle, Star, Layers, AlertTriangle
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -130,9 +130,9 @@ export default function Analytics() {
                 <div className="bg-slate-900 rounded-2xl px-5 py-4 mb-4 flex flex-wrap items-center gap-5 shadow-lg">
                     <div className="mr-auto">
                         <p className="text-slate-400 text-[10px] uppercase tracking-[0.15em]">Admission Intelligence Dashboard</p>
-                        <h1 className="text-white text-lg font-black">{profile?.name?.split(' ')[0]}'s ML Analysis Report</h1>
+                        <h1 className="text-white text-lg font-black">{profile?.name ? `${profile.name.split(' ')[0]}'s` : 'Your'} ML Analysis Report</h1>
                     </div>
-                    {[{ l: 'Predictions', v: bi.total }, { l: 'Avg Chance', v: `${bi.avgChanceAll}%` }, { l: 'Avg Pkg', v: `${bi.avgPkgAll}L` }, { l: 'Score', v: `${profile?.cet_score || profile?.diploma_score}` }].map(h => (
+                    {[{ l: 'Predictions', v: bi.total }, { l: 'Avg Chance', v: `${bi.avgChanceAll}%` }, { l: 'Avg Pkg', v: `${bi.avgPkgAll}L` }, { l: 'Score', v: profile?.cet_score || profile?.diploma_score || 'N/A' }].map(h => (
                         <div key={h.l} className="text-center"><div className="text-white font-black text-xl leading-none">{h.v}</div><div className="text-slate-400 text-[10px] mt-0.5">{h.l}</div></div>
                     ))}
                     <div className="flex items-center gap-1 text-emerald-400 text-[10px] border border-emerald-800 bg-emerald-950/40 rounded-lg px-2.5 py-1.5"><Zap className="w-3 h-3" /> Live ML Data</div>
