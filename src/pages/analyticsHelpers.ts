@@ -1,6 +1,6 @@
 import type { College } from '../context/CollegesContext';
 
-export function computeBI(colleges: College[], profile: any) {
+export function computeBI(colleges: College[], _profile: any) {
     if (!colleges.length) return null;
     const pred = colleges.filter(c => c.probability_level || c.fit || c.is_most_probable);
     if (!pred.length) return null;
@@ -88,10 +88,16 @@ export function computeBI(colleges: College[], profile: any) {
         z: c.placement_rate || 40, fit: c.is_most_probable ? 'Most Probable' : (c.fit || 'Unknown'),
     })).slice(0, 80);
 
-    // Top 10 college picks
-    const top10 = [...pred].sort((a, b) =>
+    // All unique college picks (deduplicated by college_code)
+    const seen = new Set<string>();
+    const allUniquePicks = [...pred].sort((a, b) =>
         parseFloat(b.admission_chance_percentage?.replace('%', '') || '0') - parseFloat(a.admission_chance_percentage?.replace('%', '') || '0')
-    ).slice(0, 10);
+    ).filter(c => {
+        const key = c.college_code || c.college_name;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
 
     // Hidden gems: high placement, low fees, reachable
     const gems = pred.filter(c => c.placement_rate >= 80 && c.fees > 0 && c.fees < 150000)
@@ -134,7 +140,7 @@ export function computeBI(colleges: College[], profile: any) {
         highPlacement: pred.filter(c => c.placement_rate >= 85).length,
         affordable: pred.filter(c => c.fees > 0 && c.fees < 150000).length,
         branchRows, cityRows, distRows, feeBuckets, pkgBuckets, plcBuckets, chanceLine, scatter,
-        top10, gems, autonomous, affiliated, hostelYes, safe, moderate, ambitious, catTrend,
+        allUniquePicks, gems, autonomous, affiliated, hostelYes, safe, moderate, ambitious, catTrend,
         sparkMP: mkSpark(mp.length), sparkBF: mkSpark(bf.length), sparkGF: mkSpark(gf.length),
         donut: [
             { name: 'Most Probable', value: mp.length, fill: '#7c3aed' },

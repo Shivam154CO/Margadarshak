@@ -138,13 +138,13 @@ export default function Analytics() {
                     <div className="flex items-center gap-1 text-emerald-400 text-[10px] border border-emerald-800 bg-emerald-950/40 rounded-lg px-2.5 py-1.5"><Zap className="w-3 h-3" /> Live ML Data</div>
                 </div>
 
-                {/* ═══ KPI TILES ═══ */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-2.5 mb-4">
+                {/* ═══ KPI TILES — 2 rows × 4 ═══ */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                     {kpis.map(k => (
-                        <div key={k.label} className="bg-white rounded-xl border border-slate-200 px-3 pt-2.5 pb-0.5 shadow-sm">
-                            <div className="flex items-start justify-between mb-0.5"><p className="text-[10px] text-slate-500 font-medium">{k.label}</p><k.icon className="w-3 h-3" style={{ color: k.color }} /></div>
-                            <div className="text-xl font-black" style={{ color: k.color }}>{k.value}</div>
-                            <p className="text-[10px] text-slate-400 mb-0.5">{k.sub}</p>
+                        <div key={k.label} className="bg-white rounded-xl border border-slate-200 px-4 pt-3 pb-1 shadow-sm">
+                            <div className="flex items-start justify-between mb-1"><p className="text-xs text-slate-500 font-medium">{k.label}</p><k.icon className="w-4 h-4" style={{ color: k.color }} /></div>
+                            <div className="text-2xl font-black" style={{ color: k.color }}>{k.value}</div>
+                            <p className="text-xs text-slate-400 mb-1">{k.sub}</p>
                             <Spark data={k.spark} color={k.color} />
                         </div>
                     ))}
@@ -368,8 +368,8 @@ export default function Analytics() {
                     </div>
                 </Section>
 
-                {/* ═══ SECTION 7: TOP 10 ML PICKS ═══ */}
-                <Section title="Top 10 ML Picks" icon={Star} color={C.amber}>
+                {/* ═══ SECTION 7: ALL UNIQUE COLLEGES ═══ */}
+                <Section title={`All Unique Colleges (${bi.allUniquePicks.length})`} icon={Star} color={C.amber}>
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full text-[11px]">
@@ -378,7 +378,7 @@ export default function Analytics() {
                                         <th key={h} className="text-left py-2 px-3 text-slate-500 font-bold uppercase text-[10px] whitespace-nowrap">{h}</th>
                                     ))}
                                 </tr></thead>
-                                <tbody>{bi.top10.map((c, i) => (
+                                <tbody>{bi.allUniquePicks.map((c, i) => (
                                     <tr key={i} className="border-b border-slate-50 hover:bg-indigo-50/30 transition-colors">
                                         <td className="py-2 px-3 font-bold text-slate-400">{i + 1}</td>
                                         <td className="py-2 px-3 font-semibold text-slate-800 max-w-[180px] truncate">{c.college_name}</td>
