@@ -60,48 +60,19 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
       const { data } = await supabase.from('users').select('*').eq('id', session.user.id).single();
       return data as UserProfile;
     },
-    staleTime: 1000 * 60 * 10, // 10 min — avoids refetching on every nav
+    staleTime: 1000 * 60 * 10,
     refetchOnMount: false,
   });
 
-  // Prefer cached data over prop
   const userProfile = cachedProfile ?? propProfile;
 
   const navItems: any[] = [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      icon: LayoutDashboard,
-      path: "/dashboard",
-    },
-    {
-      id: "search",
-      label: "Colleges",
-      icon: Search,
-      path: "/college-explorer",
-    },
-    {
-      id: "community",
-      label: "Community",
-      icon: MessageSquare,
-      path: "/community",
-    },
-    {
-      id: "map",
-      label: "Map",
-      icon: MapPin,
-      path: "/college-map",
-    },
-    {
-      id: "compare",
-      label: "Compare",
-      path: "/compare-college",
-    },
-    {
-      id: "favorites",
-      label: "Favorites",
-      path: "/favorites",
-    },
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+    { id: "search", label: "Colleges", icon: Search, path: "/college-explorer" },
+    { id: "community", label: "Community", icon: MessageSquare, path: "/community" },
+    { id: "map", label: "Map", icon: MapPin, path: "/college-map" },
+    { id: "compare", label: "Compare", path: "/compare-college" },
+    { id: "favorites", label: "Favorites", path: "/favorites" },
     {
       id: "automation",
       label: "Automation",
@@ -113,18 +84,8 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
         { id: "scorecard-ocr", label: "OCR Auto-fill", icon: Scan, path: "/scorecard-ocr" }
       ]
     },
-    {
-      id: "analytics",
-      label: "Analytics",
-      icon: BarChart3,
-      path: "/analytics",
-    },
-    {
-      id: "help",
-      label: "Help",
-      icon: HelpCircle,
-      path: "/help",
-    },
+    { id: "analytics", label: "Analytics", icon: BarChart3, path: "/analytics" },
+    { id: "help", label: "Help", icon: HelpCircle, path: "/help" },
   ];
 
   return (
@@ -135,18 +96,20 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Toggle mobile menu"
             >
               <Menu className="w-5 h-5 text-gray-600" />
             </button>
-            <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => {
-              setAutomationDropdownOpen(false);
-              navigate('/');
-            }}>
+            <div
+              className="flex items-center space-x-3 cursor-pointer group"
+              onClick={() => navigate('/')}
+              role="button"
+              aria-label="Go to home"
+            >
               <IkigaiLogo size="sm" showText={true} />
             </div>
           </div>
 
-          {/* Desktop Navigation Menu */}
           <div className="hidden lg:flex items-center space-x-1 bg-white/80 backdrop-blur-sm rounded-2xl px-2 py-1.5 border border-gray-200/50 shadow-sm relative">
             {navItems.map((item) => (
               <div key={item.id} className="relative">
@@ -159,12 +122,13 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
                       navigate(item.path);
                     }
                   }}
+                  aria-label={`Open ${item.label}`}
                   className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${item.id === activeTab || (item.hasDropdown && automationDropdownOpen)
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
                     }`}
                 >
-                  {item.icon && React.createElement(item.icon, { className: "w-4 h-4" })}
+                  {item.icon && <item.icon className="w-4 h-4" />}
                   <span>{item.label}</span>
                   {item.hasDropdown && (
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${automationDropdownOpen ? 'rotate-180' : ''}`} />
@@ -181,7 +145,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
                         }}
                         className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2 border-b border-gray-100 last:border-0 transition-colors"
                       >
-                        {subItem.icon && React.createElement(subItem.icon, { className: "w-4 h-4" })}
+                        {subItem.icon && <subItem.icon className="w-4 h-4" />}
                         {subItem.label}
                       </button>
                     ))}
@@ -191,12 +155,12 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
             ))}
           </div>
 
-          {/* Right side - Profile */}
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div
+              <button
                 className="flex items-center space-x-3 bg-white backdrop-blur-sm rounded-xl px-3 py-2 border border-gray-300/50 hover:bg-gray-50 transition-all cursor-pointer group shadow-sm"
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                aria-label="User profile menu"
               >
                 <div className="w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center">
                   <User className="w-4 h-4 text-indigo-600" />
@@ -207,12 +171,10 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
                   </div>
                 </div>
                 <ChevronDown className={`w-4 h-4 text-gray-500 group-hover:text-gray-700 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
-              </div>
+              </button>
 
-              {/* Profile Dropdown */}
               {profileDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200/60 backdrop-blur-sm z-50 overflow-hidden">
-                  {/* Profile Header */}
                   <div className="bg-slate-800 p-5 text-white">
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
@@ -221,82 +183,10 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
                       <div className="flex-1">
                         <h3 className="text-base font-bold">{userProfile?.name || "Student"}</h3>
                         <p className="text-slate-300 text-xs">{userProfile?.email || "student@example.com"}</p>
-                        <div className="flex items-center space-x-1.5 mt-1">
-                          <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>
-                          <span className="text-xs text-indigo-100">Active Student</span>
-                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Profile Details — neutral cards */}
-                  <div className="p-4 space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <p className="text-xs text-slate-500 font-medium">Category</p>
-                        <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile?.category || "OPEN"}</p>
-                      </div>
-                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <p className="text-xs text-slate-500 font-medium">Exam</p>
-                        <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile?.exam_type || "CET"}</p>
-                      </div>
-                    </div>
-
-                    {userProfile?.exam_type === "CET" ? (
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                          <p className="text-xs text-slate-500 font-medium">CET Rank</p>
-                          <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile?.cet_rank || "N/A"}</p>
-                        </div>
-                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                          <p className="text-xs text-slate-500 font-medium">CET Score</p>
-                          <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile?.cet_score || "N/A"}</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                          <p className="text-xs text-slate-500 font-medium">Diploma Rank</p>
-                          <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile?.diploma_rank || "N/A"}</p>
-                        </div>
-                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                          <p className="text-xs text-slate-500 font-medium">Diploma Score</p>
-                          <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile?.diploma_score || "N/A"}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {userProfile?.preferred_branches && userProfile.preferred_branches.length > 0 && (
-                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <p className="text-xs text-slate-500 font-medium mb-2">Preferred Branches</p>
-                        <div className="flex flex-wrap gap-1">
-                          {userProfile.preferred_branches.slice(0, 3).map((branch, index) => (
-                            <span key={index} className="inline-block bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded-md font-medium">
-                              {branch}
-                            </span>
-                          ))}
-                          {userProfile.preferred_branches.length > 3 && (
-                            <span className="text-xs text-slate-500 font-medium">+{userProfile.preferred_branches.length - 3} more</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {userProfile?.university_preference && (
-                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <p className="text-xs text-slate-500 font-medium">University Pref.</p>
-                        <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile.university_preference}</p>
-                      </div>
-                    )}
-                    {userProfile?.state && (
-                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <p className="text-xs text-slate-500 font-medium">Location</p>
-                        <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile.state}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Action Buttons */}
                   <div className="border-t border-gray-200/60 p-4 space-y-2">
                     <button
                       onClick={() => {
@@ -320,64 +210,11 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
                       <span>Sign Out</span>
                     </button>
                   </div>
-
-                  {/* Security Note */}
-                  <div className="bg-slate-50 px-4 py-3 border-t border-gray-200/60">
-                    <div className="flex items-center space-x-2 text-xs text-gray-600">
-                      <Shield className="w-4 h-4 text-indigo-600" />
-                      <span>Your profile data is securely encrypted</span>
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
-
-        {/* Mobile Navigation Menu */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden mt-4 pb-3 border-t border-gray-200/50 pt-4">
-            <div className="grid grid-cols-2 gap-3">
-              {navItems.map((item) => {
-                if (item.hasDropdown) {
-                  return item.dropdownItems.map((subItem: any) => (
-                    <button
-                      key={subItem.id}
-                      onClick={() => {
-                        navigate(subItem.path);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200 flex flex-col items-center justify-center space-y-2 ${subItem.id === activeTab
-                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md"
-                        : "bg-white text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 border border-gray-200/50"
-                        }`}
-                    >
-                      {subItem.icon && React.createElement(subItem.icon, { className: "w-4 h-4" })}
-                      <span className="text-xs">{subItem.label}</span>
-                    </button>
-                  ));
-                }
-
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      navigate(item.path);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200 flex flex-col items-center justify-center space-y-2 ${item.id === activeTab
-                      ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md"
-                      : "bg-white text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 border border-gray-200/50"
-                      }`}
-                  >
-                    {item.icon && React.createElement(item.icon, { className: "w-4 h-4" })}
-                    <span className="text-xs">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   );

@@ -9,12 +9,16 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {
   Building, Cpu, MapPin, IndianRupee, Trash2, ChevronDown,
-  Grid3x3, List, Map as MapIcon, Brain, Database, 
+  Grid3x3, List, Map as MapIcon, Brain, Database,
   Zap, CheckCircle, Target, TrendingUp, Bookmark, BookmarkCheck,
-  Award, Layers, ExternalLink, Star, Info, 
-  Search, Download, X, Users, Bot, SearchX, Globe, Mail, 
-  Share2, Home, Book, Activity, Music, Briefcase
+  Award, Layers, ExternalLink, Star, Info,
+  Search, Download, X, Users, Bot, SearchX, Globe, Mail,
+  Share2, Home, Book, Activity, Music, Briefcase,
+  AlertCircle
 } from "lucide-react";
+import { Virtuoso, VirtuosoGrid } from 'react-virtuoso';
+import SEO from "../components/SEO";
+import Skeleton from "../components/Skeleton";
 
 
 // ---------- TYPES ----------
@@ -262,7 +266,7 @@ function useCollegeData() {
         // Add branch information
         const existingCollege = collegeMap.get(collegeCode)!;
         const branchName = college.branch_name || college.Branch_name || "N/A";
-        
+
         // Avoid duplicate branches
         if (!existingCollege.branches.find(b => b.branch_code === (college.branch_code || college.Branch_code))) {
           existingCollege.branches.push({
@@ -635,6 +639,10 @@ export default function CollegeSearch() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      <SEO
+        title={`${viewMode === 'predicted' ? 'Targeted Matches' : 'Explore Colleges'}`}
+        description={`Browse through ${filteredColleges.length} engineering colleges in Maharashtra with AI match predictions and cutoff data.`}
+      />
       <Navbar activeTab="search" userProfile={userProfile} />
 
       {/* Page Header */}
@@ -1010,37 +1018,48 @@ export default function CollegeSearch() {
 
         {/* Colleges Grid/List View */}
         {filteredColleges.length > 0 ? (
-          activeTab === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredColleges.map((college, index) => (
-                <CollegeCard
-                  key={college.college_code}
-                  college={college}
-                  index={index}
-                  saved={saved.includes(college.college_code)}
-                  onToggleSaved={() => toggleSaved(college.college_code)}
-                  onOpenBranches={() => setBranchModal(college)}
-                  onViewDetails={() => setDetailsModal(college)}
-                  isPredicted={viewMode === "predicted" || !!college.is_predicted}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredColleges.map((college, index) => (
-                <CollegeListCard
-                  key={college.college_code}
-                  college={college}
-                  index={index}
-                  saved={saved.includes(college.college_code)}
-                  onToggleSaved={() => toggleSaved(college.college_code)}
-                  onOpenBranches={() => setBranchModal(college)}
-                  onViewDetails={() => setDetailsModal(college)}
-                  isPredicted={viewMode === "predicted" || !!college.is_predicted}
-                />
-              ))}
-            </div>
-          )
+          <div className="min-h-[600px]">
+            {activeTab === "grid" ? (
+              <VirtuosoGrid
+                useWindowScroll
+                data={filteredColleges}
+                listClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                itemContent={(index, college) => (
+                  <div className="pb-4">
+                    <CollegeCard
+                      key={college.college_code}
+                      college={college}
+                      index={index}
+                      saved={saved.includes(college.college_code)}
+                      onToggleSaved={() => toggleSaved(college.college_code)}
+                      onOpenBranches={() => setBranchModal(college)}
+                      onViewDetails={() => setDetailsModal(college)}
+                      isPredicted={viewMode === "predicted" || !!college.is_predicted}
+                    />
+                  </div>
+                )}
+              />
+            ) : (
+              <Virtuoso
+                useWindowScroll
+                data={filteredColleges}
+                itemContent={(index, college) => (
+                  <div className="pb-4">
+                    <CollegeListCard
+                      key={college.college_code}
+                      college={college}
+                      index={index}
+                      saved={saved.includes(college.college_code)}
+                      onToggleSaved={() => toggleSaved(college.college_code)}
+                      onOpenBranches={() => setBranchModal(college)}
+                      onViewDetails={() => setDetailsModal(college)}
+                      isPredicted={viewMode === "predicted" || !!college.is_predicted}
+                    />
+                  </div>
+                )}
+              />
+            )}
+          </div>
         ) : (
           <motion.div
             initial={{ opacity: 0 }}

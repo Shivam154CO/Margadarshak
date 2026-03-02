@@ -5,6 +5,7 @@ import {
     ExternalLink, IndianRupee, Star, ShieldCheck, ChevronRight
 } from "lucide-react";
 import type { College } from "../../types/college";
+import SmartImage from "../SmartImage";
 
 interface CollegeListCardProps {
     college: College;
@@ -19,6 +20,7 @@ interface CollegeListCardProps {
 export const CollegeListCard: React.FC<CollegeListCardProps> = ({
     college, index, saved, onToggleSaved, onOpenBranches, onViewDetails, isPredicted
 }) => {
+    // ... logic remains same ...
     const getAdmissionInfo = (chance: number) => {
         if (chance >= 80) return { label: "Excellent Chance", color: "text-emerald-700 bg-emerald-100", icon: ShieldCheck };
         if (chance >= 60) return { label: "Good Chance", color: "text-blue-700 bg-blue-100", icon: Target };
@@ -38,19 +40,20 @@ export const CollegeListCard: React.FC<CollegeListCardProps> = ({
             transition={{
                 duration: 0.8,
                 delay: index * 0.05,
-                ease: [0.21, 1.11, 0.81, 0.99] // Bouncy/Elastic-like curve
+                ease: [0.21, 1.11, 0.81, 0.99]
             }}
             className="group bg-white rounded-3xl p-5 border border-gray-100 hover:border-indigo-200 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 flex flex-col md:flex-row gap-6 items-center"
         >
             {/* Mini Image */}
             <div className="relative w-full md:w-48 h-32 rounded-2xl overflow-hidden flex-shrink-0">
-                <img
+                <SmartImage
                     src={college.image || "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=2064&q=80"}
                     alt={college.college_name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-full"
+                    fallbackText={college.college_name}
                 />
                 {isPredicted && (
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-lg text-[10px] font-black text-indigo-600 border border-indigo-100 shadow-sm uppercase tracking-tighter">
+                    <div className="absolute top-2 left-2 z-20 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-lg text-[10px] font-black text-indigo-600 border border-indigo-100 shadow-sm uppercase tracking-tighter">
                         Match Score: {Math.max(...(college.branches || []).map(b => b.match_score || 0))}%
                     </div>
                 )}
