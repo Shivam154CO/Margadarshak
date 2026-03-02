@@ -50,16 +50,16 @@ const Gauge = ({ value, max, color, label }: { value: number; max: number; color
     const pct = Math.min(100, (value / Math.max(max, 1)) * 100);
     return (
         <div className="flex flex-col items-center py-2">
-            <div className="relative w-36 h-20">
-                <ResponsiveContainer width="100%" height={100}>
+            <span className="text-2xl font-black mb-1" style={{ color }}>{value}</span>
+            <div className="w-36 h-16">
+                <ResponsiveContainer width="100%" height={80}>
                     <RadialBarChart cx="50%" cy="100%" innerRadius="75%" outerRadius="100%" startAngle={180} endAngle={0}
                         data={[{ value: pct, fill: color }, { value: 100 - pct, fill: '#f1f5f9' }]}>
                         <RadialBar dataKey="value" cornerRadius={4} />
                     </RadialBarChart>
                 </ResponsiveContainer>
-                <div className="absolute bottom-0 w-full text-center"><span className="text-2xl font-black" style={{ color }}>{value}</span></div>
             </div>
-            <p className="text-xs font-semibold text-slate-500 mt-3">{label}</p>
+            <p className="text-xs font-semibold text-slate-500 mt-1">{label}</p>
         </div>
     );
 };
