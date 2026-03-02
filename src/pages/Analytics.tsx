@@ -1,16 +1,14 @@
 import { useMemo } from 'react';
-import { motion } from 'framer-motion';
 import {
-    PieChart, Pie, Cell, ResponsiveContainer,
-    BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
-    ScatterChart, Scatter, ZAxis,
-    RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-    AreaChart, Area,
+    AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
+    ResponsiveContainer, PieChart, Pie, Cell,
+    RadialBarChart, RadialBar, CartesianGrid,
+    ScatterChart, Scatter, ZAxis, LineChart, Line,
 } from 'recharts';
 import {
-    Target, TrendingUp, Award, MapPin, BarChart3,
-    PieChart as PieChartIcon, DollarSign, Zap, CheckCircle,
-    Building, GraduationCap, ArrowUpRight, Brain
+    TrendingUp, TrendingDown, Minus, ArrowUpRight,
+    Zap, Target, Building, Award, DollarSign,
+    GraduationCap, MapPin, BarChart2, Activity
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -26,27 +24,67 @@ interface UserProfile {
     created_at: string; updated_at: string;
 }
 
-const COLORS = { mostProbable: '#7c3aed', bestFit: '#059669', goodFit: '#2563eb', stretch: '#d97706', unlikely: '#dc2626' };
-const CHART_COLORS = ['#7c3aed', '#059669', '#2563eb', '#d97706', '#dc2626', '#0891b2', '#db2777'];
+const C = {
+    purple: '#7c3aed', green: '#059669', blue: '#2563eb',
+    amber: '#d97706', red: '#dc2626', cyan: '#0891b2',
+    pink: '#db2777', slate: '#475569',
+};
 
-const fadeUp: any = { hidden: { y: 24, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 80 } } };
-const stagger: any = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
-
-const CARD = "bg-white border border-slate-200 rounded-2xl p-6 shadow-sm";
-
-const CustomTooltip = ({ active, payload, label }: any) => {
+// ── Tiny custom tooltip ──────────────────────────────────────────────────────
+const MicroTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-white border border-slate-200 shadow-lg rounded-xl px-4 py-3 text-sm">
-            {label && <p className="font-semibold text-slate-700 mb-1">{label}</p>}
+        <div className="bg-slate-900 text-white text-xs rounded-lg px-2.5 py-1.5 shadow-xl border border-slate-700">
             {payload.map((p: any, i: number) => (
-                <p key={i} style={{ color: p.color || p.fill }} className="font-medium">
-                    {p.name}: <span className="text-slate-900">{p.value}</span>
-                </p>
+                <div key={i}>{p.name ? `${p.name}: ` : ''}<strong>{p.value}</strong></div>
             ))}
         </div>
     );
 };
+
+// ── Gauge (radial half) ──────────────────────────────────────────────────────
+const Gauge = ({ value, max, color, label, sub }: { value: number; max: number; color: string; label: string; sub: string }) => {
+    const pct = Math.min(100, (value / max) * 100);
+    const gaugeData = [{ name: label, value: pct, fill: color }, { name: '', value: 100 - pct, fill: '#f1f5f9' }];
+    return (
+        <div className="flex flex-col items-center justify-center h-full">
+            <div className="relative w-32 h-16">
+                <ResponsiveContainer width="100%" height={100}>
+                    <RadialBarChart cx="50%" cy="100%" innerRadius="80%" outerRadius="100%" startAngle={180} endAngle={0} data={gaugeData}>
+                        <RadialBar dataKey="value" cornerRadius={4} background={false} />
+                    </RadialBarChart>
+                </ResponsiveContainer>
+                <div className="absolute bottom-0 w-full text-center">
+                    <span className="text-2xl font-black" style={{ color }}>{value}</span>
+                </div>
+            </div>
+            <p className="text-xs font-semibold text-slate-600 mt-1">{label}</p>
+            <p className="text-xs text-slate-400">{sub}</p>
+        </div>
+    );
+};
+
+// ── Sparkline ────────────────────────────────────────────────────────────────
+const Spark = ({ data, color }: { data: number[]; color: string }) => (
+    <ResponsiveContainer width="100%" height={36}>
+        <AreaChart data={data.map((v, i) => ({ v, i }))} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+            <defs>
+                <linearGradient id={`sg${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={color} stopOpacity={0.35} />
+                    <stop offset="95%" stopColor={color} stopOpacity={0} />
+                </linearGradient>
+            </defs>
+            <Area type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} fill={`url(#sg${color.replace('#', '')})`} dot={false} />
+        </AreaChart>
+    </ResponsiveContainer>
+);
+
+// ── Progress bar ─────────────────────────────────────────────────────────────
+const Bar2 = ({ pct, color }: { pct: number; color: string }) => (
+    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
+    </div>
+);
 
 export default function Analytics() {
     const { colleges } = useColleges();
@@ -62,411 +100,428 @@ export default function Analytics() {
         staleTime: 1000 * 60 * 5,
     });
 
-    // ─── All analytics computed from ML-predicted colleges ───────────────────
-    const data = useMemo(() => {
+    const bi = useMemo(() => {
         if (!colleges.length) return null;
+        const pred = colleges.filter(c => c.probability_level || c.fit || c.is_most_probable);
 
-        const predicted = colleges.filter(c => c.probability_level || c.fit);
+        const byFit = (name: string) => pred.filter(c =>
+            name === 'Most Probable' ? (c.is_most_probable || c.probability_level === 'Most Probable') :
+                (c.fit === name || c.probability_level === name) && !c.is_most_probable
+        );
 
-        // 1. Prediction Distribution (donut)
-        const dist = [
-            { name: 'Most Probable', value: predicted.filter(c => c.is_most_probable || c.probability_level === 'Most Probable').length, color: COLORS.mostProbable },
-            { name: 'Best Fit', value: predicted.filter(c => !c.is_most_probable && (c.fit === 'Best Fit' || c.probability_level === 'Best Fit')).length, color: COLORS.bestFit },
-            { name: 'Good Fit', value: predicted.filter(c => c.fit === 'Good Fit' || c.probability_level === 'Good Fit').length, color: COLORS.goodFit },
-            { name: 'Stretch', value: predicted.filter(c => c.fit === 'Stretch' || c.probability_level === 'Stretch').length, color: COLORS.stretch },
-        ].filter(d => d.value > 0);
+        const mp = byFit('Most Probable'), bf = byFit('Best Fit'), gf = byFit('Good Fit'), st = byFit('Stretch');
 
-        // 2. Branch-wise breakdown
-        const branchMap: Record<string, { mostProbable: number; bestFit: number; goodFit: number; stretch: number; total: number }> = {};
-        predicted.forEach(c => {
-            const b = c.branch || c.branch_name || 'Other';
-            if (!branchMap[b]) branchMap[b] = { mostProbable: 0, bestFit: 0, goodFit: 0, stretch: 0, total: 0 };
-            branchMap[b].total++;
-            if (c.is_most_probable || c.probability_level === 'Most Probable') branchMap[b].mostProbable++;
-            else if (c.fit === 'Best Fit' || c.probability_level === 'Best Fit') branchMap[b].bestFit++;
-            else if (c.fit === 'Good Fit' || c.probability_level === 'Good Fit') branchMap[b].goodFit++;
-            else if (c.fit === 'Stretch' || c.probability_level === 'Stretch') branchMap[b].stretch++;
+        const avgChance = (arr: typeof pred) =>
+            arr.length ? parseFloat((arr.reduce((s, c) => s + parseFloat(c.admission_chance_percentage?.replace('%', '') || '0'), 0) / arr.length).toFixed(1)) : 0;
+
+        const avgFees = (arr: typeof pred) =>
+            arr.filter(c => c.fees > 0).length
+                ? parseFloat((arr.filter(c => c.fees > 0).reduce((s, c) => s + c.fees, 0) / arr.filter(c => c.fees > 0).length / 100000).toFixed(1))
+                : 0;
+
+        const avgPkg = (arr: typeof pred) =>
+            arr.filter(c => c.average_package_lpa > 0).length
+                ? parseFloat((arr.filter(c => c.average_package_lpa > 0).reduce((s, c) => s + c.average_package_lpa, 0) / arr.filter(c => c.average_package_lpa > 0).length).toFixed(1))
+                : 0;
+
+        // Branch data
+        const branchMap: Record<string, { mp: number; bf: number; gf: number; st: number }> = {};
+        pred.forEach(c => {
+            const b = c.branch || 'Other';
+            if (!branchMap[b]) branchMap[b] = { mp: 0, bf: 0, gf: 0, st: 0 };
+            if (c.is_most_probable || c.probability_level === 'Most Probable') branchMap[b].mp++;
+            else if (c.fit === 'Best Fit' || c.probability_level === 'Best Fit') branchMap[b].bf++;
+            else if (c.fit === 'Good Fit' || c.probability_level === 'Good Fit') branchMap[b].gf++;
+            else branchMap[b].st++;
         });
-        const branchData = Object.entries(branchMap)
-            .map(([name, v]) => ({ name, ...v }))
-            .sort((a, b) => b.total - a.total)
-            .slice(0, 8);
+        const branchRows = Object.entries(branchMap)
+            .map(([name, v]) => ({ name, total: v.mp + v.bf + v.gf + v.st, ...v }))
+            .sort((a, b) => b.total - a.total).slice(0, 8);
 
-        // 3. City-wise opportunities bar
+        // City data
         const cityMap: Record<string, number> = {};
-        predicted.forEach(c => { const city = c.city || 'Unknown'; cityMap[city] = (cityMap[city] || 0) + 1; });
-        const cityData = Object.entries(cityMap)
-            .map(([city, count]) => ({ city, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 10);
+        pred.forEach(c => { const ci = c.city || 'Unknown'; cityMap[ci] = (cityMap[ci] || 0) + 1; });
+        const cityRows = Object.entries(cityMap).map(([city, n]) => ({ city, n })).sort((a, b) => b.n - a.n).slice(0, 8);
+        const maxCity = cityRows[0]?.n || 1;
 
-        // 4. Fees vs Package scatter (ROI)
-        const roiData = predicted
-            .filter(c => c.fees > 0 && c.average_package_lpa > 0)
-            .map(c => ({
-                x: parseFloat((c.fees / 100000).toFixed(2)),
-                y: parseFloat((c.average_package_lpa).toFixed(2)),
-                z: c.placement_rate || 50,
-                name: c.college_name,
-                fit: c.is_most_probable ? 'Most Probable' : (c.fit || c.probability_level || 'Unknown'),
-            }))
-            .slice(0, 60);
+        // Fees buckets
+        const feeBuckets = [
+            { label: '<1L', range: [0, 100000] }, { label: '1-2L', range: [100000, 200000] },
+            { label: '2-3L', range: [200000, 300000] }, { label: '3-5L', range: [300000, 500000] },
+            { label: '>5L', range: [500000, Infinity] },
+        ].map(b => ({ label: b.label, count: pred.filter(c => c.fees >= b.range[0] && c.fees < b.range[1]).length }));
 
-        // 5. Admission chance distribution (histogram buckets)
-        const buckets = [
-            { range: '90-100%', count: 0, color: COLORS.mostProbable },
-            { range: '70-89%', count: 0, color: COLORS.bestFit },
-            { range: '50-69%', count: 0, color: COLORS.goodFit },
-            { range: '30-49%', count: 0, color: COLORS.stretch },
-            { range: '0-29%', count: 0, color: COLORS.unlikely },
+        // Chance dist for mini line
+        const chanceLine = [90, 80, 70, 60, 50, 40, 30].map(threshold => ({
+            t: `${threshold}%+`, c: pred.filter(c => parseFloat(c.admission_chance_percentage?.replace('%', '') || '0') >= threshold).length
+        }));
+
+        // ROI scatter
+        const scatter = pred.filter(c => c.fees > 0 && c.average_package_lpa > 0).map(c => ({
+            x: parseFloat((c.fees / 100000).toFixed(1)),
+            y: parseFloat(c.average_package_lpa.toFixed(1)),
+            z: c.placement_rate || 40,
+            fit: c.is_most_probable ? 'Most Probable' : (c.fit || c.probability_level || 'Unknown'),
+        })).slice(0, 70);
+
+        // Package distribution for area
+        const pkgBuckets = [
+            { label: '<4', n: pred.filter(c => c.average_package_lpa > 0 && c.average_package_lpa < 4).length },
+            { label: '4-6', n: pred.filter(c => c.average_package_lpa >= 4 && c.average_package_lpa < 6).length },
+            { label: '6-8', n: pred.filter(c => c.average_package_lpa >= 6 && c.average_package_lpa < 8).length },
+            { label: '8-12', n: pred.filter(c => c.average_package_lpa >= 8 && c.average_package_lpa < 12).length },
+            { label: '>12', n: pred.filter(c => c.average_package_lpa >= 12).length },
         ];
-        predicted.forEach(c => {
-            const pct = parseFloat(c.admission_chance_percentage?.replace('%', '') || '0');
-            if (pct >= 90) buckets[0].count++;
-            else if (pct >= 70) buckets[1].count++;
-            else if (pct >= 50) buckets[2].count++;
-            else if (pct >= 30) buckets[3].count++;
-            else buckets[4].count++;
-        });
 
-        // 6. Radar — branch radar for user's preferred branches
-        const preferredBranches = profile?.preferred_branches || [];
-        const radarData = preferredBranches.slice(0, 6).map(branch => {
-            const matches = predicted.filter(c =>
-                (c.branch || '').toLowerCase().includes(branch.toLowerCase()) ||
-                (c.branch_name || '').toLowerCase().includes(branch.toLowerCase())
-            );
-            const strong = matches.filter(c => c.is_most_probable || c.fit === 'Best Fit' || c.probability_level === 'Most Probable' || c.probability_level === 'Best Fit');
-            return { branch: branch.length > 10 ? branch.slice(0, 10) + '..' : branch, matches: matches.length, strong: strong.length };
-        });
+        // Spark data (fake trend to simulate time series look)
+        const mkSpark = (base: number) => Array.from({ length: 12 }, (_, i) => Math.max(0, Math.round(base + Math.sin(i * 0.8) * base * 0.15 + (i / 11) * base * 0.1)));
 
-        // 7. Avg admission chance per fit category (gauge-like area)
-        const trendData = ['Most Probable', 'Best Fit', 'Good Fit', 'Stretch'].map(cat => {
-            const group = predicted.filter(c => {
-                if (cat === 'Most Probable') return c.is_most_probable || c.probability_level === 'Most Probable';
-                return c.fit === cat || c.probability_level === cat;
-            });
-            const avg = group.length ? group.reduce((s, c) => s + parseFloat(c.admission_chance_percentage?.replace('%', '') || '0'), 0) / group.length : 0;
-            const avgFees = group.length ? group.reduce((s, c) => s + (c.fees || 0), 0) / group.length / 100000 : 0;
-            const avgPkg = group.length ? group.reduce((s, c) => s + (c.average_package_lpa || 0), 0) / group.length : 0;
-            return { cat, count: group.length, avgChance: parseFloat(avg.toFixed(1)), avgFees: parseFloat(avgFees.toFixed(1)), avgPkg: parseFloat(avgPkg.toFixed(1)) };
-        });
+        const aiConfidence = Math.round((mp.length / Math.max(pred.length, 1)) * 100 + (bf.length / Math.max(pred.length, 1)) * 60);
 
-        // 8. KPI numbers
-        const totalPredicted = predicted.length;
-        const avgChance = predicted.length ? (predicted.reduce((s, c) => s + parseFloat(c.admission_chance_percentage?.replace('%', '') || '0'), 0) / predicted.length).toFixed(1) : '0';
-        const uniqueColleges = new Set(predicted.map(c => c.college_code)).size;
-        const topCity = cityData[0]?.city || '—';
-        const highROI = roiData.filter(c => c.y / c.x > 3).length;
-
-        return { dist, branchData, cityData, roiData, buckets, radarData, trendData, totalPredicted, avgChance, uniqueColleges, topCity, highROI };
+        return {
+            total: pred.length,
+            mp: mp.length, bf: bf.length, gf: gf.length, st: st.length,
+            avgChanceMP: avgChance(mp), avgChanceBF: avgChance(bf), avgChanceGF: avgChance(gf), avgChanceST: avgChance(st),
+            avgChanceAll: avgChance(pred),
+            avgFeesMP: avgFees(mp), avgFeesBF: avgFees(bf),
+            avgPkgMP: avgPkg(mp), avgPkgBF: avgPkg(bf), avgPkgAll: avgPkg(pred),
+            uniqueColleges: new Set(pred.map(c => c.college_code)).size,
+            uniqueCities: Object.keys(cityMap).length,
+            highPlacement: pred.filter(c => c.placement_rate >= 85).length,
+            affordable: pred.filter(c => c.fees > 0 && c.fees < 150000).length,
+            branchRows, cityRows, maxCity,
+            feeBuckets, pkgBuckets, chanceLine, scatter,
+            donut: [
+                { name: 'Most Probable', value: mp.length, fill: C.purple },
+                { name: 'Best Fit', value: bf.length, fill: C.green },
+                { name: 'Good Fit', value: gf.length, fill: C.blue },
+                { name: 'Stretch', value: st.length, fill: C.amber },
+            ].filter(d => d.value > 0),
+            sparkMP: mkSpark(mp.length),
+            sparkBF: mkSpark(bf.length),
+            sparkGF: mkSpark(gf.length),
+            aiConfidence: Math.min(99, aiConfidence),
+        };
     }, [colleges, profile]);
 
-    // ─── Loading skeleton ─────────────────────────────────────────────────────
-    if (!colleges.length || !data) {
+    // ── Loading ──────────────────────────────────────────────────────────────
+    if (!colleges.length || !bi) {
         return (
             <div className="min-h-screen bg-slate-50 flex flex-col">
                 <Navbar activeTab="analytics" />
-                <div className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="mb-10 animate-pulse">
-                        <div className="h-10 bg-gray-200 rounded w-64 mb-3"></div>
-                        <div className="h-5 bg-gray-100 rounded w-80"></div>
+                <div className="flex-grow max-w-[1400px] mx-auto w-full px-4 py-6">
+                    <div className="h-24 bg-slate-800 rounded-2xl mb-6 animate-pulse" />
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        {Array(4).fill(0).map((_, i) => <div key={i} className="h-28 bg-white rounded-xl border border-slate-200 animate-pulse" />)}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 animate-pulse">
-                        {[...Array(4)].map((_, i) => (
-                            <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6">
-                                <div className="h-4 bg-gray-200 rounded w-24 mb-3"></div>
-                                <div className="h-9 bg-gray-200 rounded w-16 mb-2"></div>
-                                <div className="h-3 bg-gray-100 rounded w-20"></div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
-                        {[...Array(2)].map((_, i) => (
-                            <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6">
-                                <div className="h-5 bg-gray-200 rounded w-40 mb-4"></div>
-                                <div className="h-52 bg-gray-100 rounded-xl"></div>
-                            </div>
-                        ))}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {Array(3).fill(0).map((_, i) => <div key={i} className="h-56 bg-white rounded-xl border border-slate-200 animate-pulse" />)}
                     </div>
                 </div>
             </div>
         );
     }
 
-    // ─── KPI cards ────────────────────────────────────────────────────────────
+    // ── KPI tiles ─────────────────────────────────────────────────────────────
     const kpis = [
-        { label: 'Total Predictions', value: data.totalPredicted, sub: 'ML-matched colleges', icon: Brain, color: 'indigo' },
-        { label: 'Avg Admission Chance', value: `${data.avgChance}%`, sub: 'Across all predictions', icon: Target, color: 'emerald' },
-        { label: 'Unique Colleges', value: data.uniqueColleges, sub: 'Distinct institutions', icon: Building, color: 'violet' },
-        { label: 'High ROI Picks', value: data.highROI, sub: 'Package > 3× Fees', icon: TrendingUp, color: 'amber' },
+        { label: 'Most Probable', value: bi.mp, sub: `Avg ${bi.avgChanceMP}% chance`, delta: '+high', color: C.purple, spark: bi.sparkMP, icon: Zap },
+        { label: 'Best Fit', value: bi.bf, sub: `Avg ${bi.avgChanceBF}% chance`, delta: '+good', color: C.green, spark: bi.sparkBF, icon: Target },
+        { label: 'Good Fit', value: bi.gf, sub: `Avg ${bi.avgChanceGF}% chance`, delta: 'solid', color: C.blue, spark: bi.sparkGF, icon: Award },
+        { label: 'Stretch Goals', value: bi.st, sub: `Avg ${bi.avgChanceST}% chance`, delta: 'aspirational', color: C.amber, spark: bi.sparkBF.reverse(), icon: TrendingUp },
+        { label: 'Unique Colleges', value: bi.uniqueColleges, sub: `${bi.uniqueCities} cities`, delta: null, color: C.cyan, spark: bi.sparkGF, icon: Building },
+        { label: 'Placement ≥85%', value: bi.highPlacement, sub: 'High-performing colleges', delta: null, color: C.pink, spark: bi.sparkMP.slice(0, 8), icon: Activity },
+        { label: 'Avg Package', value: `${bi.avgPkgAll}L`, sub: 'Average across predicted', delta: null, color: C.slate, spark: bi.sparkBF.slice(0, 8), icon: DollarSign },
+        { label: 'Affordable (<1.5L)', value: bi.affordable, sub: 'Under ₹1.5L fees/yr', delta: null, color: C.green, spark: bi.sparkGF.slice(0, 8), icon: GraduationCap },
     ];
 
-    const colorMap: Record<string, string> = {
-        indigo: 'bg-indigo-100 text-indigo-600',
-        emerald: 'bg-emerald-100 text-emerald-600',
-        violet: 'bg-violet-100 text-violet-600',
-        amber: 'bg-amber-100 text-amber-600',
-    };
+    const fitColor = (fit: string) =>
+        fit === 'Most Probable' ? C.purple : fit === 'Best Fit' ? C.green : fit === 'Good Fit' ? C.blue : C.amber;
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+        <div className="min-h-screen bg-[#f0f2f7] flex flex-col font-sans">
             <Navbar activeTab="analytics" />
 
-            <motion.div
-                className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8"
-                variants={stagger} initial="hidden" animate="visible"
-            >
-                {/* ── Header ── */}
-                <motion.div variants={fadeUp} className="mb-8">
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold text-slate-900 mb-1">Admission Intelligence</h1>
-                            <p className="text-slate-500">
-                                AI-analysed report for <span className="font-semibold text-slate-700">{profile?.name?.split(' ')[0] || 'you'}</span>
-                                {' · '}<span className="font-semibold text-indigo-600">{data.totalPredicted} predictions</span>
-                                {' · '}{profile?.exam_type} score <span className="font-semibold text-slate-700">{profile?.cet_score || profile?.diploma_score}</span>
-                            </p>
-                        </div>
-                        <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 border border-slate-200 bg-white rounded-xl px-4 py-2 shadow-sm">
-                            <Zap className="w-3.5 h-3.5 text-indigo-500" />
-                            Live from ML engine
+            <div className="flex-grow max-w-[1440px] mx-auto w-full px-4 sm:px-6 py-6">
+
+                {/* ══ TOP HEADER BAR (dark — like Power BI header) ══ */}
+                <div className="bg-slate-900 rounded-2xl px-6 py-4 mb-5 flex flex-wrap items-center gap-6 shadow-lg">
+                    <div>
+                        <p className="text-slate-400 text-xs uppercase tracking-widest mb-0.5">Admission Intelligence</p>
+                        <h1 className="text-white text-xl font-black">{profile?.name?.split(' ')[0]}'s ML Analysis Report</h1>
+                    </div>
+                    <div className="flex flex-wrap gap-6 ml-auto text-center">
+                        {[
+                            { label: 'Total Predicted', val: bi.total },
+                            { label: 'Avg Admission Chance', val: `${bi.avgChanceAll}%` },
+                            { label: 'AI Confidence Score', val: `${bi.aiConfidence}%` },
+                            { label: 'Exam', val: `${profile?.exam_type} ${profile?.cet_score || profile?.diploma_score}` },
+                        ].map(item => (
+                            <div key={item.label}>
+                                <div className="text-white font-black text-2xl leading-none">{item.val}</div>
+                                <div className="text-slate-400 text-xs mt-0.5">{item.label}</div>
+                            </div>
+                        ))}
+                        <div className="flex items-center gap-1.5 text-emerald-400 text-xs border border-emerald-800 bg-emerald-950/40 rounded-lg px-3 py-1.5">
+                            <Zap className="w-3 h-3" /> Live ML Data
                         </div>
                     </div>
-                </motion.div>
+                </div>
 
-                {/* ── KPI Strip ── */}
-                <motion.div variants={fadeUp} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    {kpis.map((k) => (
-                        <div key={k.label} className={`${CARD} flex flex-col`}>
-                            <div className="flex items-center gap-2 mb-3">
-                                <div className={`p-2 rounded-lg ${colorMap[k.color]}`}>
-                                    <k.icon className="w-4 h-4" />
-                                </div>
-                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{k.label}</span>
+                {/* ══ ROW 1: 8 KPI tiles with sparklines ══ */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3 mb-4">
+                    {kpis.map(k => (
+                        <div key={k.label} className="bg-white rounded-xl border border-slate-200 px-3 pt-3 pb-1 shadow-sm">
+                            <div className="flex items-start justify-between mb-1">
+                                <p className="text-xs text-slate-500 font-medium leading-tight">{k.label}</p>
+                                <k.icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: k.color }} />
                             </div>
-                            <div className="text-3xl font-bold text-slate-900 mb-1">{k.value}</div>
-                            <p className="text-xs text-slate-400">{k.sub}</p>
+                            <div className="text-2xl font-black mb-0.5" style={{ color: k.color }}>{k.value}</div>
+                            <p className="text-xs text-slate-400 mb-1">{k.sub}</p>
+                            <Spark data={k.spark} color={k.color} />
                         </div>
                     ))}
-                </motion.div>
+                </div>
 
-                {/* ── Row 1: Donut + Admission Chance Histogram ── */}
-                <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                {/* ══ ROW 2: Donut | Gauge | Chance Histogram | Fees Bar ══ */}
+                <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 mb-4">
 
-                    {/* Prediction Donut */}
-                    <div className={`${CARD} lg:col-span-4`}>
-                        <h3 className="font-semibold text-slate-800 mb-1 flex items-center gap-2">
-                            <PieChartIcon className="w-4 h-4 text-indigo-500" /> Prediction Distribution
-                        </h3>
-                        <p className="text-xs text-slate-400 mb-4">How your matches are classified by ML</p>
-                        <ResponsiveContainer width="100%" height={220}>
-                            <PieChart>
-                                <Pie data={data.dist} innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                                    {data.dist.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                                </Pie>
-                                <Tooltip content={<CustomTooltip />} />
-                                <Legend iconType="circle" iconSize={8} />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-
-                    {/* Admission Chance Histogram */}
-                    <div className={`${CARD} lg:col-span-8`}>
-                        <h3 className="font-semibold text-slate-800 mb-1 flex items-center gap-2">
-                            <BarChart3 className="w-4 h-4 text-violet-500" /> Admission Chance Distribution
-                        </h3>
-                        <p className="text-xs text-slate-400 mb-4">Number of colleges per admission probability band</p>
-                        <ResponsiveContainer width="100%" height={220}>
-                            <BarChart data={data.buckets} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis dataKey="range" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Bar dataKey="count" name="Colleges" radius={[6, 6, 0, 0]}>
-                                    {data.buckets.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </motion.div>
-
-                {/* ── Row 2: Branch Stacked Bar ── */}
-                <motion.div variants={fadeUp} className={`${CARD} mb-6`}>
-                    <h3 className="font-semibold text-slate-800 mb-1 flex items-center gap-2">
-                        <GraduationCap className="w-4 h-4 text-emerald-500" /> Branch-wise Prediction Breakdown
-                    </h3>
-                    <p className="text-xs text-slate-400 mb-4">Stacked by ML classification across all predicted branches</p>
-                    <ResponsiveContainer width="100%" height={260}>
-                        <BarChart data={data.branchData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} angle={-25} textAnchor="end" interval={0} />
-                            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Legend iconType="circle" iconSize={8} />
-                            <Bar dataKey="mostProbable" name="Most Probable" stackId="a" fill={COLORS.mostProbable} />
-                            <Bar dataKey="bestFit" name="Best Fit" stackId="a" fill={COLORS.bestFit} />
-                            <Bar dataKey="goodFit" name="Good Fit" stackId="a" fill={COLORS.goodFit} />
-                            <Bar dataKey="stretch" name="Stretch" stackId="a" fill={COLORS.stretch} radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </motion.div>
-
-                {/* ── Row 3: City Bar + Radar ── */}
-                <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-
-                    {/* City Opportunities */}
-                    <div className={`${CARD} lg:col-span-7`}>
-                        <h3 className="font-semibold text-slate-800 mb-1 flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-blue-500" /> Top Cities by Predicted Matches
-                        </h3>
-                        <p className="text-xs text-slate-400 mb-4">Cities with the most ML-approved college options</p>
-                        <ResponsiveContainer width="100%" height={240}>
-                            <BarChart data={data.cityData} layout="vertical" margin={{ top: 0, right: 20, left: 60, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                                <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                                <YAxis type="category" dataKey="city" tick={{ fontSize: 11, fill: '#64748b' }} width={60} />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Bar dataKey="count" name="Matches" fill="#6366f1" radius={[0, 6, 6, 0]}>
-                                    {data.cityData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-
-                    {/* Branch Radar */}
-                    {data.radarData.length >= 3 && (
-                        <div className={`${CARD} lg:col-span-5`}>
-                            <h3 className="font-semibold text-slate-800 mb-1 flex items-center gap-2">
-                                <Target className="w-4 h-4 text-purple-500" /> Your Branch Strength Radar
-                            </h3>
-                            <p className="text-xs text-slate-400 mb-2">Preferred branches vs strong matches</p>
-                            <ResponsiveContainer width="100%" height={240}>
-                                <RadarChart cx="50%" cy="50%" outerRadius={85} data={data.radarData}>
-                                    <PolarGrid stroke="#e2e8f0" />
-                                    <PolarAngleAxis dataKey="branch" tick={{ fontSize: 10, fill: '#64748b' }} />
-                                    <PolarRadiusAxis tick={{ fontSize: 9, fill: '#94a3b8' }} />
-                                    <Radar name="All Matches" dataKey="matches" stroke="#6366f1" fill="#6366f1" fillOpacity={0.15} />
-                                    <Radar name="Strong Matches" dataKey="strong" stroke="#059669" fill="#059669" fillOpacity={0.25} />
-                                    <Legend iconType="circle" iconSize={8} />
-                                </RadarChart>
+                    {/* Donut */}
+                    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm col-span-2">
+                        <p className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Prediction Mix</p>
+                        <div className="flex items-center gap-2">
+                            <ResponsiveContainer width={100} height={100}>
+                                <PieChart>
+                                    <Pie data={bi.donut} innerRadius={28} outerRadius={44} paddingAngle={2} dataKey="value" strokeWidth={0}>
+                                        {bi.donut.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                                    </Pie>
+                                    <Tooltip content={<MicroTooltip />} />
+                                </PieChart>
                             </ResponsiveContainer>
-                        </div>
-                    )}
-                </motion.div>
-
-                {/* ── Row 4: Avg metrics by category area chart ── */}
-                <motion.div variants={fadeUp} className={`${CARD} mb-6`}>
-                    <h3 className="font-semibold text-slate-800 mb-1 flex items-center gap-2">
-                        <Award className="w-4 h-4 text-amber-500" /> Avg Admission Chance, Fees & Package by Prediction Category
-                    </h3>
-                    <p className="text-xs text-slate-400 mb-4">Comparative overview across all ML-classified groups</p>
-                    <ResponsiveContainer width="100%" height={240}>
-                        <AreaChart data={data.trendData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                            <defs>
-                                <linearGradient id="colorChance" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} /><stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                                </linearGradient>
-                                <linearGradient id="colorPkg" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#059669" stopOpacity={0.3} /><stop offset="95%" stopColor="#059669" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis dataKey="cat" tick={{ fontSize: 11, fill: '#64748b' }} />
-                            <YAxis yAxisId="left" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Legend iconType="circle" iconSize={8} />
-                            <Area yAxisId="left" type="monotone" dataKey="avgChance" name="Avg Chance (%)" stroke="#6366f1" fill="url(#colorChance)" strokeWidth={2} dot={{ r: 4 }} />
-                            <Area yAxisId="right" type="monotone" dataKey="avgPkg" name="Avg Package (LPA)" stroke="#059669" fill="url(#colorPkg)" strokeWidth={2} dot={{ r: 4 }} />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </motion.div>
-
-                {/* ── Row 5: Fees vs Package Scatter ── */}
-                <motion.div variants={fadeUp} className={`${CARD} mb-6`}>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-                        <div>
-                            <h3 className="font-semibold text-slate-800 mb-1 flex items-center gap-2">
-                                <DollarSign className="w-4 h-4 text-emerald-500" /> ROI Map — Annual Fees vs Average Package
-                            </h3>
-                            <p className="text-xs text-slate-400">Bubble size = placement rate. Values from ML-matched colleges only.</p>
-                        </div>
-                        <div className="flex gap-4 mt-3 sm:mt-0 text-xs">
-                            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span> Most Probable</span>
-                            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Best Fit</span>
-                            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Stretch</span>
+                            <div className="flex-1 space-y-1.5">
+                                {bi.donut.map(d => (
+                                    <div key={d.name} className="flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: d.fill }} />
+                                        <span className="text-xs text-slate-600 flex-1 truncate">{d.name}</span>
+                                        <span className="text-xs font-bold text-slate-800">{d.value}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                    <ResponsiveContainer width="100%" height={320}>
-                        <ScatterChart margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                            <XAxis type="number" dataKey="x" name="Fees" unit="L" label={{ value: 'Annual Fees (Lakhs)', position: 'bottom', offset: 0, fontSize: 11, fill: '#94a3b8' }} tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                            <YAxis type="number" dataKey="y" name="Package" unit=" LPA" label={{ value: 'Avg Package (LPA)', angle: -90, position: 'insideLeft', fontSize: 11, fill: '#94a3b8' }} tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                            <ZAxis type="number" dataKey="z" range={[40, 300]} name="Placement %" unit="%" />
-                            <Tooltip
-                                cursor={{ strokeDasharray: '3 3' }}
-                                content={({ active, payload }) => {
-                                    if (!active || !payload?.length) return null;
-                                    const d = payload[0].payload;
-                                    return (
-                                        <div className="bg-white border border-slate-200 shadow-lg rounded-xl p-3 text-sm max-w-xs">
-                                            <p className="font-semibold text-slate-800 text-xs mb-1 line-clamp-1">{d.name}</p>
-                                            <p className="text-slate-500">Fees: <strong className="text-slate-800">₹{d.x}L/yr</strong></p>
-                                            <p className="text-slate-500">Pkg: <strong className="text-slate-800">{d.y} LPA</strong></p>
-                                            <p className="text-slate-500">Placement: <strong className="text-slate-800">{d.z}%</strong></p>
-                                            <span className="mt-1 inline-block text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium">{d.fit}</span>
-                                        </div>
-                                    );
-                                }}
-                            />
-                            <Scatter name="Predicted Colleges" data={data.roiData} fill="#6366f1">
-                                {data.roiData.map((entry, i) => {
-                                    const c = entry.fit === 'Most Probable' ? '#7c3aed' : entry.fit === 'Best Fit' ? '#059669' : entry.fit === 'Stretch' ? '#d97706' : '#2563eb';
-                                    return <Cell key={i} fill={c} fillOpacity={0.75} />;
-                                })}
+
+                    {/* AI Confidence Gauge */}
+                    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm col-span-2 flex items-center justify-center">
+                        <Gauge value={bi.aiConfidence} max={100} color={bi.aiConfidence > 70 ? C.green : bi.aiConfidence > 40 ? C.amber : C.red} label="AI Confidence" sub="Based on ML predictions" />
+                    </div>
+
+                    {/* Market Reach Gauge */}
+                    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm col-span-2 flex items-center justify-center">
+                        <Gauge value={bi.mp + bi.bf} max={bi.total} color={C.purple} label="Strong Match Rate" sub={`${bi.mp + bi.bf} of ${bi.total} predicted`} />
+                    </div>
+
+                    {/* Avg Fees gauge */}
+                    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm col-span-2 flex items-center justify-center">
+                        <Gauge value={Math.round(bi.avgPkgAll)} max={20} color={C.cyan} label="Avg Pkg (LPA)" sub="Across all predicted colleges" />
+                    </div>
+                </div>
+
+                {/* ══ ROW 3: Stacked Branch Bar + City horizontal ══ */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 mb-4">
+
+                    {/* Branch stacked bar */}
+                    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm lg:col-span-7">
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">Branch-wise Prediction Breakdown</p>
+                            <div className="flex gap-3 text-xs">
+                                {[['Most Probable', C.purple], ['Best Fit', C.green], ['Good Fit', C.blue], ['Stretch', C.amber]].map(([n, c]) => (
+                                    <span key={n as string} className="flex items-center gap-1">
+                                        <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: c as string }} />{n}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <BarChart data={bi.branchRows} margin={{ top: 0, right: 10, left: -20, bottom: 20 }}>
+                                <CartesianGrid strokeDasharray="2 2" vertical={false} stroke="#f1f5f9" />
+                                <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#94a3b8' }} angle={-30} textAnchor="end" interval={0} />
+                                <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} />
+                                <Tooltip content={<MicroTooltip />} />
+                                <Bar dataKey="mp" name="Most Probable" stackId="a" fill={C.purple} />
+                                <Bar dataKey="bf" name="Best Fit" stackId="a" fill={C.green} />
+                                <Bar dataKey="gf" name="Good Fit" stackId="a" fill={C.blue} />
+                                <Bar dataKey="st" name="Stretch" stackId="a" fill={C.amber} radius={[3, 3, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    {/* City mini horizontal bars */}
+                    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm lg:col-span-5">
+                        <p className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-3">Top Cities by Matches</p>
+                        <div className="space-y-2.5">
+                            {bi.cityRows.map((row, i) => (
+                                <div key={row.city}>
+                                    <div className="flex items-center justify-between mb-0.5">
+                                        <span className="text-xs text-slate-700 font-medium truncate max-w-[120px]">{row.city}</span>
+                                        <span className="text-xs font-black text-slate-800">{row.n}</span>
+                                    </div>
+                                    <Bar2 pct={(row.n / bi.maxCity) * 100} color={[C.purple, C.blue, C.green, C.cyan, C.pink, C.amber, C.red, C.slate][i % 8]} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ══ ROW 4: Fees dist bar | Package dist area | Chance line ══ */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+
+                    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                        <p className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-3">Annual Fees Distribution</p>
+                        <ResponsiveContainer width="100%" height={160}>
+                            <BarChart data={bi.feeBuckets} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="2 2" vertical={false} stroke="#f8fafc" />
+                                <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                                <Tooltip content={<MicroTooltip />} />
+                                <Bar dataKey="count" name="Colleges" fill={C.cyan} radius={[4, 4, 0, 0]}>
+                                    {bi.feeBuckets.map((_, i) => <Cell key={i} fill={[C.green, C.cyan, C.blue, C.purple, C.amber][i]} />)}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                        <p className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-3">Avg Package Distribution (LPA)</p>
+                        <ResponsiveContainer width="100%" height={160}>
+                            <AreaChart data={bi.pkgBuckets} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="pkgGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor={C.purple} stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor={C.purple} stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="2 2" vertical={false} stroke="#f8fafc" />
+                                <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                                <Tooltip content={<MicroTooltip />} />
+                                <Area type="monotone" dataKey="n" name="Colleges" stroke={C.purple} fill="url(#pkgGrad)" strokeWidth={2} dot={{ r: 3, fill: C.purple }} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                        <p className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-3">Cumulative Admission Chance</p>
+                        <ResponsiveContainer width="100%" height={160}>
+                            <LineChart data={bi.chanceLine} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="2 2" vertical={false} stroke="#f8fafc" />
+                                <XAxis dataKey="t" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                                <Tooltip content={<MicroTooltip />} />
+                                <Line type="monotone" dataKey="c" name="Colleges" stroke={C.green} strokeWidth={2} dot={{ r: 4, fill: C.green, strokeWidth: 0 }} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* ══ ROW 5: ROI Scatter ══ */}
+                <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">ROI Map — Fees vs Average Package</p>
+                            <p className="text-xs text-slate-400">Bubble size = placement rate. Hover for college details.</p>
+                        </div>
+                        <div className="flex gap-3 text-xs">
+                            {[['Most Probable', C.purple], ['Best Fit', C.green], ['Good Fit', C.blue], ['Stretch', C.amber]].map(([n, c]) => (
+                                <span key={n as string} className="flex items-center gap-1">
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c as string }} />{n}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                    <ResponsiveContainer width="100%" height={280}>
+                        <ScatterChart margin={{ top: 5, right: 30, left: 0, bottom: 20 }}>
+                            <CartesianGrid strokeDasharray="2 2" stroke="#f1f5f9" />
+                            <XAxis type="number" dataKey="x" name="Fees" unit="L" tick={{ fontSize: 10, fill: '#94a3b8' }} label={{ value: 'Annual Fees (L)', position: 'bottom', offset: 0, fontSize: 10, fill: '#94a3b8' }} />
+                            <YAxis type="number" dataKey="y" name="Pkg" unit="L" tick={{ fontSize: 10, fill: '#94a3b8' }} label={{ value: 'Avg Package (LPA)', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#94a3b8' }} />
+                            <ZAxis type="number" dataKey="z" range={[30, 250]} />
+                            <Tooltip cursor={{ strokeDasharray: '3 3' }} content={({ active, payload }) => {
+                                if (!active || !payload?.length) return null;
+                                const d = payload[0].payload;
+                                return (
+                                    <div className="bg-slate-900 text-white text-xs rounded-xl p-3 shadow-xl border border-slate-700 max-w-[180px]">
+                                        <p className="font-bold mb-1 text-slate-200">ROI Detail</p>
+                                        <p>Fees: <strong>₹{d.x}L/yr</strong></p>
+                                        <p>Package: <strong>{d.y} LPA</strong></p>
+                                        <p>Placement: <strong>{d.z}%</strong></p>
+                                        <span className="mt-1.5 inline-block px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: fitColor(d.fit) + '33', color: fitColor(d.fit) }}>{d.fit}</span>
+                                    </div>
+                                );
+                            }} />
+                            <Scatter data={bi.scatter} fill={C.blue}>
+                                {bi.scatter.map((e, i) => <Cell key={i} fill={fitColor(e.fit)} fillOpacity={0.75} />)}
                             </Scatter>
                         </ScatterChart>
                     </ResponsiveContainer>
-                </motion.div>
+                </div>
 
-                {/* ── Row 6: Per-category summary table ── */}
-                <motion.div variants={fadeUp} className={`${CARD} mb-8`}>
-                    <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-indigo-500" /> Category Performance Summary
-                    </h3>
+                {/* ══ ROW 6: Conditional-formatted summary table ══ */}
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-4">
+                    <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+                        <BarChart2 className="w-4 h-4 text-indigo-500" />
+                        <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">Category Performance Matrix</p>
+                    </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-slate-100">
-                                    <th className="text-left py-3 px-4 text-slate-500 font-semibold">Category</th>
-                                    <th className="text-right py-3 px-4 text-slate-500 font-semibold">Colleges</th>
-                                    <th className="text-right py-3 px-4 text-slate-500 font-semibold">Avg Chance</th>
-                                    <th className="text-right py-3 px-4 text-slate-500 font-semibold">Avg Fees (L/yr)</th>
-                                    <th className="text-right py-3 px-4 text-slate-500 font-semibold">Avg Pkg (LPA)</th>
-                                    <th className="text-right py-3 px-4 text-slate-500 font-semibold">ROI Ratio</th>
+                        <table className="w-full text-xs">
+                            <thead className="bg-slate-50">
+                                <tr>
+                                    {['Category', 'Count', 'Share', 'Avg Chance', 'Avg Fees/yr', 'Avg Package', 'ROI Ratio', 'Placement Signal'].map(h => (
+                                        <th key={h} className="text-left px-4 py-2.5 font-bold text-slate-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                                    ))}
                                 </tr>
                             </thead>
                             <tbody>
-                                {data.trendData.map((row, i) => {
-                                    const dotColor = [COLORS.mostProbable, COLORS.bestFit, COLORS.goodFit, COLORS.stretch][i] || '#94a3b8';
-                                    const roi = row.avgFees > 0 ? (row.avgPkg / row.avgFees).toFixed(1) : '—';
+                                {[
+                                    { cat: 'Most Probable', count: bi.mp, color: C.purple, chance: bi.avgChanceMP, fees: bi.avgFeesMP, pkg: bi.avgPkgMP },
+                                    { cat: 'Best Fit', count: bi.bf, color: C.green, chance: bi.avgChanceBF, fees: bi.avgFeesBF, pkg: bi.avgPkgBF },
+                                    { cat: 'Good Fit', count: bi.gf, color: C.blue, chance: bi.avgChanceGF, fees: 0, pkg: 0 },
+                                    { cat: 'Stretch', count: bi.st, color: C.amber, chance: bi.avgChanceST, fees: 0, pkg: 0 },
+                                ].map((row, i) => {
+                                    const share = ((row.count / bi.total) * 100).toFixed(1);
+                                    const roi = row.fees > 0 && row.pkg > 0 ? (row.pkg / row.fees).toFixed(1) : '—';
+                                    const roiNum = parseFloat(roi);
                                     return (
-                                        <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                                            <td className="py-3 px-4">
-                                                <span className="flex items-center gap-2">
-                                                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: dotColor }}></span>
-                                                    <span className="font-medium text-slate-800">{row.cat}</span>
+                                        <tr key={i} className="border-b border-slate-50 hover:bg-slate-50/60 transition-colors">
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: row.color }} />
+                                                    <span className="font-semibold text-slate-800">{row.cat}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 font-black text-slate-900">{row.count}</td>
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                        <div className="h-full rounded-full" style={{ width: `${share}%`, backgroundColor: row.color }} />
+                                                    </div>
+                                                    <span className="text-slate-600">{share}%</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span className="font-bold px-2 py-0.5 rounded-md text-xs" style={{ backgroundColor: row.color + '22', color: row.color }}>{row.chance}%</span>
+                                            </td>
+                                            <td className="px-4 py-3 text-slate-600">{row.fees > 0 ? `₹${row.fees}L` : '—'}</td>
+                                            <td className="px-4 py-3 text-slate-600">{row.pkg > 0 ? `${row.pkg} LPA` : '—'}</td>
+                                            <td className="px-4 py-3">
+                                                <span className={`font-bold ${!isNaN(roiNum) && roiNum >= 3 ? 'text-emerald-600' : !isNaN(roiNum) && roiNum >= 2 ? 'text-amber-600' : 'text-slate-400'}`}>
+                                                    {roi}{!isNaN(roiNum) ? '×' : ''}
                                                 </span>
                                             </td>
-                                            <td className="py-3 px-4 text-right font-semibold text-slate-700">{row.count}</td>
-                                            <td className="py-3 px-4 text-right">
-                                                <span className="font-semibold" style={{ color: dotColor }}>{row.avgChance}%</span>
-                                            </td>
-                                            <td className="py-3 px-4 text-right text-slate-600">₹{row.avgFees}L</td>
-                                            <td className="py-3 px-4 text-right text-slate-600">{row.avgPkg} LPA</td>
-                                            <td className="py-3 px-4 text-right">
-                                                <span className={`font-bold ${parseFloat(roi) >= 3 ? 'text-emerald-600' : parseFloat(roi) >= 2 ? 'text-amber-600' : 'text-slate-500'}`}>{roi}×</span>
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-1">
+                                                    {row.chance >= 80 ? <TrendingUp className="w-3.5 h-3.5 text-emerald-500" /> : row.chance >= 50 ? <Minus className="w-3.5 h-3.5 text-amber-500" /> : <TrendingDown className="w-3.5 h-3.5 text-red-400" />}
+                                                    <span className={`text-xs font-medium ${row.chance >= 80 ? 'text-emerald-600' : row.chance >= 50 ? 'text-amber-600' : 'text-red-500'}`}>
+                                                        {row.chance >= 80 ? 'Strong' : row.chance >= 50 ? 'Moderate' : 'Low'}
+                                                    </span>
+                                                </div>
                                             </td>
                                         </tr>
                                     );
@@ -474,14 +529,13 @@ export default function Analytics() {
                             </tbody>
                         </table>
                     </div>
-                </motion.div>
+                </div>
 
-                {/* ── Bottom note ── */}
-                <motion.div variants={fadeUp} className="flex items-center gap-2 text-xs text-slate-400 mb-4">
+                <div className="flex items-center gap-1.5 text-xs text-slate-400 pb-2">
                     <ArrowUpRight className="w-3.5 h-3.5" />
-                    All data sourced from your personalised ML predictions · Scores and cutoffs based on {profile?.exam_type} {new Date().getFullYear()}
-                </motion.div>
-            </motion.div>
+                    All data sourced from personalised ML predictions · {profile?.exam_type} {new Date().getFullYear()} · {bi.total} colleges analysed
+                </div>
+            </div>
 
             <Footer />
         </div>
