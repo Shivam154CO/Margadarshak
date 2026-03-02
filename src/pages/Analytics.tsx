@@ -49,17 +49,17 @@ const Spark = ({ data, color }: { data: number[]; color: string }) => (
 const Gauge = ({ value, max, color, label }: { value: number; max: number; color: string; label: string }) => {
     const pct = Math.min(100, (value / Math.max(max, 1)) * 100);
     return (
-        <div className="flex flex-col items-center py-2">
-            <span className="text-2xl font-black mb-1" style={{ color }}>{value}</span>
-            <div className="w-36 h-16">
-                <ResponsiveContainer width="100%" height={80}>
-                    <RadialBarChart cx="50%" cy="100%" innerRadius="75%" outerRadius="100%" startAngle={180} endAngle={0}
-                        data={[{ value: pct, fill: color }, { value: 100 - pct, fill: '#f1f5f9' }]}>
+        <div className="flex flex-col items-center py-3 gap-2">
+            <span className="text-2xl font-black" style={{ color }}>{value}</span>
+            <div className="w-32 h-16 overflow-hidden">
+                <ResponsiveContainer width="100%" height={64}>
+                    <RadialBarChart cx="50%" cy="100%" innerRadius="70%" outerRadius="100%" startAngle={180} endAngle={0}
+                        data={[{ value: pct, fill: color }, { value: 100 - pct, fill: '#e2e8f0' }]}>
                         <RadialBar dataKey="value" cornerRadius={4} />
                     </RadialBarChart>
                 </ResponsiveContainer>
             </div>
-            <p className="text-xs font-semibold text-slate-500 mt-1">{label}</p>
+            <p className="text-xs font-semibold text-slate-500">{label}</p>
         </div>
     );
 };
