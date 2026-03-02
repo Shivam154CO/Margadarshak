@@ -283,7 +283,7 @@ export default function OverviewScreen() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar activeTab="overview" userProfile={profile as any} />
 
       <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
@@ -302,7 +302,7 @@ export default function OverviewScreen() {
             <button onClick={() => navigate("/profile-view")} className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition flex items-center gap-2 shadow-sm">
               View Profile
             </button>
-            <button onClick={() => navigate("/profile")} className="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-semibold hover:from-indigo-700 hover:to-purple-700 transition shadow-md flex items-center gap-2">
+            <button onClick={() => navigate("/profile")} className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition shadow-sm flex items-center gap-2">
               Update Profile
             </button>
           </div>
@@ -310,11 +310,11 @@ export default function OverviewScreen() {
 
         {/* ═══════════ Profile Summary Bar ═══════════ */}
         {profile && (
-          <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 rounded-2xl border border-indigo-200/50 p-5 mb-8 shadow-sm">
+          <div className="bg-white rounded-xl border border-slate-200 p-5 mb-8 shadow-sm">
             <div className="flex flex-wrap items-center gap-4 text-sm">
-              <span className="font-bold text-indigo-900 text-base">{profile.name}</span>
-              <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg font-semibold">{profile.exam_type}</span>
-              <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg font-semibold">{profile.category}</span>
+              <span className="font-bold text-slate-900 text-base">{profile.name}</span>
+              <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg font-semibold">{profile.exam_type}</span>
+              <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg font-semibold">{profile.category}</span>
               <span className="text-slate-500">
                 Score: <span className="font-bold text-slate-700">{profile.exam_type === "CET" ? profile.cet_score : profile.diploma_score}</span>
                 {" · "}
@@ -322,7 +322,7 @@ export default function OverviewScreen() {
               </span>
               <div className="flex gap-1.5 ml-auto flex-wrap">
                 {(profile.preferred_branches ?? []).slice(0, 5).map(b => (
-                  <span key={b} className="px-2.5 py-1 bg-white border border-indigo-200 text-indigo-700 rounded-lg font-semibold text-xs">{b}</span>
+                  <span key={b} className="px-2.5 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg font-semibold text-xs">{b}</span>
                 ))}
               </div>
             </div>
@@ -400,18 +400,16 @@ export default function OverviewScreen() {
             {/* ═══════════ SECTION 1: Fit Distribution Stats ═══════════ */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
               {[
-                { label: "Most Probable", count: stats.mostProbable, sub: "Near-exact", gradient: "from-purple-500 to-pink-500" },
-                { label: "Best Fit", count: stats.bestFit, sub: "High chance", gradient: "from-emerald-500 to-teal-500" },
-                { label: "Good Fit", count: stats.goodFit, sub: "Solid match", gradient: "from-blue-500 to-cyan-500" },
-                { label: "Stretch", count: stats.stretch, sub: "Backup", gradient: "from-orange-500 to-red-500" },
-                { label: "Total Matches", count: stats.total, sub: `${stats.unique} colleges`, gradient: "from-slate-700 to-slate-900" },
+                { label: "Most Probable", count: stats.mostProbable, sub: "Near-exact match", accent: "border-l-purple-500" },
+                { label: "Best Fit", count: stats.bestFit, sub: "High chance", accent: "border-l-emerald-500" },
+                { label: "Good Fit", count: stats.goodFit, sub: "Solid match", accent: "border-l-blue-500" },
+                { label: "Stretch", count: stats.stretch, sub: "Backup option", accent: "border-l-orange-400" },
+                { label: "Total Matches", count: stats.total, sub: `${stats.unique} unique colleges`, accent: "border-l-slate-400" },
               ].map(s => (
-                <div key={s.label} className={`bg-gradient-to-br ${s.gradient} rounded-2xl p-5 text-white shadow-md hover:-translate-y-0.5 transition-transform cursor-default`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-3xl font-bold">{s.count}</span>
-                  </div>
-                  <p className="text-base font-semibold text-white/95">{s.label}</p>
-                  <p className="text-xs text-white/70 mt-0.5">{s.sub}</p>
+                <div key={s.label} className={`bg-white border border-slate-200 border-l-4 ${s.accent} rounded-xl p-5 shadow-sm hover:-translate-y-0.5 transition-transform cursor-default`}>
+                  <span className="text-3xl font-bold text-slate-800">{s.count}</span>
+                  <p className="text-sm font-semibold text-slate-700 mt-2">{s.label}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{s.sub}</p>
                 </div>
               ))}
             </div>
@@ -555,15 +553,15 @@ export default function OverviewScreen() {
             </div>
 
             {/* ═══════════ SECTION 6: Quick Feature Navigation ═══════════ */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-8">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-8">
               <SectionTitle title="Explore Features" />
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 {features.map(f => (
-                  <button key={f.title} onClick={() => navigate(f.link)} className="group p-5 rounded-xl border border-slate-100 hover:border-indigo-200 hover:shadow-md transition-all text-left bg-slate-50/50 hover:bg-white">
-                    <div className={`w-11 h-11 bg-gradient-to-br ${f.color} rounded-xl flex items-center justify-center mb-3 shadow-sm group-hover:shadow-md transition-shadow`}>
-                      <span className="text-sm font-bold text-white">{f.title.charAt(0)}</span>
+                  <button key={f.title} onClick={() => navigate(f.link)} className="group p-4 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all text-left bg-white hover:bg-indigo-50/30">
+                    <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-indigo-200 transition-colors">
+                      <span className="text-sm font-bold text-indigo-700">{f.title.charAt(0)}</span>
                     </div>
-                    <p className="text-sm font-bold text-slate-800 mb-1">{f.title}</p>
+                    <p className="text-sm font-semibold text-slate-800 mb-0.5">{f.title}</p>
                     <p className="text-xs text-slate-400">{f.desc}</p>
                   </button>
                 ))}
@@ -632,8 +630,8 @@ export default function OverviewScreen() {
                     ))}
                   </div>
                   {/* Most affordable */}
-                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 rounded-xl border border-emerald-100">
-                    <p className="text-sm font-bold text-emerald-800 mb-3">Most Affordable Match</p>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <p className="text-sm font-semibold text-slate-700 mb-3">Most Affordable Match</p>
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"><MiniCollegeImg code={feeAnalysis.cheapest.college_code} className="w-12 h-12" /></div>
                       <div className="min-w-0">
@@ -642,8 +640,8 @@ export default function OverviewScreen() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-emerald-700 font-medium">Annual Fee</span>
-                      <span className="text-lg font-bold text-emerald-700">₹{((feeAnalysis.cheapest.fees ?? 0) / 1000).toFixed(0)}K</span>
+                      <span className="text-sm text-slate-500 font-medium">Annual Fee</span>
+                      <span className="text-lg font-bold text-emerald-600">₹{((feeAnalysis.cheapest.fees ?? 0) / 1000).toFixed(0)}K</span>
                     </div>
                   </div>
                 </div>
@@ -697,24 +695,24 @@ export default function OverviewScreen() {
             )}
 
             {/* ═══════════ SECTION 10: Infrastructure Overview ═══════════ */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-8">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-8">
               <SectionTitle title="Infrastructure Overview" />
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-5 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
-                  <p className="text-2xl font-bold text-emerald-700">{infraStats.hostelYes}</p>
-                  <p className="text-sm text-emerald-600 font-medium mt-1">Hostel Available</p>
+                <div className="p-5 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                  <p className="text-2xl font-bold text-emerald-600">{infraStats.hostelYes}</p>
+                  <p className="text-sm text-slate-600 font-medium mt-1">Hostel Available</p>
                 </div>
-                <div className="p-5 bg-orange-50 rounded-xl border border-orange-100 text-center">
-                  <p className="text-2xl font-bold text-orange-700">{infraStats.hostelNo}</p>
-                  <p className="text-sm text-orange-600 font-medium mt-1">No Hostel</p>
+                <div className="p-5 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                  <p className="text-2xl font-bold text-slate-700">{infraStats.hostelNo}</p>
+                  <p className="text-sm text-slate-500 font-medium mt-1">No Hostel</p>
                 </div>
-                <div className="p-5 bg-purple-50 rounded-xl border border-purple-100 text-center">
-                  <p className="text-2xl font-bold text-purple-700">{infraStats.autonomous}</p>
-                  <p className="text-sm text-purple-600 font-medium mt-1">Autonomous</p>
+                <div className="p-5 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                  <p className="text-2xl font-bold text-indigo-600">{infraStats.autonomous}</p>
+                  <p className="text-sm text-slate-600 font-medium mt-1">Autonomous</p>
                 </div>
-                <div className="p-5 bg-blue-50 rounded-xl border border-blue-100 text-center">
-                  <p className="text-2xl font-bold text-blue-700">{infraStats.affiliated}</p>
-                  <p className="text-sm text-blue-600 font-medium mt-1">Affiliated</p>
+                <div className="p-5 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                  <p className="text-2xl font-bold text-slate-700">{infraStats.affiliated}</p>
+                  <p className="text-sm text-slate-500 font-medium mt-1">Affiliated</p>
                 </div>
               </div>
             </div>

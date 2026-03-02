@@ -1,41 +1,21 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   HelpCircle,
   Search,
   ChevronDown,
   ChevronUp,
   User,
-  Menu,
   Mail,
   Phone,
   MessageCircle,
   BookOpen,
   Target,
-  GraduationCap,
-  MapPin,
-  Heart,
   BarChart3,
   Star,
   Sparkles,
   Layers,
-  Lightbulb,
   MessageSquare,
   Send,
-  Play,
-  CheckCircle2,
-  Clock,
-  Users,
-  TrendingUp,
-  Award,
-  Zap,
-  Eye,
-  ThumbsUp,
-  MessageCircle as MessageIcon,
-  FileText,
-  Settings,
-  Shield,
-  ExternalLink as ExternalLinkIcon,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Footer from "../components/Footer";
@@ -60,11 +40,9 @@ interface GuideItem {
 }
 
 export default function Help() {
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ['userProfile'],
@@ -75,40 +53,6 @@ export default function Help() {
       return data;
     }
   });
-
-  const navItems = [
-    {
-      id: "search",
-      label: "Search College",
-      icon: Search,
-      path: "/college-explorer",
-    },
-    {
-      id: "map",
-      label: "College Map",
-      icon: MapPin,
-      path: "/college-map",
-    },
-    {
-      id: "compare",
-      label: "Compare College",
-      icon: BarChart3,
-      path: "/compare-college",
-    },
-    {
-      id: "favorites",
-      label: "Favorites",
-      icon: Heart,
-      path: "/favorites",
-    },
-    {
-      id: "analytics",
-      label: "Analytics",
-      icon: BarChart3,
-      path: "/analytics",
-    },
-    { id: "help", label: "Help & Support", icon: HelpCircle, path: "/help" },
-  ];
 
   const faqItems: FAQItem[] = [
     {
@@ -264,7 +208,7 @@ export default function Help() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar activeTab="help" userProfile={profile} />
 
       {/* ===== Main Content ===== */}
@@ -274,11 +218,11 @@ export default function Help() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <HelpCircle className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                  <HelpCircle className="w-5 h-5 text-indigo-600" />
                 </div>
                 <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
                     Help & Support Center
                   </h2>
                   <p className="text-gray-600 mt-1">
@@ -311,9 +255,9 @@ export default function Help() {
               <button
                 key={category.id}
                 onClick={() => setActiveCategory(category.id)}
-                className={`px-4 py-3 rounded-xl font-medium transition-all duration-300 transform hover:-translate-y-0.5 flex items-center space-x-2 ${activeCategory === category.id
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25"
-                    : "bg-white text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 border border-gray-300/50 shadow-sm hover:shadow-md"
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-2 ${activeCategory === category.id
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-white text-gray-600 hover:bg-slate-50 border border-slate-200"
                   }`}
               >
                 <category.icon className="w-4 h-4" />
@@ -329,8 +273,8 @@ export default function Help() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-3xl border border-gray-200/60 shadow-lg p-6">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-md">
-                  <MessageSquare className="w-5 h-5 text-white" />
+                <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center shadow-sm">
+                  <MessageSquare className="w-4 h-4 text-indigo-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900">Frequently Asked Questions</h3>
               </div>
@@ -377,8 +321,8 @@ export default function Help() {
             {/* ===== Quick Guides ===== */}
             <div className="bg-white rounded-3xl border border-gray-200/60 shadow-lg p-6">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
-                  <BookOpen className="w-5 h-5 text-white" />
+                <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-4 h-4 text-emerald-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Quick Guides</h3>
               </div>
@@ -401,8 +345,8 @@ export default function Help() {
                     <div className="space-y-2">
                       {guide.steps.slice(0, 3).map((step, index) => (
                         <div key={index} className="flex items-start space-x-2">
-                          <div className="w-5 h-5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-md flex-shrink-0 mt-0.5">
-                            <span className="text-xs text-white font-bold">{index + 1}</span>
+                          <div className="w-7 h-7 bg-indigo-100 rounded-md flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs text-indigo-700 font-bold">{index + 1}</span>
                           </div>
                           <p className="text-sm text-gray-600">{step}</p>
                         </div>
@@ -419,18 +363,18 @@ export default function Help() {
             </div>
 
             {/* ===== Contact Support ===== */}
-            <div className="bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl border border-indigo-200/50 p-6 backdrop-blur-sm">
+            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6 backdrop-blur-sm">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
-                  <MessageCircle className="w-5 h-5 text-white" />
+                <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center">
+                  <MessageCircle className="w-4 h-4 text-indigo-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Need More Help?</h3>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center space-x-3 p-3 bg-white/80 rounded-xl border border-gray-200/50">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center shadow-md">
-                    <Mail className="w-4 h-4 text-white" />
+                <div className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-slate-200">
+                  <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+                    <Mail className="w-4 h-4 text-slate-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">Email Support</p>
@@ -438,9 +382,9 @@ export default function Help() {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3 p-3 bg-white/80 rounded-xl border border-gray-200/50">
-                  <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
-                    <Phone className="w-4 h-4 text-white" />
+                <div className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-slate-200">
+                  <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+                    <Phone className="w-4 h-4 text-slate-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">Phone Support</p>
@@ -448,7 +392,8 @@ export default function Help() {
                   </div>
                 </div>
 
-                <button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 flex items-center justify-center space-x-2">
+                <button
+                  className="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm flex items-center justify-center space-x-2">
                   <Send className="w-4 h-4" />
                   <span>Contact Support</span>
                 </button>
@@ -458,8 +403,8 @@ export default function Help() {
             {/* ===== Popular Topics ===== */}
             <div className="bg-white rounded-3xl border border-gray-200/60 shadow-lg p-6">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md">
-                  <Star className="w-5 h-5 text-white" />
+                <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <Star className="w-4 h-4 text-amber-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Popular Topics</h3>
               </div>
@@ -476,8 +421,8 @@ export default function Help() {
                     key={index}
                     className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50/50 transition-colors cursor-pointer"
                   >
-                    <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-md">
-                      <span className="text-xs text-white font-bold">{index + 1}</span>
+                    <div className="w-5 h-5 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs text-indigo-700 font-bold">{index + 1}</span>
                     </div>
                     <span className="text-sm text-gray-700">{topic}</span>
                   </div>
@@ -489,24 +434,19 @@ export default function Help() {
       </div>
 
       {/* ===== Footer CTA ===== */}
-      <div className="mt-auto bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl p-8 text-center text-white shadow-xl mx-4 sm:mx-6 lg:mx-8 mb-8">
+      <div className="mt-auto bg-slate-800 rounded-2xl p-8 text-center text-white shadow-xl mx-4 sm:mx-6 lg:mx-8 mb-8">
         <div className="max-w-4xl mx-auto">
-          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-            <Lightbulb className="w-8 h-8 text-white" />
-          </div>
-          <h3 className="text-2xl font-bold mb-2">
-            Still Need Help?
-          </h3>
-          <p className="text-indigo-100 mb-6 max-w-2xl mx-auto">
+          <h3 className="text-2xl font-bold mb-2">Still Need Help?</h3>
+          <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
             Can't find what you're looking for? Our support team is here to help you navigate your college admission journey.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button className="bg-white text-indigo-600 px-8 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl inline-flex items-center space-x-2 group">
-              <MessageCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <button className="bg-white text-slate-800 px-8 py-3 rounded-xl font-semibold hover:bg-slate-100 transition-all shadow-lg hover:shadow-xl inline-flex items-center space-x-2">
+              <MessageCircle className="w-5 h-5" />
               <span>Start Live Chat</span>
             </button>
-            <button className="border-2 border-white/30 text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/10 transition-all inline-flex items-center space-x-2 group">
-              <Mail className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <button className="border border-white/30 text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/10 transition-all inline-flex items-center space-x-2">
+              <Mail className="w-5 h-5" />
               <span>Send Email</span>
             </button>
           </div>

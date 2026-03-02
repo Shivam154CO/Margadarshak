@@ -11,16 +11,9 @@ import {
   User,
   ChevronDown,
   GraduationCap,
-  Mail,
-  Award,
-  BookOpen,
-  MapPin as MapPinIcon,
   LogOut,
   Settings,
   Shield,
-  Star,
-  Heart,
-  School,
   LayoutDashboard,
   FileText,
   Scan,
@@ -125,13 +118,13 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile }) =>
             </button>
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
                   <GraduationCap className="w-6 h-6 text-white" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold text-slate-900">
                   Ikigai
                 </h1>
                 <p className="text-xs text-gray-500">
@@ -155,7 +148,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile }) =>
                     }
                   }}
                   className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${item.id === activeTab || (item.hasDropdown && automationDropdownOpen)
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md"
+                    ? "bg-indigo-600 text-white shadow-sm"
                     : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
                     }`}
                 >
@@ -193,8 +186,8 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile }) =>
                 className="flex items-center space-x-3 bg-white backdrop-blur-sm rounded-xl px-3 py-2 border border-gray-300/50 hover:bg-gray-50 transition-all cursor-pointer group shadow-sm"
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
               >
-                <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-md">
-                  <User className="w-4 h-4 text-white" />
+                <div className="w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div className="hidden sm:block">
                   <div className="text-sm font-semibold text-gray-900">
@@ -208,121 +201,85 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile }) =>
               {profileDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200/60 backdrop-blur-sm z-50 overflow-hidden">
                   {/* Profile Header */}
-                  <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 text-white">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shadow-lg">
-                        <User className="w-8 h-8 text-white" />
+                  <div className="bg-slate-800 p-5 text-white">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                        <User className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold">{userProfile?.name || "Student"}</h3>
-                        <p className="text-indigo-100 text-sm">{userProfile?.email || "student@example.com"}</p>
-                        <div className="flex items-center space-x-2 mt-2">
-                          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <h3 className="text-base font-bold">{userProfile?.name || "Student"}</h3>
+                        <p className="text-slate-300 text-xs">{userProfile?.email || "student@example.com"}</p>
+                        <div className="flex items-center space-x-1.5 mt-1">
+                          <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>
                           <span className="text-xs text-indigo-100">Active Student</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Profile Details */}
-                  <div className="p-4 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-3 rounded-xl border border-blue-200/50">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <Award className="w-4 h-4 text-blue-600" />
-                          <span className="text-xs text-blue-700 font-medium">Category</span>
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900">{userProfile?.category || "OPEN"}</p>
+                  {/* Profile Details — neutral cards */}
+                  <div className="p-4 space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <p className="text-xs text-slate-500 font-medium">Category</p>
+                        <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile?.category || "OPEN"}</p>
                       </div>
-                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 rounded-xl border border-green-200/50">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <BookOpen className="w-4 h-4 text-green-600" />
-                          <span className="text-xs text-green-700 font-medium">Exam</span>
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900">{userProfile?.exam_type || "CET"}</p>
+                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <p className="text-xs text-slate-500 font-medium">Exam</p>
+                        <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile?.exam_type || "CET"}</p>
                       </div>
                     </div>
 
                     {userProfile?.exam_type === "CET" ? (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-3 rounded-xl border border-purple-200/50">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <BarChart3 className="w-4 h-4 text-purple-600" />
-                            <span className="text-xs text-purple-700 font-medium">CET Rank</span>
-                          </div>
-                          <p className="text-sm font-semibold text-gray-900">{userProfile?.cet_rank || "N/A"}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                          <p className="text-xs text-slate-500 font-medium">CET Rank</p>
+                          <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile?.cet_rank || "N/A"}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-pink-50 to-rose-50 p-3 rounded-xl border border-pink-200/50">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <Star className="w-4 h-4 text-pink-600" />
-                            <span className="text-xs text-pink-700 font-medium">CET Score</span>
-                          </div>
-                          <p className="text-sm font-semibold text-gray-900">{userProfile?.cet_score || "N/A"}</p>
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                          <p className="text-xs text-slate-500 font-medium">CET Score</p>
+                          <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile?.cet_score || "N/A"}</p>
                         </div>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-3 rounded-xl border border-purple-200/50">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <BarChart3 className="w-4 h-4 text-purple-600" />
-                            <span className="text-xs text-purple-700 font-medium">Diploma Rank</span>
-                          </div>
-                          <p className="text-sm font-semibold text-gray-900">{userProfile?.diploma_rank || "N/A"}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                          <p className="text-xs text-slate-500 font-medium">Diploma Rank</p>
+                          <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile?.diploma_rank || "N/A"}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-pink-50 to-rose-50 p-3 rounded-xl border border-pink-200/50">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <Star className="w-4 h-4 text-pink-600" />
-                            <span className="text-xs text-pink-700 font-medium">Diploma Score</span>
-                          </div>
-                          <p className="text-sm font-semibold text-gray-900">{userProfile?.diploma_score || "N/A"}</p>
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                          <p className="text-xs text-slate-500 font-medium">Diploma Score</p>
+                          <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile?.diploma_score || "N/A"}</p>
                         </div>
                       </div>
                     )}
 
-                    {/* Preferred Branches */}
                     {userProfile?.preferred_branches && userProfile.preferred_branches.length > 0 && (
-                      <div className="bg-gradient-to-br from-red-50 to-pink-50 p-3 rounded-xl border border-red-200/50">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <Heart className="w-4 h-4 text-red-600" />
-                          <span className="text-xs text-red-700 font-medium">Preferred Branches</span>
-                        </div>
+                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <p className="text-xs text-slate-500 font-medium mb-2">Preferred Branches</p>
                         <div className="flex flex-wrap gap-1">
                           {userProfile.preferred_branches.slice(0, 3).map((branch, index) => (
-                            <span
-                              key={index}
-                              className="inline-block bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs px-2 py-1 rounded-full font-medium"
-                            >
+                            <span key={index} className="inline-block bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded-md font-medium">
                               {branch}
                             </span>
                           ))}
                           {userProfile.preferred_branches.length > 3 && (
-                            <span className="text-xs text-gray-600 font-medium">
-                              +{userProfile.preferred_branches.length - 3} more
-                            </span>
+                            <span className="text-xs text-slate-500 font-medium">+{userProfile.preferred_branches.length - 3} more</span>
                           )}
                         </div>
                       </div>
                     )}
 
-                    {/* University Preference */}
                     {userProfile?.university_preference && (
-                      <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-3 rounded-xl border border-emerald-200/50">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <School className="w-4 h-4 text-emerald-600" />
-                          <span className="text-xs text-emerald-700 font-medium">University Preference</span>
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900">{userProfile.university_preference}</p>
+                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <p className="text-xs text-slate-500 font-medium">University Pref.</p>
+                        <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile.university_preference}</p>
                       </div>
                     )}
-
-                    {/* Location */}
                     {userProfile?.state && (
-                      <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-3 rounded-xl border border-orange-200/50">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <MapPinIcon className="w-4 h-4 text-orange-600" />
-                          <span className="text-xs text-orange-700 font-medium">Location</span>
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900">{userProfile.state}</p>
+                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <p className="text-xs text-slate-500 font-medium">Location</p>
+                        <p className="text-sm font-semibold text-slate-800 mt-0.5">{userProfile.state}</p>
                       </div>
                     )}
                   </div>
@@ -334,7 +291,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile }) =>
                         navigate("/profile");
                         setProfileDropdownOpen(false);
                       }}
-                      className="w-full flex items-center space-x-3 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
+                      className="w-full flex items-center space-x-3 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm"
                     >
                       <Settings className="w-5 h-5" />
                       <span>Edit Profile</span>
@@ -353,7 +310,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile }) =>
                   </div>
 
                   {/* Security Note */}
-                  <div className="bg-gradient-to-r from-gray-50 to-slate-50 px-4 py-3 border-t border-gray-200/60">
+                  <div className="bg-slate-50 px-4 py-3 border-t border-gray-200/60">
                     <div className="flex items-center space-x-2 text-xs text-gray-600">
                       <Shield className="w-4 h-4 text-indigo-600" />
                       <span>Your profile data is securely encrypted</span>

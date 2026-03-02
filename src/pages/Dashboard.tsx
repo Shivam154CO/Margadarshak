@@ -10,13 +10,11 @@ import {
   Search,
   Filter,
   TrendingUp,
-  Building,
   Award,
   ExternalLink,
   Target,
   CheckCircle,
   AlertCircle,
-  BarChart3,
   Zap,
   Sparkles,
   Target as TargetIcon,
@@ -455,7 +453,7 @@ export default function Dashboard() {
         percentage: college.admission_chance_percentage || "95%",
         color: "text-purple-700",
         bgColor: "bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200",
-        label: "🎯 Most Probable",
+        label: "Most Probable",
         gradient: "from-purple-600 via-purple-500 to-pink-500",
         iconName: "Zap",
         badgeColor: "bg-gradient-to-r from-purple-600 to-pink-600",
@@ -517,7 +515,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar activeTab="search" userProfile={profile} />
 
       <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
@@ -530,8 +528,8 @@ export default function Dashboard() {
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                    Welcome back, {profile?.name?.split(" ")[0] || "User"}! 👋
+                  <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
+                    Welcome back, {profile?.name?.split(" ")[0] || "User"}!
                   </h2>
                 </div>
               </div>
@@ -539,7 +537,7 @@ export default function Dashboard() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate("/profile")}
-                className="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 flex items-center space-x-2"
+                className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm flex items-center space-x-2"
               >
                 <User className="w-4 h-4" />
                 <span className="hidden sm:inline">Update Profile</span>
@@ -549,31 +547,31 @@ export default function Dashboard() {
 
           {/* Profile Quick Access */}
           {profile && (
-            <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl border border-indigo-200/50 p-6 mb-8 backdrop-blur-sm transition-all duration-300 shadow-sm hover:shadow-md">
+            <div className="bg-white rounded-xl border border-slate-200 p-5 mb-8 shadow-sm transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <User className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                    <User className="w-6 h-6 text-indigo-600" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    <h3 className="text-lg font-bold text-slate-900">
                       Welcome back, {profile?.name?.split(" ")[0]}!
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-500">
                       View your complete profile details
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2 text-sm text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200">
+                  <div className="flex items-center space-x-2 text-sm text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200">
                     <Database className="w-4 h-4" />
-                    <span>AI Profile Analysis</span>
+                    <span>AI Analysis</span>
                   </div>
                   <button
                     onClick={() => navigate("/profile-view")}
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center space-x-2 group"
+                    className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm inline-flex items-center space-x-2"
                   >
-                    <User className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <User className="w-4 h-4" />
                     <span>View Profile</span>
                   </button>
                 </div>
@@ -583,55 +581,30 @@ export default function Dashboard() {
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-4 text-white shadow-lg transform transition-transform hover:-translate-y-1">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <div className="text-2xl font-bold">{stats.mostProbable}</div>
-              </div>
-              <p className="text-sm font-medium text-white/95">Most Probable</p>
-              <p className="text-xs text-white/80 mt-1">Near-exact matches</p>
+            <div className="bg-white border border-slate-200 border-l-4 border-l-purple-500 rounded-xl p-4 shadow-sm hover:-translate-y-0.5 transition-transform">
+              <div className="text-2xl font-bold text-slate-800">{stats.mostProbable}</div>
+              <p className="text-sm font-medium text-slate-700 mt-1">Most Probable</p>
+              <p className="text-xs text-slate-400 mt-0.5">Near-exact matches</p>
             </div>
-            <div className="bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl p-4 text-white shadow-lg transform transition-transform hover:-translate-y-1">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <CheckCircle className="w-5 h-5" />
-                </div>
-                <div className="text-2xl font-bold">{stats.bestFit}</div>
-              </div>
-              <p className="text-sm font-medium text-white/95">Best Fit</p>
-              <p className="text-xs text-white/80 mt-1">High probability</p>
+            <div className="bg-white border border-slate-200 border-l-4 border-l-emerald-500 rounded-xl p-4 shadow-sm hover:-translate-y-0.5 transition-transform">
+              <div className="text-2xl font-bold text-slate-800">{stats.bestFit}</div>
+              <p className="text-sm font-medium text-slate-700 mt-1">Best Fit</p>
+              <p className="text-xs text-slate-400 mt-0.5">High probability</p>
             </div>
-            <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transform transition-transform hover:-translate-y-1">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <Target className="w-5 h-5" />
-                </div>
-                <div className="text-2xl font-bold">{stats.goodFit}</div>
-              </div>
-              <p className="text-sm font-medium text-white/95">Good Fit</p>
-              <p className="text-xs text-white/80 mt-1">Solid chance</p>
+            <div className="bg-white border border-slate-200 border-l-4 border-l-blue-500 rounded-xl p-4 shadow-sm hover:-translate-y-0.5 transition-transform">
+              <div className="text-2xl font-bold text-slate-800">{stats.goodFit}</div>
+              <p className="text-sm font-medium text-slate-700 mt-1">Good Fit</p>
+              <p className="text-xs text-slate-400 mt-0.5">Solid chance</p>
             </div>
-            <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white shadow-lg transform transition-transform hover:-translate-y-1">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <TrendingUp className="w-5 h-5" />
-                </div>
-                <div className="text-2xl font-bold">{stats.stretch}</div>
-              </div>
-              <p className="text-sm font-medium text-white/95">Stretch</p>
-              <p className="text-xs text-white/80 mt-1">Backup options</p>
+            <div className="bg-white border border-slate-200 border-l-4 border-l-orange-400 rounded-xl p-4 shadow-sm hover:-translate-y-0.5 transition-transform">
+              <div className="text-2xl font-bold text-slate-800">{stats.stretch}</div>
+              <p className="text-sm font-medium text-slate-700 mt-1">Stretch</p>
+              <p className="text-xs text-slate-400 mt-0.5">Backup options</p>
             </div>
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl p-4 text-white shadow-lg transform transition-transform hover:-translate-y-1">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <Building className="w-5 h-5" />
-                </div>
-                <div className="text-2xl font-bold">{stats.uniqueColleges}</div>
-              </div>
-              <p className="text-sm font-medium text-white/95">Unique Colleges</p>
-              <p className="text-xs text-white/80 mt-1">Different institutions</p>
+            <div className="bg-white border border-slate-200 border-l-4 border-l-slate-400 rounded-xl p-4 shadow-sm hover:-translate-y-0.5 transition-transform">
+              <div className="text-2xl font-bold text-slate-800">{stats.uniqueColleges}</div>
+              <p className="text-sm font-medium text-slate-700 mt-1">Unique Colleges</p>
+              <p className="text-xs text-slate-400 mt-0.5">Different institutions</p>
             </div>
           </div>
         </div>
@@ -641,72 +614,62 @@ export default function Dashboard() {
           <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
             <button
               onClick={() => setActiveFilter("all")}
-              className={`px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:-translate-y-0.5 ${activeFilter === "all"
-                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25"
-                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300/50 shadow-sm hover:shadow-md"
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${activeFilter === "all"
+                ? "bg-slate-800 text-white shadow-sm"
+                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
                 }`}
             >
-              All Matches ({stats.total})
+              All ({stats.total})
             </button>
             <button
               onClick={() => setActiveFilter("most-probable")}
-              className={`px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:-translate-y-0.5 ${activeFilter === "most-probable"
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25"
-                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300/50 shadow-sm hover:shadow-md"
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 ${activeFilter === "most-probable"
+                ? "bg-purple-600 text-white shadow-sm"
+                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
                 }`}
             >
-              <span className="flex items-center space-x-1.5">
-                <Zap className="w-4 h-4" />
-                <span>Most Probable ({stats.mostProbable})</span>
-              </span>
+              <Zap className="w-3.5 h-3.5" />
+              <span>Most Probable ({stats.mostProbable})</span>
             </button>
             <button
               onClick={() => setActiveFilter("best-fit")}
-              className={`px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:-translate-y-0.5 ${activeFilter === "best-fit"
-                ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/25"
-                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300/50 shadow-sm hover:shadow-md"
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 ${activeFilter === "best-fit"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
                 }`}
             >
-              <span className="flex items-center space-x-1.5">
-                <CheckCircle className="w-4 h-4" />
-                <span>Best Fit ({stats.bestFit})</span>
-              </span>
+              <CheckCircle className="w-3.5 h-3.5" />
+              <span>Best Fit ({stats.bestFit})</span>
             </button>
             <button
               onClick={() => setActiveFilter("good-fit")}
-              className={`px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:-translate-y-0.5 ${activeFilter === "good-fit"
-                ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/25"
-                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300/50 shadow-sm hover:shadow-md"
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 ${activeFilter === "good-fit"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
                 }`}
             >
-              <span className="flex items-center space-x-1.5">
-                <TargetIcon className="w-4 h-4" />
-                <span>Good Fit ({stats.goodFit})</span>
-              </span>
+              <TargetIcon className="w-3.5 h-3.5" />
+              <span>Good Fit ({stats.goodFit})</span>
             </button>
             <button
               onClick={() => setActiveFilter("stretch")}
-              className={`px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:-translate-y-0.5 ${activeFilter === "stretch"
-                ? "bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg shadow-orange-500/25"
-                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300/50 shadow-sm hover:shadow-md"
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 ${activeFilter === "stretch"
+                ? "bg-orange-500 text-white shadow-sm"
+                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
                 }`}
             >
-              <span className="flex items-center space-x-1.5">
-                <TrendingUp className="w-4 h-4" />
-                <span>Stretch ({stats.stretch})</span>
-              </span>
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>Stretch ({stats.stretch})</span>
             </button>
             <button
               onClick={() => setActiveFilter("saved")}
-              className={`px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:-translate-y-0.5 ${activeFilter === "saved"
-                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/25"
-                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300/50 shadow-sm hover:shadow-md"
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 ${activeFilter === "saved"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
                 }`}
             >
-              <span className="flex items-center space-x-1.5">
-                <BookmarkCheck className="w-4 h-4" />
-                <span>Saved ({stats.saved})</span>
-              </span>
+              <BookmarkCheck className="w-3.5 h-3.5" />
+              <span>Saved ({stats.saved})</span>
             </button>
           </div>
         </div>
@@ -774,7 +737,7 @@ export default function Dashboard() {
             <div className="inline-flex items-center justify-center mb-4">
               <div className="animate-spin rounded-full h-14 w-14 border-b-2 border-indigo-600"></div>
             </div>
-    
+
             {/* Skeleton Loader Cards */}
             <div className={`mt-12 grid gap-6 ${viewMode === 'grid-3' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : viewMode === 'grid-4' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>
               {[...Array(9)].map((_, index) => (
@@ -857,7 +820,7 @@ export default function Dashboard() {
                   <button
                     onClick={() => setViewMode('grid-3')}
                     className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center space-x-1.5 ${viewMode === 'grid-3'
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                      ? 'bg-slate-800 text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100'
                       }`}
                   >
@@ -874,7 +837,7 @@ export default function Dashboard() {
                   <button
                     onClick={() => setViewMode('grid-4')}
                     className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center space-x-1.5 ${viewMode === 'grid-4'
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                      ? 'bg-slate-800 text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100'
                       }`}
                   >
@@ -893,7 +856,7 @@ export default function Dashboard() {
                   <button
                     onClick={() => setViewMode('list')}
                     className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center space-x-1.5 ${viewMode === 'list'
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                      ? 'bg-slate-800 text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100'
                       }`}
                   >
@@ -976,7 +939,7 @@ export default function Dashboard() {
 
                     <div className="p-6">
                       <div className="mb-4">
-                        <div className="inline-block bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 px-3 py-1.5 rounded-lg text-sm font-medium mb-2 border border-indigo-200">
+                        <div className="inline-block bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium mb-2 border border-slate-200">
                           <span className="flex items-center space-x-1.5">
                             <Layers className="w-4 h-4" />
                             <span>{college.branch}</span>
@@ -989,25 +952,25 @@ export default function Dashboard() {
                       </div>
 
                       <div className="grid grid-cols-4 gap-3 mb-4">
-                        <div className="text-center bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200/50">
+                        <div className="text-center bg-slate-50 p-3 rounded-xl border border-slate-200">
                           <div className="text-lg font-bold text-gray-900">
                             {college.cutoff_rank > 0 ? college.cutoff_rank : Math.round(college.cutoff_percentile)}
                           </div>
                           <div className="text-xs text-gray-500">Cutoff</div>
                         </div>
-                        <div className="text-center bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200/50">
+                        <div className="text-center bg-slate-50 p-3 rounded-xl border border-slate-200">
                           <div className="text-lg font-bold text-gray-900">
                             {college.seats || "N/A"}
                           </div>
                           <div className="text-xs text-gray-500">Seats</div>
                         </div>
-                        <div className="text-center bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200/50">
+                        <div className="text-center bg-slate-50 p-3 rounded-xl border border-slate-200">
                           <div className="text-lg font-bold text-gray-900">
                             {college.fees ? `₹${(college.fees / 100000).toFixed(1)}L` : "N/A"}
                           </div>
                           <div className="text-xs text-gray-500">Fees/Year</div>
                         </div>
-                        <div className="text-center bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200/50">
+                        <div className="text-center bg-slate-50 p-3 rounded-xl border border-slate-200">
                           <div className="text-lg font-bold text-gray-900">
                             {college.placement_rate ? `${college.placement_rate.toFixed(0)}%` : "N/A"}
                           </div>
@@ -1032,7 +995,7 @@ export default function Dashboard() {
                       </div>
 
                       {(college.average_package_lpa > 0 || college.highest_package_lpa > 0) && (
-                        <div className="mb-4 p-3 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-xl border border-blue-200/50">
+                        <div className="mb-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
                           <div className="flex items-center justify-between">
                             <span className="text-gray-700 text-sm font-medium flex items-center space-x-1.5">
                               <Trophy className="w-4 h-4 text-blue-600" />
@@ -1053,7 +1016,7 @@ export default function Dashboard() {
                       <div className="flex space-x-3">
                         <button
                           onClick={() => navigate("/college-details", { state: { college } })}
-                          className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 flex items-center justify-center space-x-2 group/btn"
+                          className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm flex items-center justify-center space-x-2 group/btn"
                         >
                           <span>View Details</span>
                           <ExternalLink className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
@@ -1069,20 +1032,17 @@ export default function Dashboard() {
 
         {/* Footer CTA */}
         {!isLoading && sortedColleges.length > 0 && (
-          <div className="mt-auto bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl p-8 text-center text-white shadow-xl">
+          <div className="mt-auto bg-slate-800 rounded-2xl p-8 text-center text-white shadow-xl">
             <div className="max-w-2xl mx-auto">
-              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                <Sparkles className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold mb-2">Need More Personalized Recommendations?</h3>
-              <p className="text-indigo-100 mb-6">
+              <h3 className="text-xl font-bold mb-2">Need More Personalized Recommendations?</h3>
+              <p className="text-slate-300 mb-6">
                 Update your profile with detailed preferences to get even better college matches tailored just for you.
               </p>
               <button
                 onClick={() => navigate("/profile")}
-                className="bg-white text-indigo-600 px-8 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl inline-flex items-center space-x-2 group/cta"
+                className="bg-white text-slate-800 px-8 py-3 rounded-xl font-semibold hover:bg-slate-100 transition-all shadow-lg hover:shadow-xl inline-flex items-center space-x-2"
               >
-                <User className="w-5 h-5 group-hover/cta:scale-110 transition-transform" />
+                <User className="w-5 h-5" />
                 <span>Complete Your Profile</span>
               </button>
             </div>

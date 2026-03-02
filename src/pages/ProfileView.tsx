@@ -167,10 +167,10 @@ const Navbar = ({
             className="flex items-center space-x-2 cursor-pointer"
             onClick={() => navigate("/dashboard")}
           >
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-2 rounded-lg">
+            <div className="bg-indigo-600 p-2 rounded-lg">
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold text-slate-900">
               EduPortal
             </span>
           </div>
@@ -180,7 +180,7 @@ const Navbar = ({
             <button
               onClick={() => navigate("/dashboard")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "dashboard"
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                ? 'bg-indigo-600 text-white shadow-sm'
                 : 'text-gray-600 hover:bg-gray-100'
                 }`}
             >
@@ -189,7 +189,7 @@ const Navbar = ({
             <button
               onClick={() => navigate("/profile-view")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "profile"
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                ? 'bg-indigo-600 text-white shadow-sm'
                 : 'text-gray-600 hover:bg-gray-100'
                 }`}
             >
@@ -210,8 +210,8 @@ const Navbar = ({
                   <p className="text-sm font-semibold text-gray-900">{userProfile.name}</p>
                   <p className="text-xs text-gray-500">{userProfile.email}</p>
                 </div>
-                <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
-                  <User className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                  <User className="w-5 h-5 text-indigo-600" />
                 </div>
               </div>
             )}
@@ -432,7 +432,7 @@ export default function ProfileView() {
     fetchAllUserData();
   }, [navigate]);
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
+
 
   // DigiLocker Auth States
   const [isDigilockerVerified, setIsDigilockerVerified] = useState(
@@ -518,27 +518,27 @@ export default function ProfileView() {
     if (isMostProbable || chance >= 80) {
       return {
         label: 'Most Probable',
-        color: 'bg-gradient-to-r from-purple-600 to-pink-600 text-white',
+        color: 'bg-purple-100 text-purple-800 border border-purple-200',
         icon: Zap
       };
     }
     if (chance >= 70 || fit === 'Best Fit') {
       return {
         label: 'Best Fit',
-        color: 'bg-gradient-to-r from-green-600 to-emerald-600 text-white',
+        color: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
         icon: CheckCircle
       };
     }
     if (chance >= 50 || fit === 'Good Fit') {
       return {
         label: 'Good Fit',
-        color: 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white',
+        color: 'bg-blue-100 text-blue-800 border border-blue-200',
         icon: Target
       };
     }
     return {
       label: 'Stretch',
-      color: 'bg-gradient-to-r from-orange-600 to-red-600 text-white',
+      color: 'bg-orange-100 text-orange-800 border border-orange-200',
       icon: TrendingUp
     };
   };
@@ -554,11 +554,11 @@ export default function ProfileView() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md">
           <div className="relative mx-auto w-16 h-16 mb-4">
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full blur-xl opacity-20 animate-pulse"></div>
-            <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-full">
+            <div className="relative bg-indigo-600 p-4 rounded-full">
               <Loader2 className="w-8 h-8 text-white animate-spin" />
             </div>
           </div>
@@ -573,7 +573,7 @@ export default function ProfileView() {
 
   if (!userProfile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md">
           <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="w-10 h-10 text-gray-400" />
@@ -582,7 +582,7 @@ export default function ProfileView() {
           <p className="text-gray-600 mb-6">Please complete your profile setup first.</p>
           <button
             onClick={() => navigate("/profile")}
-            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg"
+            className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm"
           >
             Complete Profile
           </button>
@@ -594,7 +594,7 @@ export default function ProfileView() {
   // ==================== MAIN RENDER ====================
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar activeTab="profile" userProfile={userProfile} />
 
       <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
@@ -609,7 +609,7 @@ export default function ProfileView() {
                 <ChevronLeft className="w-5 h-5 text-gray-600" />
               </button>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold text-slate-900">
                   Profile Overview
                 </h1>
                 <p className="text-gray-600 mt-1 flex items-center">
@@ -639,7 +639,7 @@ export default function ProfileView() {
 
               <button
                 onClick={() => navigate("/profile")}
-                className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl flex items-center space-x-2"
+                className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm flex items-center space-x-2"
               >
                 <Edit className="w-4 h-4" />
                 <span>Edit Profile</span>
@@ -670,7 +670,7 @@ export default function ProfileView() {
             <div className="flex-1 max-w-md">
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
-                  className="h-2.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600"
+                  className="h-2.5 rounded-full bg-indigo-600"
                   style={{ width: `${profileCompleteness}%` }}
                 ></div>
               </div>
@@ -701,7 +701,7 @@ export default function ProfileView() {
                 key={tab.id}
                 onClick={() => setActiveSection(tab.id)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeSection === tab.id
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                  ? 'bg-indigo-600 text-white shadow-sm'
                   : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
               >
@@ -728,7 +728,7 @@ export default function ProfileView() {
             >
               {/* Profile Summary Card */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-8 text-white relative">
+                <div className="bg-slate-800 px-6 py-8 text-white relative">
                   <div className="absolute top-4 right-4">
                     <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                   </div>
@@ -768,19 +768,19 @@ export default function ProfileView() {
 
                 <div className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-200/50">
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                       <div className="flex items-center space-x-2 mb-2">
-                        <Award className="w-5 h-5 text-blue-600" />
-                        <span className="text-xs text-blue-700 font-medium">Category</span>
+                        <Award className="w-4 h-4 text-slate-500" />
+                        <span className="text-xs text-slate-500 font-medium">Category</span>
                       </div>
                       <p className="text-lg font-bold text-gray-900">{userProfile.category}</p>
                       <p className="text-xs text-gray-500 mt-1">Your reservation category</p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200/50">
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                       <div className="flex items-center space-x-2 mb-2">
-                        <BookOpen className="w-5 h-5 text-green-600" />
-                        <span className="text-xs text-green-700 font-medium">Exam Type</span>
+                        <BookOpen className="w-4 h-4 text-slate-500" />
+                        <span className="text-xs text-slate-500 font-medium">Exam Type</span>
                       </div>
                       <p className="text-lg font-bold text-gray-900">{userProfile.exam_type}</p>
                       <p className="text-xs text-gray-500 mt-1">
@@ -788,10 +788,10 @@ export default function ProfileView() {
                       </p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 rounded-xl border border-purple-200/50">
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                       <div className="flex items-center space-x-2 mb-2">
-                        <Calendar className="w-5 h-5 text-purple-600" />
-                        <span className="text-xs text-purple-700 font-medium">Member Since</span>
+                        <Calendar className="w-4 h-4 text-slate-500" />
+                        <span className="text-xs text-slate-500 font-medium">Member Since</span>
                       </div>
                       <p className="text-lg font-bold text-gray-900">{memberSince}</p>
                       <p className="text-xs text-gray-500 mt-1">
