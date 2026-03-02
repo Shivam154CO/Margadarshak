@@ -12,22 +12,12 @@ import {
   Search,
   Filter,
   ArrowLeft,
-  User,
-  ChevronDown,
-  ChevronUp,
   Target,
   CheckCircle,
   Zap,
   TrendingUp,
   TrendingDown,
   AlertCircle,
-  Building,
-  Shield,
-  Database,
-  Mail,
-  BookOpen,
-  Star,
-  School,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useColleges } from "../context/CollegesContext";
@@ -236,9 +226,8 @@ export default function Favorites() {
       return {
         percentage: college.admission_chance_percentage || "95%",
         color: "text-purple-700",
-        bgColor:
-          "bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200",
-        label: "🎯 Most Probable",
+        bgColor: "bg-slate-50 border border-slate-200",
+        label: "Most Probable",
         gradient: "from-purple-600 via-purple-500 to-pink-500",
         icon: <Zap className="w-4 h-4" />,
         badgeColor: "bg-gradient-to-r from-purple-600 to-pink-600",
@@ -252,8 +241,7 @@ export default function Favorites() {
         return {
           percentage: college.admission_chance_percentage || "85%",
           color: "text-green-700",
-          bgColor:
-            "bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200",
+          bgColor: "bg-slate-50 border border-slate-200",
           label: "Best Fit",
           gradient: "from-green-500 via-emerald-500 to-teal-500",
           icon: <CheckCircle className="w-4 h-4" />,
@@ -265,8 +253,7 @@ export default function Favorites() {
         return {
           percentage: college.admission_chance_percentage || "70%",
           color: "text-blue-700",
-          bgColor:
-            "bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200",
+          bgColor: "bg-slate-50 border border-slate-200",
           label: "Good Fit",
           gradient: "from-blue-500 via-cyan-500 to-sky-500",
           icon: <Target className="w-4 h-4" />,
@@ -278,8 +265,7 @@ export default function Favorites() {
         return {
           percentage: college.admission_chance_percentage || "50%",
           color: "text-orange-700",
-          bgColor:
-            "bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200",
+          bgColor: "bg-slate-50 border border-slate-200",
           label: "Stretch",
           gradient: "from-orange-500 via-amber-500 to-red-500",
           icon: <TrendingUp className="w-4 h-4" />,
@@ -291,8 +277,7 @@ export default function Favorites() {
         return {
           percentage: college.admission_chance_percentage || "30%",
           color: "text-red-700",
-          bgColor:
-            "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200",
+          bgColor: "bg-slate-50 border border-slate-200",
           label: "Unlikely Fit",
           gradient: "from-red-500 via-rose-500 to-pink-500",
           icon: <TrendingDown className="w-4 h-4" />,
@@ -304,8 +289,7 @@ export default function Favorites() {
         return {
           percentage: college.admission_chance_percentage || "25%",
           color: "text-gray-700",
-          bgColor:
-            "bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200",
+          bgColor: "bg-slate-50 border border-slate-200",
           label: "Unknown",
           gradient: "from-gray-500 to-gray-600",
           icon: <AlertCircle className="w-4 h-4" />,
@@ -401,7 +385,7 @@ export default function Favorites() {
   const stats = getStatistics();
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar activeTab="favorites" userProfile={profile} />
 
       {/* ===== Mobile Search ===== */}
@@ -434,8 +418,8 @@ export default function Favorites() {
 
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <Heart className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                <Heart className="w-5 h-5 text-indigo-600" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">My Favorites</h1>
@@ -522,7 +506,7 @@ export default function Favorites() {
             </p>
             <button
               onClick={() => navigate("/")}
-              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
+              className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm"
             >
               Explore Colleges
             </button>
@@ -544,7 +528,7 @@ export default function Favorites() {
                 setSelectedBranch("");
                 setActiveFilter("all");
               }}
-              className="px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl font-semibold hover:from-gray-700 hover:to-gray-800 transition-all shadow-lg hover:shadow-xl"
+              className="px-6 py-3 bg-slate-700 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all shadow-sm"
             >
               Clear Filters
             </button>
@@ -567,7 +551,7 @@ export default function Favorites() {
                   <button
                     onClick={() => setViewMode('grid-3')}
                     className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center space-x-1.5 ${viewMode === 'grid-3'
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                      ? 'bg-indigo-600 text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100'
                       }`}
                   >
@@ -584,7 +568,7 @@ export default function Favorites() {
                   <button
                     onClick={() => setViewMode('grid-4')}
                     className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center space-x-1.5 ${viewMode === 'grid-4'
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                      ? 'bg-indigo-600 text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100'
                       }`}
                   >
@@ -603,7 +587,7 @@ export default function Favorites() {
                   <button
                     onClick={() => setViewMode('list')}
                     className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center space-x-1.5 ${viewMode === 'list'
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                      ? 'bg-indigo-600 text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100'
                       }`}
                   >

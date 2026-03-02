@@ -5,7 +5,6 @@ import {
   Search,
   MapPin,
   BarChart3,
-  HeartIcon,
   HelpCircle,
   Menu,
   User,
@@ -77,7 +76,6 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile }) =>
     {
       id: "favorites",
       label: "Favorites",
-      icon: HeartIcon,
       path: "/favorites",
     },
     {

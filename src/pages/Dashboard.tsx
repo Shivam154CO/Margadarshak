@@ -16,7 +16,6 @@ import {
   CheckCircle,
   AlertCircle,
   Zap,
-  Sparkles,
   Target as TargetIcon,
   Trophy,
   Layers,
@@ -523,15 +522,10 @@ export default function Dashboard() {
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 gap-4">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
-                    Welcome back, {profile?.name?.split(" ")[0] || "User"}!
-                  </h2>
-                </div>
+              <div>
+                <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
+                  Welcome back, {profile?.name?.split(" ")[0] || "User"}!
+                </h2>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -733,58 +727,42 @@ export default function Dashboard() {
 
         {/* Loading State */}
         {isLoading || predictionsLoading && colleges.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center mb-4">
-              <div className="animate-spin rounded-full h-14 w-14 border-b-2 border-indigo-600"></div>
+          <>
+            {/* Skeleton stats strip */}
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="bg-white border border-slate-200 border-l-4 border-l-slate-200 rounded-xl p-4 animate-pulse">
+                  <div className="h-7 bg-gray-200 rounded w-10 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-20 mb-1"></div>
+                  <div className="h-2.5 bg-gray-100 rounded w-16"></div>
+                </div>
+              ))}
             </div>
 
-            {/* Skeleton Loader Cards */}
-            <div className={`mt-12 grid gap-6 ${viewMode === 'grid-3' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : viewMode === 'grid-4' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>
+            {/* Skeleton filter row */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-9 bg-gray-200 rounded-lg w-28 animate-pulse"></div>
+              ))}
+            </div>
+
+            {/* Skeleton cards grid */}
+            <div className={`grid gap-6 ${viewMode === 'grid-3' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : viewMode === 'grid-4' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>
               {[...Array(9)].map((_, index) => (
-                <div
-                  key={index}
-                  className="group bg-white rounded-3xl border border-gray-200/60 shadow-lg overflow-hidden animate-pulse"
-                >
-                  {/* Image Skeleton */}
-                  <div className="relative h-48 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_200%] animate-gradient">
-                    {/* Badge Skeleton */}
-                    <div className="absolute top-4 left-4 w-28 h-8 bg-gray-300/50 rounded-full"></div>
-                    {/* Bookmark Skeleton */}
-                    <div className="absolute top-4 right-4 w-10 h-10 bg-white/90 rounded-full"></div>
-                    {/* Bottom Info Skeleton */}
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="h-6 bg-gray-300/70 rounded-lg w-3/4 mb-2"></div>
-                      <div className="h-4 bg-gray-300/60 rounded-lg w-1/2"></div>
-                    </div>
-                  </div>
-
-                  {/* Content Skeleton */}
-                  <div className="p-6 space-y-4">
-                    {/* Branch Info */}
-                    <div className="flex items-center justify-between">
-                      <div className="h-5 bg-gray-200 rounded-lg w-32"></div>
-                      <div className="h-8 bg-gray-200 rounded-lg w-20"></div>
-                    </div>
-
-                    {/* Stats Grid */}
+                <div key={index} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden animate-pulse">
+                  <div className="h-48 bg-gray-100"></div>
+                  <div className="p-5 space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-gray-50 rounded-xl p-3">
-                        <div className="h-3 bg-gray-200 rounded w-20 mb-2"></div>
-                        <div className="h-5 bg-gray-200 rounded w-16"></div>
-                      </div>
-                      <div className="bg-gray-50 rounded-xl p-3">
-                        <div className="h-3 bg-gray-200 rounded w-20 mb-2"></div>
-                        <div className="h-5 bg-gray-200 rounded w-16"></div>
-                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3"><div className="h-3 bg-gray-200 rounded w-full mb-2"></div><div className="h-4 bg-gray-200 rounded w-2/3"></div></div>
+                      <div className="bg-gray-50 rounded-lg p-3"><div className="h-3 bg-gray-200 rounded w-full mb-2"></div><div className="h-4 bg-gray-200 rounded w-2/3"></div></div>
                     </div>
-
-                    {/* Button Skeleton */}
-                    <div className="h-12 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl"></div>
+                    <div className="h-10 bg-gray-100 rounded-xl"></div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </>
         ) : sortedColleges.length === 0 ? (
           <div className="text-center py-16 bg-white/50 rounded-3xl border-2 border-dashed border-gray-300/50 shadow-sm">
             <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
@@ -798,7 +776,7 @@ export default function Dashboard() {
             </p>
             <button
               onClick={() => navigate("/profile")}
-              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
+              className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm"
             >
               Update Preferences
             </button>
