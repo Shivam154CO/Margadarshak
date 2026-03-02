@@ -206,33 +206,26 @@ export default function Dashboard() {
     refetchOnMount: false,
   });
 
-  const { isLoading: predictionsLoading } = useQuery({
+  const predictionsQuery = useQuery({
     queryKey: ['predictions', profile?.id],
     queryFn: async () => {
-      if (!profile?.preferred_branches || profile.preferred_branches.length === 0) {
-        return [];
-      }
+      if (!profile?.preferred_branches || profile.preferred_branches.length === 0) return [];
+
       const requestData = {
-        score: profile.exam_type === "CET"
-          ? parseFloat(profile.cet_score || "0")
-          : parseFloat(profile.diploma_score || "0"),
-        rank: profile.exam_type === "CET"
-          ? parseFloat(profile.cet_rank || "0")
-          : parseFloat(profile.diploma_rank || "0"),
+        score: profile.exam_type === "CET" ? parseFloat(profile.cet_score || "0") : parseFloat(profile.diploma_score || "0"),
+        rank: profile.exam_type === "CET" ? parseFloat(profile.cet_rank || "0") : parseFloat(profile.diploma_rank || "0"),
         category: profile.category,
         branches: profile.preferred_branches,
-        limit: 50,
+        limit: 100, // Sync limit with Analytics
       };
-      const response = await axios.post(
-        "http://127.0.0.1:5001/predict_admission",
-        requestData,
-        {
-          headers: { "Content-Type": "application/json" },
-          timeout: 30000,
-        }
-      );
+
+      const response = await axios.post("http://127.0.0.1:5001/predict_admission", requestData, {
+        headers: { "Content-Type": "application/json" },
+        timeout: 30000,
+      });
+
       if (response.data.colleges && response.data.colleges.length > 0) {
-        const collegesWithImages = response.data.colleges.map((college: College) => ({
+        return response.data.colleges.map((college: College) => ({
           ...college,
           image: getCollegeImage(college.college_code),
           probability_level: college.is_most_probable ? "Most Probable" : college.fit || "Unknown",
@@ -240,15 +233,23 @@ export default function Dashboard() {
           admission_chance_percentage: college.admission_chance_percentage || `${Math.round(college.admission_chance || 0)}%`,
           fit: college.fit || (college.is_most_probable ? "Most Probable" : "Unknown"),
         }));
-        setColleges(collegesWithImages);
-        return collegesWithImages;
       }
       return [];
     },
-    enabled: !!profile && profile.preferred_branches?.length > 0 && colleges.length === 0,
+    enabled: !!profile && colleges.length === 0,
     staleTime: 1000 * 60 * 60,
     refetchOnMount: false,
   });
+
+  // Synchronize query data with CollegesContext
+  const predictionsData = predictionsQuery.data;
+  const predictionsLoading = predictionsQuery.isLoading;
+
+  useEffect(() => {
+    if (predictionsData && predictionsData.length > 0 && colleges.length === 0) {
+      setColleges(predictionsData);
+    }
+  }, [predictionsData, colleges.length, setColleges]);
 
   const filtered = useMemo(() => {
     let result = colleges;

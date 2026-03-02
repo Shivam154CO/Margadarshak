@@ -6,10 +6,11 @@ import ThreeDCard from "../components/ThreeDCard";
 import TypewriterText from "../components/TypewriterText";
 import ParticleBackground from "../components/ParticleBackground";
 import AnimatedIcon from "../components/AnimatedIcon";
+import Footer from "../components/Footer";
+import IkigaiLogo from "../components/IkigaiLogo";
 
 export default function NewLanding() {
     const navigate = useNavigate();
-    const [activeStep, setActiveStep] = useState(0);
     const [stats, setStats] = useState({
         colleges: 0,
         students: 0,
@@ -137,19 +138,7 @@ export default function NewLanding() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center space-x-3">
-                            <motion.div
-                                className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg"
-                                whileHover={{ scale: 1.1, rotate: 5 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                <div className="text-white font-bold text-xl">S</div>
-                            </motion.div>
-                            <div>
-                                <div className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                                    SmartCF
-                                </div>
-                                <div className="text-xs text-gray-500">AI College Finder</div>
-                            </div>
+                            <IkigaiLogo size="md" showText={true} />
                         </div>
 
                         <div className="hidden md:flex items-center space-x-8">
@@ -695,59 +684,7 @@ export default function NewLanding() {
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="bg-gray-900 text-white py-16">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid md:grid-cols-4 gap-12">
-                        <div>
-                            <div className="flex items-center space-x-3 mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
-                                    <div className="text-white font-bold text-xl">S</div>
-                                </div>
-                                <div className="text-xl font-bold">SmartCF</div>
-                            </div>
-                            <p className="text-gray-400">
-                                AI-powered college predictions for engineering students
-                            </p>
-                        </div>
-
-                        <div>
-                            <div className="font-bold text-lg mb-6">Product</div>
-                            <ul className="space-y-3 text-gray-400">
-                                <li><button className="hover:text-white transition-colors">Features</button></li>
-                                <li><button className="hover:text-white transition-colors">How It Works</button></li>
-                                <li><button className="hover:text-white transition-colors">Pricing</button></li>
-                                <li><button className="hover:text-white transition-colors">FAQ</button></li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <div className="font-bold text-lg mb-6">Company</div>
-                            <ul className="space-y-3 text-gray-400">
-                                <li><button className="hover:text-white transition-colors">About Us</button></li>
-                                <li><button className="hover:text-white transition-colors">Blog</button></li>
-                                <li><button className="hover:text-white transition-colors">Careers</button></li>
-                                <li><button className="hover:text-white transition-colors">Contact</button></li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <div className="font-bold text-lg mb-6">Legal</div>
-                            <ul className="space-y-3 text-gray-400">
-                                <li><button className="hover:text-white transition-colors">Privacy Policy</button></li>
-                                <li><button className="hover:text-white transition-colors">Terms of Service</button></li>
-                                <li><button className="hover:text-white transition-colors">Cookie Policy</button></li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div className="border-t border-gray-800 mt-12 pt-8 text-center">
-                        <p className="text-gray-400">
-                            © 2026 SmartCF. Empowering students with AI-driven college predictions.
-                        </p>
-                    </div>
-                </div>
-            </footer>
+            <Footer />
         </div>
     );
 }

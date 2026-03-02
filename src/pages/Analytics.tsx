@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
+import axios from 'axios';
 import {
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
     ResponsiveContainer, PieChart, Pie, Cell,
@@ -24,6 +25,11 @@ interface UserProfile {
     address: string; receive_updates: boolean; profile_complete: boolean;
     created_at: string; updated_at: string;
 }
+
+const getCollegeImage = (collegeCode: string): string => {
+    if (!collegeCode) return "/src/assets/fallback-campus.jpg";
+    return `/src/assets/${collegeCode}/campus.png`;
+};
 
 const C: Record<string, string> = { purple: '#7c3aed', green: '#059669', blue: '#2563eb', amber: '#d97706', red: '#dc2626', cyan: '#0891b2', pink: '#db2777', slate: '#475569' };
 const fitColor = (f: string) => f === 'Most Probable' ? C.purple : f === 'Best Fit' ? C.green : f === 'Good Fit' ? C.blue : f === 'Stretch' ? C.amber : C.slate;
@@ -83,7 +89,7 @@ const Section = ({ title, icon: Icon, children, color = '#6366f1' }: { title: st
 const CARD = "bg-white border border-slate-200 rounded-xl p-4 shadow-sm";
 
 export default function Analytics() {
-    const { colleges } = useColleges();
+    const { colleges, setColleges } = useColleges();
     const { data: profile } = useQuery<UserProfile>({
         queryKey: ['userProfile'],
         queryFn: async () => {
@@ -93,11 +99,55 @@ export default function Analytics() {
             return data as UserProfile;
         },
         staleTime: 1000 * 60 * 5,
+        refetchOnMount: false,
     });
+
+    const predictionsQuery = useQuery({
+        queryKey: ['predictions', profile?.id],
+        queryFn: async () => {
+            if (!profile?.preferred_branches || profile.preferred_branches.length === 0) return [];
+
+            const requestData = {
+                score: profile.exam_type === "CET" ? parseFloat(profile.cet_score || "0") : parseFloat(profile.diploma_score || "0"),
+                rank: profile.exam_type === "CET" ? parseFloat(profile.cet_rank || "0") : parseFloat(profile.diploma_rank || "0"),
+                category: profile.category,
+                branches: profile.preferred_branches,
+                limit: 100,
+            };
+
+            const response = await axios.post("http://127.0.0.1:5001/predict_admission", requestData, {
+                headers: { "Content-Type": "application/json" },
+                timeout: 30000,
+            });
+
+            if (response.data.colleges && response.data.colleges.length > 0) {
+                return response.data.colleges.map((college: any) => ({
+                    ...college,
+                    image: getCollegeImage(college.college_code),
+                    probability_level: college.is_most_probable ? "Most Probable" : college.fit || "Unknown",
+                    match_percentage: college.match_percentage || `${Math.round(college.match_score || 0)}%`,
+                    admission_chance_percentage: college.admission_chance_percentage || `${Math.round(college.admission_chance || 0)}%`,
+                    fit: college.fit || (college.is_most_probable ? "Most Probable" : "Unknown"),
+                }));
+            }
+            return [];
+        },
+        enabled: !!profile && colleges.length === 0,
+        staleTime: 1000 * 60 * 60,
+        refetchOnMount: false,
+    });
+
+    // Synchronize query data with CollegesContext
+    const predictionsData = predictionsQuery.data;
+    useEffect(() => {
+        if (predictionsData && predictionsData.length > 0 && colleges.length === 0) {
+            setColleges(predictionsData);
+        }
+    }, [predictionsData, colleges.length, setColleges]);
 
     const bi = useMemo(() => computeBI(colleges, profile), [colleges, profile]);
 
-    if (!colleges.length || !bi) {
+    if (!colleges.length || !bi || predictionsQuery.isLoading) {
         return (
             <div className="min-h-screen bg-[#f0f2f5] flex flex-col">
                 <Navbar activeTab="analytics" />

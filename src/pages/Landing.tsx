@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform, motionValue, useSpring, AnimatePresenc
 import ScrollAnimationWrapper from "../components/ScrollAnimationWrapper";
 import LiveFeatureIcon from "../components/LiveFeatureIcon";
 import IkigaiLogo from "../components/IkigaiLogo";
+import Footer from "../components/Footer";
 import { LiveCastePreview, LiveMatchSimulator, LiveTrendPulse, LiveAIAssistant, LiveDistanceTracker, LiveScholarshipGuide } from "../components/LiveFeatureShowcase";
 
 // Import custom illustrations
@@ -707,17 +708,7 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-white py-32 border-t border-gray-50 text-center">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col items-center space-y-12">
-          <IkigaiLogo size="md" showText={true} />
-          <div className="flex flex-wrap justify-center gap-16">
-            {['Predictor', 'Colleges', 'How it Works', 'Privacy'].map(item => (
-              <button key={item} className="text-slate-400 font-semibold text-[10px] uppercase tracking-[0.3em] hover:text-rose-600 transition-colors">{item}</button>
-            ))}
-          </div>
-          <p className="text-slate-400 font-medium italic text-sm">Empowering Diploma students to make their best engineering choice. <br /> © 2026 SmartCF Platform. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
+import IkigaiLogo from "./IkigaiLogo";
 import {
   Search,
   MapPin,
@@ -10,7 +11,6 @@ import {
   Menu,
   User,
   ChevronDown,
-  GraduationCap,
   LogOut,
   Settings,
   Shield,
@@ -131,21 +131,11 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
             >
               <Menu className="w-5 h-5 text-gray-600" />
             </button>
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-                  <GraduationCap className="w-6 h-6 text-white" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">
-                  Ikigai
-                </h1>
-                <p className="text-xs text-gray-500">
-                  AI-Powered Admissions Predictor
-                </p>
-              </div>
+            <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => {
+              setAutomationDropdownOpen(false);
+              navigate('/');
+            }}>
+              <IkigaiLogo size="sm" showText={true} />
             </div>
           </div>
 
