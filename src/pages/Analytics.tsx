@@ -49,17 +49,17 @@ const Spark = ({ data, color }: { data: number[]; color: string }) => (
 const Gauge = ({ value, max, color, label }: { value: number; max: number; color: string; label: string }) => {
     const pct = Math.min(100, (value / Math.max(max, 1)) * 100);
     return (
-        <div className="flex flex-col items-center">
-            <div className="relative w-28 h-14">
-                <ResponsiveContainer width="100%" height={80}>
-                    <RadialBarChart cx="50%" cy="100%" innerRadius="78%" outerRadius="100%" startAngle={180} endAngle={0}
+        <div className="flex flex-col items-center py-2">
+            <div className="relative w-36 h-20">
+                <ResponsiveContainer width="100%" height={100}>
+                    <RadialBarChart cx="50%" cy="100%" innerRadius="75%" outerRadius="100%" startAngle={180} endAngle={0}
                         data={[{ value: pct, fill: color }, { value: 100 - pct, fill: '#f1f5f9' }]}>
                         <RadialBar dataKey="value" cornerRadius={4} />
                     </RadialBarChart>
                 </ResponsiveContainer>
-                <div className="absolute bottom-0 w-full text-center"><span className="text-xl font-black" style={{ color }}>{value}</span></div>
+                <div className="absolute bottom-0 w-full text-center"><span className="text-2xl font-black" style={{ color }}>{value}</span></div>
             </div>
-            <p className="text-[10px] font-semibold text-slate-500 mt-0.5">{label}</p>
+            <p className="text-xs font-semibold text-slate-500 mt-3">{label}</p>
         </div>
     );
 };
@@ -162,7 +162,7 @@ export default function Analytics() {
                                     </Pie><Tooltip content={<Tip />} /></PieChart>
                                 </ResponsiveContainer>
                                 <div className="space-y-1">
-                                    {bi.donut.map(d => (<div key={d.name} className="flex items-center gap-1.5">
+                                    {bi.donut.map(d => (<div key={d.name} className="flex gap-1.5">
                                         <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: d.fill }} />
                                         <span className="text-[11px] text-slate-600">{d.name}</span>
                                         <span className="text-[11px] font-bold text-slate-800 ml-auto">{d.value}</span>
