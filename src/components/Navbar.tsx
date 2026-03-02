@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import {
   Search,
@@ -43,11 +44,21 @@ interface NavbarProps {
   userProfile?: UserProfile | null;
 }
 
-const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile }) => {
+const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: propProfile }) => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [automationDropdownOpen, setAutomationDropdownOpen] = useState(false);
+
+  // Read from shared React Query cache — same key used by all pages
+  const { data: cachedProfile } = useQuery<UserProfile | null>({
+    queryKey: ['userProfile'],
+    enabled: false, // never refetch here — just read from cache
+    staleTime: Infinity,
+  });
+
+  // Prefer cached data over prop (cache is always up-to-date)
+  const userProfile = cachedProfile ?? propProfile;
 
   const navItems: any[] = [
     {
