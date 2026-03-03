@@ -1,7 +1,9 @@
-import { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import { debounce } from "lodash";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin,
   Bookmark,
@@ -155,44 +157,6 @@ const CollegeImage: React.FC<CollegeImageProps> = ({
   );
 };
 
-// Fully isolated search input — typing here NEVER re-renders the parent Dashboard
-const DashboardSearch = memo(({ onSearch }: { onSearch: (term: string) => void }) => {
-  const [localValue, setLocalValue] = useState("");
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setLocalValue(val);
-
-    // Debounce: only notify parent after 400ms of no typing
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      onSearch(val);
-    }, 400);
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  return (
-    <div className="relative flex-grow w-full sm:w-auto">
-      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-      <input
-        type="text"
-        placeholder="Search colleges, cities, districts..."
-        value={localValue}
-        onChange={handleChange}
-        className="pl-10 pr-4 py-2.5 w-full bg-white border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm hover:shadow-md"
-      />
-    </div>
-  );
-});
-DashboardSearch.displayName = 'DashboardSearch';
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const { colleges, setColleges } = useColleges();
@@ -214,7 +178,8 @@ export default function Dashboard() {
   const [selectedBranch, setSelectedBranch] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // Debounced value for filtering
+  const [searchInput, setSearchInput] = useState(""); // Instant value for input display
 
   const { data: profile } = useQuery({
     queryKey: ['userProfile'],
@@ -332,9 +297,15 @@ export default function Dashboard() {
   const isLoading = !profile || predictionsLoading;
 
 
-  const handleSearch = useCallback((term: string) => {
-    setSearchTerm(term);
-  }, []);
+  const debouncedSearch = useMemo(
+    () => debounce((value: string) => setSearchTerm(value), 300),
+    []
+  );
+
+  const handleSearch = useCallback((value: string) => {
+    setSearchInput(value);
+    debouncedSearch(value);
+  }, [debouncedSearch]);
 
   const handleBranchFilter = useCallback((branch: string) => {
     setSelectedBranch(branch);
@@ -384,19 +355,26 @@ export default function Dashboard() {
     localStorage.setItem("favoriteColleges", JSON.stringify(newLocalStorage));
   };
 
-  const branches = useMemo(() => {
-    return [...new Set(colleges.map((c) => c.branch))].sort();
-  }, [colleges]);
+  const getAvailableBranches = () => {
+    const branches = [...new Set(colleges.map((c) => c.branch))];
+    return branches.sort();
+  };
 
-  const cities = useMemo(() => {
-    return [...new Set(colleges.map((c) => c.city))].sort();
-  }, [colleges]);
+  const getAvailableCities = () => {
+    const cities = [...new Set(colleges.map((c) => c.city))];
+    return cities.sort();
+  };
 
-  const districts = useMemo(() => {
-    return [...new Set(colleges.map((c) => c.district).filter(Boolean))].sort();
-  }, [colleges]);
+  const getAvailableDistricts = () => {
+    const districts = [...new Set(colleges.map((c) => c.district).filter(Boolean))];
+    return districts.sort();
+  };
 
-  const displayedColleges = useMemo(() => {
+  const branches = getAvailableBranches();
+  const cities = getAvailableCities();
+  const districts = getAvailableDistricts();
+
+  const getFilteredColleges = () => {
     let result = filtered;
     switch (activeFilter) {
       case "most-probable":
@@ -418,7 +396,9 @@ export default function Dashboard() {
         break;
     }
     return result;
-  }, [filtered, activeFilter, savedColleges]);
+  };
+
+  const displayedColleges = getFilteredColleges();
 
   // Helper to get sort order efficiently without creating JSX
   const getSortOrder = (college: College) => {
@@ -466,15 +446,19 @@ export default function Dashboard() {
     return result;
   }, [displayedColleges]);
 
-  const stats = useMemo(() => ({
-    total: colleges.length,
-    mostProbable: colleges.filter((c) => c.is_most_probable || c.probability_level === "Most Probable").length,
-    bestFit: colleges.filter((c) => (c.fit === "Best Fit" || c.probability_level === "Best Fit") && !c.is_most_probable).length,
-    goodFit: colleges.filter((c) => c.fit === "Good Fit" || c.probability_level === "Good Fit").length,
-    stretch: colleges.filter((c) => c.fit === "Stretch" || c.probability_level === "Stretch").length,
-    saved: savedColleges.length,
-    uniqueColleges: new Set(colleges.map((c) => c.college_code)).size,
-  }), [colleges, savedColleges]);
+  const getStatistics = () => {
+    return {
+      total: colleges.length,
+      mostProbable: colleges.filter((c) => c.is_most_probable || c.probability_level === "Most Probable").length,
+      bestFit: colleges.filter((c) => (c.fit === "Best Fit" || c.probability_level === "Best Fit") && !c.is_most_probable).length,
+      goodFit: colleges.filter((c) => c.fit === "Good Fit" || c.probability_level === "Good Fit").length,
+      stretch: colleges.filter((c) => c.fit === "Stretch" || c.probability_level === "Stretch").length,
+      saved: savedColleges.length,
+      uniqueColleges: new Set(colleges.map((c) => c.college_code)).size,
+    };
+  };
+
+  const stats = getStatistics();
 
   const getAdmissionInfo = (college: College) => {
     const fitCategory = college.probability_level || college.fit;
@@ -704,7 +688,16 @@ export default function Dashboard() {
         {/* Search and Filter Controls */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <DashboardSearch onSearch={handleSearch} />
+            <div className="relative flex-grow w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search colleges, cities, districts..."
+                value={searchInput}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-10 pr-4 py-2.5 w-full bg-white border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm hover:shadow-md"
+              />
+            </div>
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-grow sm:flex-grow-0">
                 <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -849,173 +842,184 @@ export default function Dashboard() {
             </div>
 
             {/* College Cards Grid */}
-            <div
+            <motion.div
+              layout
               className={`grid gap-6 ${viewMode === 'grid-3'
                 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
                 : viewMode === 'grid-4'
                   ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4'
                   : 'grid-cols-1'
                 }`}>
-              {sortedColleges.map((college, index) => {
-                const admissionInfo = getAdmissionInfo(college);
-                const saveKey = `${college.college_code}_${college.branch}`;
-                const isSaved = savedColleges.includes(saveKey);
+              <AnimatePresence mode="popLayout">
+                {sortedColleges.map((college, index) => {
+                  const admissionInfo = getAdmissionInfo(college);
+                  const saveKey = `${college.college_code}_${college.branch}`;
+                  const isSaved = savedColleges.includes(saveKey);
 
-                // Render the icon dynamically based on the name
-                const IconComponent = {
-                  Zap, CheckCircle, Target, TrendingUp, AlertCircle
-                }[admissionInfo.iconName] || AlertCircle;
+                  // Render the icon dynamically based on the name
+                  const IconComponent = {
+                    Zap, CheckCircle, Target, TrendingUp, AlertCircle
+                  }[admissionInfo.iconName] || AlertCircle;
 
-                return (
-                  <div
-                    key={`${college.college_code}_${college.branch}_${index}`}
-                    className="group bg-white rounded-2xl border border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_32px_-8px_rgba(0,0,0,0.12)] hover:border-indigo-100 transition-all duration-300 overflow-hidden hover:-translate-y-1.5 flex flex-col h-full animate-fade-in"
-                    style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
-                  >
-                    {/* Image Header with Heavy Glassmorphism */}
-                    <div className="relative h-56 overflow-hidden">
-                      <CollegeImage
-                        collegeCode={college.college_code}
-                        className="w-full h-full object-cover group-hover:scale-[1.07] transition-transform duration-700 ease-out"
-                        alt={`${college.college_name} campus`}
-                        priority={index < 4}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent"></div>
+                  return (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: Math.min(index * 0.05, 0.3),
+                        ease: [0.23, 1, 0.32, 1]
+                      }}
+                      key={`${college.college_code}_${college.branch}_${index}`}
+                      className="group bg-white rounded-2xl border border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_32px_-8px_rgba(0,0,0,0.12)] hover:border-indigo-100 transition-all duration-500 overflow-hidden hover:-translate-y-1.5 flex flex-col h-full"
+                    >
+                      {/* Image Header with Heavy Glassmorphism */}
+                      <div className="relative h-56 overflow-hidden">
+                        <CollegeImage
+                          collegeCode={college.college_code}
+                          className="w-full h-full object-cover group-hover:scale-[1.07] transition-transform duration-700 ease-out"
+                          alt={`${college.college_name} campus`}
+                          priority={index < 4}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent"></div>
 
-                      {/* Floating Save Button */}
-                      <button
-                        onClick={() => toggleSaveCollege(college)}
-                        className="absolute top-4 right-4 w-9 h-9 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center hover:bg-white hover:border-white transition-all duration-300 shadow-xl z-20 group/save"
-                      >
-                        {isSaved ? (
-                          <BookmarkCheck className="w-4 h-4 text-white group-hover/save:text-indigo-600 transition-colors" />
-                        ) : (
-                          <Bookmark className="w-4 h-4 text-white group-hover/save:text-indigo-600 transition-colors" />
-                        )}
-                      </button>
+                        {/* Floating Save Button */}
+                        <button
+                          onClick={() => toggleSaveCollege(college)}
+                          className="absolute top-4 right-4 w-9 h-9 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center hover:bg-white hover:border-white transition-all duration-300 shadow-xl z-20 group/save"
+                        >
+                          {isSaved ? (
+                            <BookmarkCheck className="w-4 h-4 text-white group-hover/save:text-indigo-600 transition-colors" />
+                          ) : (
+                            <Bookmark className="w-4 h-4 text-white group-hover/save:text-indigo-600 transition-colors" />
+                          )}
+                        </button>
 
-                      {/* Status Badge */}
-                      <div
-                        className={`absolute top-4 left-4 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/20 ${admissionInfo.bgColor.replace('bg-gradient-to-r', '').replace('bg-white', 'bg-white/90')} text-slate-900 flex items-center space-x-1.5 text-xs font-bold z-20 shadow-lg`}
-                      >
-                        <IconComponent className={`w-3.5 h-3.5 ${admissionInfo.color.replace('text-', 'text-').split(' ')[0]}`} />
-                        <span>{admissionInfo.label}</span>
-                      </div>
+                        {/* Status Badge */}
+                        <div
+                          className={`absolute top-4 left-4 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/20 ${admissionInfo.bgColor.replace('bg-gradient-to-r', '').replace('bg-white', 'bg-white/90')} text-slate-900 flex items-center space-x-1.5 text-xs font-bold z-20 shadow-lg`}
+                        >
+                          <IconComponent className={`w-3.5 h-3.5 ${admissionInfo.color.replace('text-', 'text-').split(' ')[0]}`} />
+                          <span>{admissionInfo.label}</span>
+                        </div>
 
-                      {/* Title & Location Overlay */}
-                      <div className="absolute bottom-0 left-0 right-0 p-5 z-20 flex flex-col justify-end">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1">
-                            <h3 className="text-xl font-bold text-white tracking-tight leading-tight line-clamp-2 mb-2 group-hover:text-indigo-100 transition-colors">
-                              {college.college_name}
-                            </h3>
-                            <div className="flex items-center text-slate-300 text-xs font-medium">
-                              <MapPin className="w-3.5 h-3.5 mr-1" />
-                              <span className="truncate">{college.city}</span>
+                        {/* Title & Location Overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 p-5 z-20 flex flex-col justify-end">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <h3 className="text-xl font-bold text-white tracking-tight leading-tight line-clamp-2 mb-2 group-hover:text-indigo-100 transition-colors">
+                                {college.college_name}
+                              </h3>
+                              <div className="flex items-center text-slate-300 text-xs font-medium">
+                                <MapPin className="w-3.5 h-3.5 mr-1" />
+                                <span className="truncate">{college.city}</span>
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0 flex flex-col items-end">
+                              <div className="px-3 py-1 rounded-lg bg-indigo-500/20 backdrop-blur-md border border-indigo-500/30 text-indigo-100 text-sm font-black shadow-lg">
+                                {college.match_score ? `${college.match_score.toFixed(1)}/100` : (college.match_percentage || "N/A")}
+                              </div>
+                              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">Match Score</span>
                             </div>
                           </div>
-                          <div className="flex-shrink-0 flex flex-col items-end">
-                            <div className="px-3 py-1 rounded-lg bg-indigo-500/20 backdrop-blur-md border border-indigo-500/30 text-indigo-100 text-sm font-black shadow-lg">
-                              {college.match_score ? `${college.match_score.toFixed(1)}/100` : (college.match_percentage || "N/A")}
-                            </div>
-                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">Match Score</span>
+                        </div>
+                      </div>
+
+                      {/* Data Details Section */}
+                      <div className="p-5 flex flex-col flex-grow">
+
+                        {/* Branch & Category */}
+                        <div className="flex flex-wrap items-center gap-2 mb-5">
+                          <div className="inline-flex items-center space-x-1.5 bg-slate-50 text-slate-700 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide border border-slate-200/60">
+                            <Layers className="w-3 h-3 text-indigo-500" />
+                            <span className="line-clamp-1 max-w-[180px]">{college.branch}</span>
+                          </div>
+                          <div className="inline-flex items-center space-x-1.5 bg-slate-50 text-slate-600 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide border border-slate-200/60">
+                            <Award className="w-3 h-3 text-emerald-500" />
+                            <span>{college.category}</span>
                           </div>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Data Details Section */}
-                    <div className="p-5 flex flex-col flex-grow">
-
-                      {/* Branch & Category */}
-                      <div className="flex flex-wrap items-center gap-2 mb-5">
-                        <div className="inline-flex items-center space-x-1.5 bg-slate-50 text-slate-700 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide border border-slate-200/60">
-                          <Layers className="w-3 h-3 text-indigo-500" />
-                          <span className="line-clamp-1 max-w-[180px]">{college.branch}</span>
-                        </div>
-                        <div className="inline-flex items-center space-x-1.5 bg-slate-50 text-slate-600 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide border border-slate-200/60">
-                          <Award className="w-3 h-3 text-emerald-500" />
-                          <span>{college.category}</span>
-                        </div>
-                      </div>
-
-                      {/* 4-Grid Metrics */}
-                      <div className="grid grid-cols-4 gap-2 mb-6">
-                        <div className="flex flex-col justify-center bg-white p-2 text-center">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cutoff</span>
-                          <span className="text-sm font-black text-slate-800">
-                            {college.cutoff_rank > 0 ? college.cutoff_rank : Math.round(college.cutoff_percentile)}
-                          </span>
-                        </div>
-                        <div className="flex flex-col justify-center bg-white p-2 text-center border-l border-slate-100">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Seats</span>
-                          <span className="text-sm font-black text-slate-800">
-                            {college.seats || "N/A"}
-                          </span>
-                        </div>
-                        <div className="flex flex-col justify-center bg-white p-2 text-center border-l border-slate-100">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Fees</span>
-                          <span className="text-sm font-black text-slate-800">
-                            {college.fees ? `₹${(college.fees / 100000).toFixed(1)}L` : "N/A"}
-                          </span>
-                        </div>
-                        <div className="flex flex-col justify-center bg-white p-2 text-center border-l border-slate-100">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Placements</span>
-                          <span className="text-sm font-black text-emerald-600">
-                            {college.placement_rate ? `${college.placement_rate.toFixed(0)}%` : "N/A"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Admission Probability Bar */}
-                      <div className="mb-6 mt-auto">
-                        <div className="flex justify-between items-end mb-2">
-                          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Admission Probability</span>
-                          <span className={`text-xs font-black ${admissionInfo.color}`}>
-                            {admissionInfo.percentage}
-                          </span>
-                        </div>
-                        <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full bg-gradient-to-r ${admissionInfo.gradient} transition-all duration-1000`}
-                            style={{ width: `${college.admission_chance || 0}%` }}
-                          ></div>
-                        </div>
-                      </div>
-
-                      {/* Package Highlights */}
-                      {(college.average_package_lpa > 0 || college.highest_package_lpa > 0) && (
-                        <div className="mb-6 bg-slate-50 rounded-xl border border-slate-200/60 p-3 mt-auto">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
-                              <Trophy className="w-3.5 h-3.5 text-indigo-500" />
-                              <span>Package (LPA)</span>
+                        {/* 4-Grid Metrics */}
+                        <div className="grid grid-cols-4 gap-2 mb-6">
+                          <div className="flex flex-col justify-center bg-white p-2 text-center">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cutoff</span>
+                            <span className="text-sm font-black text-slate-800">
+                              {college.cutoff_rank > 0 ? college.cutoff_rank : Math.round(college.cutoff_percentile)}
                             </span>
-                            <div className="text-right flex items-center gap-3">
-                              {college.average_package_lpa > 0 && (
-                                <div className="text-[11px] font-black text-slate-800">Avg: {college.average_package_lpa.toFixed(1)}L</div>
-                              )}
-                              {college.highest_package_lpa > 0 && (
-                                <div className="text-[10px] font-bold text-slate-500 border-l border-slate-300 pl-3">High: {college.highest_package_lpa.toFixed(1)}L</div>
-                              )}
-                            </div>
+                          </div>
+                          <div className="flex flex-col justify-center bg-white p-2 text-center border-l border-slate-100">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Seats</span>
+                            <span className="text-sm font-black text-slate-800">
+                              {college.seats || "N/A"}
+                            </span>
+                          </div>
+                          <div className="flex flex-col justify-center bg-white p-2 text-center border-l border-slate-100">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Fees</span>
+                            <span className="text-sm font-black text-slate-800">
+                              {college.fees ? `₹${(college.fees / 100000).toFixed(1)}L` : "N/A"}
+                            </span>
+                          </div>
+                          <div className="flex flex-col justify-center bg-white p-2 text-center border-l border-slate-100">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Placements</span>
+                            <span className="text-sm font-black text-emerald-600">
+                              {college.placement_rate ? `${college.placement_rate.toFixed(0)}%` : "N/A"}
+                            </span>
                           </div>
                         </div>
-                      )}
 
-                      {/* Call to Action Button */}
-                      <button
-                        onClick={() => navigate("/college-details", { state: { college } })}
-                        className="w-full bg-slate-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-indigo-600 transition-colors duration-300 shadow-sm flex items-center justify-center space-x-2 group/btn mt-auto"
-                      >
-                        <span>View Details</span>
-                        <ExternalLink className="w-4 h-4 group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5 transition-transform" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                        {/* Admission Probability Bar */}
+                        <div className="mb-6 mt-auto">
+                          <div className="flex justify-between items-end mb-2">
+                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Admission Probability</span>
+                            <span className={`text-xs font-black ${admissionInfo.color}`}>
+                              {admissionInfo.percentage}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full bg-gradient-to-r ${admissionInfo.gradient} transition-all duration-1000`}
+                              style={{ width: `${college.admission_chance || 0}%` }}
+                            ></div>
+                          </div>
+                        </div>
+
+                        {/* Package Highlights */}
+                        {(college.average_package_lpa > 0 || college.highest_package_lpa > 0) && (
+                          <div className="mb-6 bg-slate-50 rounded-xl border border-slate-200/60 p-3 mt-auto">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                                <Trophy className="w-3.5 h-3.5 text-indigo-500" />
+                                <span>Package (LPA)</span>
+                              </span>
+                              <div className="text-right flex items-center gap-3">
+                                {college.average_package_lpa > 0 && (
+                                  <div className="text-[11px] font-black text-slate-800">Avg: {college.average_package_lpa.toFixed(1)}L</div>
+                                )}
+                                {college.highest_package_lpa > 0 && (
+                                  <div className="text-[10px] font-bold text-slate-500 border-l border-slate-300 pl-3">High: {college.highest_package_lpa.toFixed(1)}L</div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Call to Action Button */}
+                        <button
+                          onClick={() => navigate("/college-details", { state: { college } })}
+                          className="w-full bg-slate-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-indigo-600 transition-colors duration-300 shadow-sm flex items-center justify-center space-x-2 group/btn mt-auto"
+                        >
+                          <span>View Details</span>
+                          <ExternalLink className="w-4 h-4 group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5 transition-transform" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </motion.div>
           </>
         )}
 
@@ -1041,6 +1045,6 @@ export default function Dashboard() {
           <Footer />
         </footer>
       </div>
-    </div >
+    </div>
   );
 }
