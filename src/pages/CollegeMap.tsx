@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Globe, Target, Sparkles, RotateCw, ZoomIn, ZoomOut,
-  SlidersHorizontal, X, Building2, MapPin, IndianRupee, Briefcase, GraduationCap, ArrowRight, Activity, Layers,
-  Home, Train, Shield, Eye, Compass, Users, Share2, Navigation, Thermometer
+  Target, Sparkles, RotateCw, ZoomIn, ZoomOut,
+  X, Building2, MapPin, IndianRupee, GraduationCap, ArrowRight, Activity, Layers,
+  Home, Train, Shield, Eye, Compass, Users, Share2, Navigation
 } from "lucide-react";
 import axios from "axios";
 import { supabase } from "../lib/supabase";
@@ -389,6 +390,7 @@ export default function InteractiveCollegeMap() {
 }
 
 function CollegeMapContent() {
+  const navigate = useNavigate();
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   const [zoomLevel, setZoomLevel] = useState(8);
   const [mapCenter, setMapCenter] = useState({ lat: 19.75, lng: 75.75 });
@@ -871,7 +873,7 @@ function CollegeMapContent() {
         {/* Map Rendering */}
         {mapProvider === "osm" ? renderOpenStreetMap() : renderGoogleMap()}
 
-        {/* Slide-out Analytics Panel */}
+        {/* Slide-out College Panel */}
         <AnimatePresence>
           {selectedCollege && (
             <motion.div
@@ -879,154 +881,184 @@ function CollegeMapContent() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="absolute top-0 right-0 h-full w-full sm:w-[500px] bg-white shadow-2xl z-[100] flex flex-col border-l border-gray-100"
+              className="absolute top-0 right-0 h-full w-full sm:w-[460px] bg-white shadow-2xl z-[100] flex flex-col border-l border-gray-200"
             >
               {/* Header Image */}
-              <div className="relative h-56 w-full flex-shrink-0">
+              <div className="relative h-52 w-full flex-shrink-0">
                 <img src={getCollegeImage(selectedCollege.college_code)} onError={handleImageError} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/95 via-gray-900/40 to-transparent" />
-                <button onClick={() => setSelectedCollege(null)} className="absolute top-6 right-6 p-2 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white transition-colors">
-                  <X className="w-5 h-5" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                <button onClick={() => setSelectedCollege(null)} className="absolute top-4 right-4 p-2 bg-black/25 hover:bg-black/50 backdrop-blur-sm rounded-full text-white transition-colors">
+                  <X className="w-4 h-4" />
                 </button>
                 {selectedCollege.is_predicted && (
-                  <div className="absolute top-6 left-6 bg-yellow-400 text-yellow-900 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 border border-yellow-300">
-                    <Sparkles className="w-3.5 h-3.5" /> AI Recommended
+                  <div className="absolute top-4 left-4 bg-amber-400 text-amber-900 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3" /> AI Recommended
                   </div>
                 )}
-                <div className="absolute bottom-6 left-6 right-6">
-                  <h2 className="text-2xl font-bold text-white leading-tight mb-2 pr-6">{selectedCollege.college_name}</h2>
-                  <div className="flex items-center gap-4 text-gray-300 text-xs font-bold uppercase tracking-wider">
-                    <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-indigo-400" />{selectedCollege.city}</span>
-                    <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-indigo-400" />{selectedCollege.autonomy_status}</span>
+                <div className="absolute bottom-4 left-5 right-5">
+                  <h2 className="text-lg font-bold text-white leading-snug mb-1 pr-6">{selectedCollege.college_name}</h2>
+                  <div className="flex items-center gap-3 text-white/75 text-sm">
+                    <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-indigo-300" />{selectedCollege.city}</span>
+                    <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5 text-indigo-300" />{selectedCollege.autonomy_status}</span>
                   </div>
                 </div>
               </div>
 
               {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-gray-50/50">
-                {/* 360 & Experience Quick Links */}
-                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                  <button className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg hover:shadow-indigo-500/40 transition-all">
-                    <Eye className="w-3.5 h-3.5" /> 360° Panorama
+              <div className="flex-1 overflow-y-auto bg-white">
+                {/* Quick Action Buttons */}
+                <div className="px-5 py-4 flex gap-2 border-b border-gray-100">
+                  <button
+                    onClick={() => {
+                      if (!selectedCollege) return;
+                      window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${selectedCollege.latitude},${selectedCollege.longitude}&heading=0&pitch=0`, '_blank');
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-medium hover:bg-indigo-100 transition-colors"
+                  >
+                    <Eye className="w-3.5 h-3.5" /> Street View
                   </button>
-                  <button className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">
-                    <Compass className="w-3.5 h-3.5" /> Indoor Map
+                  <button
+                    onClick={() => {
+                      if (!selectedCollege) return;
+                      window.open(`https://www.openstreetmap.org/?mlat=${selectedCollege.latitude}&mlon=${selectedCollege.longitude}#map=18/${selectedCollege.latitude}/${selectedCollege.longitude}`, '_blank');
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                  >
+                    <Compass className="w-3.5 h-3.5" /> View Map
                   </button>
-                  <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse">
-                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" /> Live Event
-                  </div>
+                  <button
+                    onClick={() => {
+                      if (!selectedCollege) return;
+                      window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedCollege.latitude},${selectedCollege.longitude}&travelmode=transit`, '_blank');
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-sm font-medium hover:bg-emerald-100 transition-colors"
+                  >
+                    <Train className="w-3.5 h-3.5" /> Directions
+                  </button>
                 </div>
 
-                {/* Logistics & Transit Info */}
-                <div className="bg-white p-5 rounded-[1.25rem] border border-gray-100 shadow-sm space-y-4">
-                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    <Train className="w-3.5 h-3.5 text-indigo-500" /> Transit & Neighborhood
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <div className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
-                        <Train className="w-3 h-3 text-gray-400" /> Metro Station
-                      </div>
-                      <div className="text-[10px] text-gray-500 font-medium">1.2 km (15 min walk)</div>
+                <div className="p-5 space-y-5">
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-emerald-50 rounded-2xl p-4">
+                      <p className="text-xs text-emerald-700 font-medium mb-1">Admission Chance</p>
+                      <p className="text-2xl font-bold text-emerald-800">
+                        {selectedCollege.branches.length > 0 ? Math.min(100, Math.max(...selectedCollege.branches.map(b => b.admission_chance)) + whatIfScore).toFixed(1) : "—"}%
+                      </p>
+                      {whatIfScore > 0 && (
+                        <p className="text-[11px] text-emerald-600 mt-0.5">+{whatIfScore}% simulated</p>
+                      )}
                     </div>
-                    <div className="space-y-1">
-                      <div className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
-                        <Home className="w-3 h-3 text-gray-400" /> Student Hub
-                      </div>
-                      <div className="text-[10px] text-gray-500 font-medium">400m (Photocopy, Mess)</div>
+                    <div className="bg-blue-50 rounded-2xl p-4">
+                      <p className="text-xs text-blue-700 font-medium mb-1">Avg. Package</p>
+                      <p className="text-2xl font-bold text-blue-800">
+                        {selectedCollege.average_package_lpa > 0 ? `₹${selectedCollege.average_package_lpa}L` : '—'}
+                      </p>
                     </div>
-                  </div>
-                  <div className="pt-3 border-t border-gray-50">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Shield className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-xs font-bold text-gray-700">Safety Cluster Rating</span>
-                      </div>
-                      <div className="flex gap-0.5">
-                        {[1, 2, 3, 4].map(i => <div key={i} className="w-3 h-1 bg-emerald-500 rounded-full" />)}
-                        <div className="w-3 h-1 bg-gray-200 rounded-full" />
-                      </div>
+                    <div className="bg-violet-50 rounded-2xl p-4">
+                      <p className="text-xs text-violet-700 font-medium mb-1">Branches</p>
+                      <p className="text-2xl font-bold text-violet-800">{selectedCollege.branches.length}</p>
+                    </div>
+                    <div className="bg-orange-50 rounded-2xl p-4">
+                      <p className="text-xs text-orange-700 font-medium mb-1">Placement</p>
+                      <p className="text-2xl font-bold text-orange-800">
+                        {selectedCollege.placement_rate > 0 ? `${selectedCollege.placement_rate}%` : '—'}
+                      </p>
                     </div>
                   </div>
-                </div>
 
-                {/* Analytics Cards */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white p-5 rounded-[1.25rem] border border-gray-100 shadow-sm flex flex-col gap-2 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform"><Activity className="w-12 h-12 text-emerald-500" /></div>
-                    <div className="flex items-center gap-2 text-gray-500 text-[10px] font-black uppercase tracking-widest relative z-10"><Activity className="w-4 h-4 text-emerald-500" /> Predicted Chance</div>
-                    <div className="text-3xl font-black text-gray-900 relative z-10">
-                      {selectedCollege.branches.length > 0 ? Math.min(100, Math.max(...selectedCollege.branches.map(b => b.admission_chance)) + whatIfScore).toFixed(1) : "50.0"}%
-                    </div>
-                  </div>
-                  <div className="bg-white p-5 rounded-[1.25rem] border border-gray-100 shadow-sm flex flex-col gap-2 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform"><Briefcase className="w-12 h-12 text-blue-500" /></div>
-                    <div className="flex items-center gap-2 text-gray-500 text-[10px] font-black uppercase tracking-widest relative z-10"><Briefcase className="w-4 h-4 text-blue-500" /> Avg Package</div>
-                    <div className="text-3xl font-black text-gray-900 relative z-10">₹{selectedCollege.average_package_lpa}L</div>
-                  </div>
-                  <div className="bg-white p-5 rounded-[1.25rem] border border-gray-100 shadow-sm flex flex-col gap-2 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform"><Users className="w-12 h-12 text-indigo-500" /></div>
-                    <div className="flex items-center gap-2 text-gray-500 text-[10px] font-black uppercase tracking-widest relative z-10"><Users className="w-4 h-4 text-indigo-500" /> Student Interest</div>
-                    <div className="text-3xl font-black text-gray-900 relative z-10">
-                      {(Math.random() * 500 + 100).toFixed(0)}+
-                    </div>
-                    <div className="text-[9px] text-gray-400 font-bold uppercase">Viewing now</div>
-                  </div>
-                  <div className="bg-white p-5 rounded-[1.25rem] border border-gray-100 shadow-sm flex flex-col gap-2 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform"><Target className="w-12 h-12 text-orange-500" /></div>
-                    <div className="flex items-center gap-2 text-gray-500 text-[10px] font-black uppercase tracking-widest relative z-10"><Target className="w-4 h-4 text-orange-500" /> Placement Rate</div>
-                    <div className="text-3xl font-black text-gray-900 relative z-10">{selectedCollege.placement_rate}%</div>
-                  </div>
-                </div>
-
-                {/* Branches List */}
-                <div>
-                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2"><Layers className="w-4 h-4 text-indigo-600" /> Admission Insights by Branch</h3>
-                  <div className="space-y-3">
-                    {selectedCollege.branches.sort((a, b) => b.admission_chance - a.admission_chance).map((b, i) => {
-                      const finalChance = Math.min(100, Math.max(0, b.admission_chance + whatIfScore));
-                      return (
-                        <div key={i} className="bg-white p-5 rounded-[1.25rem] border border-gray-100 shadow-sm hover:border-indigo-200 transition-colors">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex-1 pr-4">
-                              <h4 className="font-bold text-gray-900 text-sm leading-tight">{b.branch}</h4>
-                              <span className="text-[10px] font-black text-gray-400 mt-2 uppercase tracking-widest bg-gray-50 border border-gray-100 px-2 py-1 rounded inline-block">{b.branch_code}</span>
+                  {/* Transit & Neighborhood */}
+                  <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
+                    <p className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                      <Train className="w-4 h-4 text-indigo-500" /> Nearby Locations
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {(() => {
+                        const transit = neighborhoodMarkers.find(n => n.type === 'transit');
+                        const pg = neighborhoodMarkers.find(n => n.type === 'pg');
+                        return (
+                          <>
+                            <div>
+                              <p className="text-xs text-gray-500">Nearest Transit</p>
+                              <p className="text-sm font-semibold text-gray-800">{transit ? `${transit.distance} km` : '—'}</p>
                             </div>
-                            <div className="text-right flex-shrink-0">
-                              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Chance</div>
-                              <div className={`text-xl font-black ${finalChance >= 80 ? 'text-emerald-500' : finalChance >= 50 ? 'text-blue-500' : 'text-red-500'}`}>
-                                {finalChance.toFixed(1)}%
+                            <div>
+                              <p className="text-xs text-gray-500">Nearest PG</p>
+                              <p className="text-sm font-semibold text-gray-800">{pg ? `${pg.distance} km` : '—'}</p>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                    <div className="flex items-center justify-between pt-1 border-t border-gray-200">
+                      <p className="text-xs text-gray-500 flex items-center gap-1"><Shield className="w-3 h-3 text-emerald-500" /> {neighborhoodMarkers.length} nearby places</p>
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <div key={i} className={`w-2.5 h-1 rounded-full ${i < Math.min(5, neighborhoodMarkers.length) ? 'bg-emerald-500' : 'bg-gray-200'}`} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Branches List */}
+                  {selectedCollege.branches.length > 0 && (
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-indigo-500" /> Branches & Admission Chances
+                      </p>
+                      <div className="space-y-2">
+                        {selectedCollege.branches.sort((a, b) => b.admission_chance - a.admission_chance).map((b, i) => {
+                          const finalChance = Math.min(100, Math.max(0, b.admission_chance + whatIfScore));
+                          return (
+                            <div key={i} className="bg-white border border-gray-100 rounded-xl p-4 hover:border-indigo-200 transition-colors">
+                              <div className="flex justify-between items-start mb-2">
+                                <div className="flex-1 pr-3">
+                                  <p className="text-sm font-semibold text-gray-900 leading-snug">{b.branch}</p>
+                                  {b.branch_code && (
+                                    <span className="text-xs text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded mt-1 inline-block">{b.branch_code}</span>
+                                  )}
+                                </div>
+                                <div className="text-right flex-shrink-0">
+                                  <p className="text-xs text-gray-400 mb-0.5">Chance</p>
+                                  <p className={`text-lg font-bold ${finalChance >= 80 ? 'text-emerald-600' : finalChance >= 50 ? 'text-blue-600' : 'text-red-500'}`}>
+                                    {finalChance.toFixed(1)}%
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden my-4 relative">
+                                <motion.div
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${finalChance}%` }}
+                                  className={`absolute left-0 top-0 h-full ${finalChance >= 80 ? 'bg-emerald-500' : finalChance >= 50 ? 'bg-blue-500' : 'bg-red-500'}`}
+                                />
+                                {/* What if original vs new indicator */}
+                                {whatIfScore > 0 && b.admission_chance > 0 && (
+                                  <div className="absolute h-full w-0.5 bg-gray-900 opacity-50 z-10" style={{ left: `${b.admission_chance}%` }} title="Original Chance" />
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4 text-sm font-bold text-gray-700 pt-2">
+                                <span className="flex items-center gap-2"><IndianRupee className="w-4 h-4 text-gray-400" /> ₹{b.fees?.toLocaleString() || 'N/A'}</span>
+                                <span className="flex items-center gap-2 justify-end"><GraduationCap className="w-4 h-4 text-gray-400" /> {b.seats} Seats</span>
                               </div>
                             </div>
-                          </div>
-
-                          <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden my-4 relative">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${finalChance}%` }}
-                              className={`absolute left-0 top-0 h-full ${finalChance >= 80 ? 'bg-emerald-500' : finalChance >= 50 ? 'bg-blue-500' : 'bg-red-500'}`}
-                            />
-                            {/* What if original vs new indicator */}
-                            {whatIfScore > 0 && b.admission_chance > 0 && (
-                              <div className="absolute h-full w-0.5 bg-gray-900 opacity-50 z-10" style={{ left: `${b.admission_chance}%` }} title="Original Chance" />
-                            )}
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4 text-sm font-bold text-gray-700 pt-2">
-                            <span className="flex items-center gap-2"><IndianRupee className="w-4 h-4 text-gray-400" /> ₹{b.fees?.toLocaleString() || 'N/A'}</span>
-                            <span className="flex items-center gap-2 justify-end"><GraduationCap className="w-4 h-4 text-gray-400" /> {b.seats} Seats</span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                  }
                 </div>
               </div>
 
               {/* Action Footer */}
-              <div className="p-6 bg-white border-t border-gray-100 flex-shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] space-y-3">
+              <div className="px-5 py-4 bg-white border-t border-gray-100 flex-shrink-0 space-y-2">
                 <button
-                  className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-3 transition-all ${visitList.some(c => c.college_code === selectedCollege.college_code) ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 mb-2' : 'bg-white text-gray-900 border border-gray-200 hover:bg-gray-50'}`}
+                  className={`w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all border ${visitList.some(c => c.college_code === selectedCollege.college_code)
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-50'
+                    }`}
                   onClick={() => {
                     if (visitList.some(c => c.college_code === selectedCollege.college_code)) {
                       setVisitList(prev => prev.filter(c => c.college_code !== selectedCollege.college_code));
@@ -1035,17 +1067,18 @@ function CollegeMapContent() {
                     }
                   }}
                 >
-                  {visitList.some(c => c.college_code === selectedCollege.college_code) ? (
-                    <><Navigation className="w-4 h-4" /> Added to Visit List</>
-                  ) : (
-                    <><Navigation className="w-4 h-4" /> Add to Visit List</>
-                  )}
+                  <Navigation className="w-4 h-4" />
+                  {visitList.some(c => c.college_code === selectedCollege.college_code) ? 'Added to Visit List' : 'Add to Visit List'}
                 </button>
                 <button
-                  className="w-full py-4 bg-gray-900 text-white rounded-xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-indigo-600 transition-colors shadow-lg hover:shadow-indigo-500/25"
-                  onClick={() => {/* could navigate to full details */ }}
+                  className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors"
+                  onClick={() => {
+                    if (selectedCollege?.college_code) {
+                      navigate(`/college/${selectedCollege.college_code}`);
+                    }
+                  }}
                 >
-                  View Complete Profile <ArrowRight className="w-4 h-4" />
+                  View Full Profile <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </motion.div>
@@ -1066,44 +1099,44 @@ function CollegeMapContent() {
                 >
                   <div className="p-6 space-y-8 pb-8 border-b border-gray-100 w-full bg-white">
                     {/* What-If Simulation */}
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center text-sm font-black text-gray-900 uppercase tracking-wide">
-                        <span className="flex items-center gap-2.5"><Sparkles className="w-4 h-4 text-indigo-500" /> What-If Simulation</span>
-                        <span className="text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">+{whatIfScore}% Boost</span>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-semibold text-gray-800">What-If Simulation</span>
+                        <span className="text-sm font-medium text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">+{whatIfScore}%</span>
                       </div>
                       <input
                         type="range" min="0" max="30" value={whatIfScore}
                         onChange={(e) => setWhatIfScore(parseInt(e.target.value))}
-                        className="w-full accent-indigo-600 h-2.5 bg-gray-100 rounded-lg appearance-none cursor-pointer"
+                        className="w-full accent-indigo-600 h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer"
                       />
-                      <p className="text-[11px] font-bold text-gray-400">Drag to simulate chances if you scored higher in MHT-CET/JEE</p>
+                      <p className="text-xs text-gray-400">Simulate your chances if you scored higher in MHT-CET / JEE</p>
                     </div>
 
                     {/* Minimum Placement */}
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center text-sm font-black text-gray-900 uppercase tracking-wide">
-                        <span className="flex items-center gap-2.5"><Target className="w-4 h-4 text-emerald-500" /> Min. Placement Rate</span>
-                        <span className="text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">{filters.minPlacement}%+</span>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-semibold text-gray-800">Min. Placement Rate</span>
+                        <span className="text-sm font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">{filters.minPlacement}%+</span>
                       </div>
                       <input
                         type="range" min="0" max="100" step="5" value={filters.minPlacement}
                         onChange={(e) => setFilters(p => ({ ...p, minPlacement: parseInt(e.target.value) }))}
-                        className="w-full accent-emerald-600 h-2.5 bg-gray-100 rounded-lg appearance-none cursor-pointer"
+                        className="w-full accent-emerald-600 h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer"
                       />
                     </div>
 
                     {/* Max Budget */}
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center text-sm font-black text-gray-900 uppercase tracking-wide">
-                        <span className="flex items-center gap-2.5"><IndianRupee className="w-4 h-4 text-orange-500" /> Max Yearly Tuition Fees</span>
-                        <span className="text-orange-700 bg-orange-50 px-2.5 py-1 rounded-md border border-orange-100">
-                          {filters.maxFees >= 500000 ? "No Limit" : `₹${(filters.maxFees / 1000).toFixed(0)}k Max`}
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-semibold text-gray-800">Max Yearly Fees</span>
+                        <span className="text-sm font-medium text-orange-700 bg-orange-50 px-2.5 py-1 rounded-lg">
+                          {filters.maxFees >= 500000 ? "No Limit" : `₹${(filters.maxFees / 1000).toFixed(0)}k`}
                         </span>
                       </div>
                       <input
                         type="range" min="50000" max="500000" step="10000" value={filters.maxFees}
                         onChange={(e) => setFilters(p => ({ ...p, maxFees: parseInt(e.target.value) }))}
-                        className="w-full accent-orange-500 h-2.5 bg-gray-100 rounded-lg appearance-none cursor-pointer"
+                        className="w-full accent-orange-500 h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer"
                       />
                     </div>
                   </div>
@@ -1114,27 +1147,24 @@ function CollegeMapContent() {
             <div className="flex items-center justify-between w-full p-1.5 gap-2 bg-white rounded-xl">
               <button
                 onClick={() => { setFiltersOpen(!filtersOpen); setLayersOpen(false); }}
-                className={`flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-black uppercase tracking-wider transition-all shadow-sm ${filtersOpen ? 'bg-gray-900 text-white' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'}`}
+                className={`px-5 py-3 rounded-xl text-sm font-medium transition-all ${filtersOpen ? 'bg-gray-900 text-white' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'}`}
               >
-                <SlidersHorizontal className="w-4 h-4" />
-                Live Filters
+                Filters
               </button>
 
               <button
                 onClick={() => { setLayersOpen(!layersOpen); setFiltersOpen(false); }}
-                className={`flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-black uppercase tracking-wider transition-all shadow-sm ${layersOpen ? 'bg-gray-900 text-white' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'}`}
+                className={`px-5 py-3 rounded-xl text-sm font-medium transition-all ${layersOpen ? 'bg-gray-900 text-white' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'}`}
               >
-                <Layers className="w-4 h-4" />
                 Map Layers
               </button>
 
               {visitList.length > 0 && (
                 <button
                   onClick={() => setShowVisitPlanner(true)}
-                  className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-black uppercase tracking-wider transition-all shadow-sm bg-indigo-600 text-white hover:bg-indigo-700"
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-all"
                 >
-                  <Navigation className="w-4 h-4" />
-                  Planner ({visitList.length})
+                  <Navigation className="w-4 h-4" /> Plan ({visitList.length})
                 </button>
               )}
             </div>
@@ -1151,14 +1181,12 @@ function CollegeMapContent() {
               className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[40] w-[320px] sm:w-[450px]"
             >
               <div className="bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl rounded-[1.5rem] p-6 space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-indigo-600" /> Active Map Layers
-                  </h3>
-                  <button onClick={() => setLayersOpen(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                <div className="flex justify-between items-center mb-1">
+                  <h3 className="text-sm font-semibold text-gray-900">Map Layers</h3>
+                  <button onClick={() => setLayersOpen(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"><X className="w-4 h-4" /></button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   {[
                     { id: 'colleges', label: 'Colleges', icon: Building2, color: 'text-blue-600' },
                     { id: 'essentials', label: 'Nearby Essentials', icon: Home, color: 'text-orange-500' },
@@ -1174,18 +1202,18 @@ function CollegeMapContent() {
                         else newLayers.add(layer.id);
                         setActiveLayers(newLayers);
                       }}
-                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${activeLayers.has(layer.id) ? 'bg-indigo-50 border-indigo-200 text-indigo-900' : 'bg-gray-50 border-gray-100 text-gray-500 hover:border-gray-200'}`}
+                      className={`flex items-center gap-2 p-3 rounded-xl border text-sm transition-all ${activeLayers.has(layer.id)
+                        ? 'bg-indigo-50 border-indigo-200 text-indigo-800'
+                        : 'bg-gray-50 border-gray-100 text-gray-600 hover:border-gray-200'
+                        }`}
                     >
-                      <layer.icon className={`w-4 h-4 ${layer.color}`} />
-                      <span className="text-xs font-bold">{layer.label}</span>
+                      <span className="text-xs font-medium">{layer.label}</span>
                     </button>
                   ))}
                 </div>
 
-                <div className="space-y-4 pt-2 border-t border-gray-100">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    <Globe className="w-3.5 h-3.5" /> Map Provider
-                  </span>
+                <div className="space-y-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs font-semibold text-gray-500">Map Provider</p>
                   <div className="flex gap-2">
                     {[
                       { id: 'osm', label: 'OpenStreetMap' },
@@ -1194,7 +1222,10 @@ function CollegeMapContent() {
                       <button
                         key={provider.id}
                         onClick={() => setMapProvider(provider.id as any)}
-                        className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border ${mapProvider === provider.id ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'}`}
+                        className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all border ${mapProvider === provider.id
+                          ? 'bg-gray-900 text-white border-gray-900'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                          }`}
                       >
                         {provider.label}
                       </button>
@@ -1202,21 +1233,22 @@ function CollegeMapContent() {
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-2 border-t border-gray-100">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    <Thermometer className="w-3.5 h-3.5" /> Analytical Heatmaps
-                  </span>
-                  <div className="flex gap-2 pb-2 overflow-x-auto no-scrollbar">
+                <div className="space-y-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs font-semibold text-gray-500">Heatmap Overlay</p>
+                  <div className="flex gap-2 flex-wrap">
                     {[
                       { id: 'none', label: 'None' },
-                      { id: 'cutoff', label: 'Cut-off Relief' },
-                      { id: 'safety', label: 'Safety Map' },
-                      { id: 'popularity', label: 'Student Interest' },
+                      { id: 'cutoff', label: 'Cut-off' },
+                      { id: 'safety', label: 'Safety' },
+                      { id: 'popularity', label: 'Popularity' },
                     ].map(type => (
                       <button
                         key={type.id}
                         onClick={() => setHeatmapType(type.id as any)}
-                        className={`flex-shrink-0 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-tighter transition-all ${heatmapType === type.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${heatmapType === type.id
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                          }`}
                       >
                         {type.label}
                       </button>
@@ -1225,10 +1257,10 @@ function CollegeMapContent() {
                 </div>
 
                 {activeLayers.has('range') && (
-                  <div className="space-y-3 pt-2">
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
-                      <span>Radius Ring</span>
-                      <span className="text-indigo-600">{rangeRadius}km</span>
+                  <div className="space-y-2 pt-3">
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Travel Radius</span>
+                      <span className="font-semibold text-indigo-600">{rangeRadius} km</span>
                     </div>
                     <input
                       type="range" min="5" max="50" step="5" value={rangeRadius}
@@ -1250,47 +1282,123 @@ function CollegeMapContent() {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-[2rem] w-full max-w-lg overflow-hidden shadow-2xl border border-white/20"
+                className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
               >
-                <div className="p-8 bg-indigo-600 text-white relative">
-                  <div className="absolute top-0 right-0 p-8 opacity-10"><Navigation className="w-32 h-32" /></div>
-                  <button onClick={() => setShowVisitPlanner(false)} className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"><X className="w-5 h-5" /></button>
-                  <h2 className="text-2xl font-black mb-2 flex items-center gap-3"><Navigation className="w-8 h-8" /> Visit Optimizer</h2>
-                  <p className="text-indigo-100 text-sm font-medium">Most efficient route for your college visits.</p>
-                </div>
-
-                <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
-                  <div className="space-y-4">
-                    {visitList.map((col, idx) => (
-                      <div key={col.college_code} className="flex gap-4 items-start relative">
-                        {idx !== visitList.length - 1 && <div className="absolute top-8 left-[11px] bottom-0 w-0.5 bg-gray-100"></div>}
-                        <div className="mt-1 w-6 h-6 rounded-full bg-indigo-50 border-2 border-indigo-200 flex items-center justify-center text-[10px] font-black text-indigo-600 relative z-10">{idx + 1}</div>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-gray-900 text-sm">{col.college_name}</h4>
-                          <p className="text-xs text-gray-500 font-medium">{col.city}</p>
-                        </div>
-                        <button onClick={() => setVisitList(prev => prev.filter(c => c.college_code !== col.college_code))} className="text-gray-300 hover:text-red-500 transition-colors p-1"><X className="w-4 h-4" /></button>
-                      </div>
-                    ))}
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+                  <div>
+                    <h2 className="text-base font-bold text-gray-900">Route Planner</h2>
+                    <p className="text-xs text-gray-400">{visitList.length} college{visitList.length !== 1 ? 's' : ''} in your route</p>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-50 p-4 rounded-2xl">
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Distance</div>
-                      <div className="text-xl font-black text-gray-900">{(visitList.length * 5.2).toFixed(1)} km</div>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-2xl">
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Est. Time</div>
-                      <div className="text-xl font-black text-gray-900">{Math.floor(visitList.length * 20 / 60)}h {visitList.length * 20 % 60}m</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-8 bg-gray-50 border-t border-gray-100">
-                  <button className="w-full py-4 bg-indigo-600 text-white rounded-xl font-black text-sm uppercase tracking-wider shadow-xl shadow-indigo-600/20 flex items-center justify-center gap-3 hover:bg-indigo-700 transition-all">
-                    Open in Google Maps <Share2 className="w-4 h-4" />
+                  <button onClick={() => setShowVisitPlanner(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-400 hover:text-gray-600">
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
+
+                {/* Route legs */}
+                <div className="flex-1 overflow-y-auto p-5 space-y-1">
+                  {visitList.length === 0 ? (
+                    <p className="text-center text-sm text-gray-400 py-8">Add colleges from the map to plan your route.</p>
+                  ) : (
+                    visitList.map((col, idx) => {
+                      const next = visitList[idx + 1];
+                      const legDist = (next && col.latitude && col.longitude && next.latitude && next.longitude)
+                        ? calculateDistance(col.latitude!, col.longitude!, next.latitude!, next.longitude!)
+                        : null;
+                      const legMins = legDist ? Math.round((legDist / 40) * 60) : null;
+                      const legH = legMins ? Math.floor(legMins / 60) : 0;
+                      const legM = legMins ? legMins % 60 : 0;
+                      return (
+                        <div key={col.college_code}>
+                          {/* College stop card */}
+                          <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-xl p-3 hover:border-indigo-100 transition-colors">
+                            <div className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-indigo-600 text-white'
+                              : idx === visitList.length - 1 ? 'bg-emerald-600 text-white'
+                                : 'bg-gray-100 text-gray-600'
+                              }`}>
+                              {idx === 0 ? 'S' : idx === visitList.length - 1 ? 'E' : idx}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-900 truncate">{col.college_name}</p>
+                              <p className="text-xs text-gray-400">{col.city}</p>
+                            </div>
+                            <button
+                              onClick={() => setVisitList(prev => prev.filter(c => c.college_code !== col.college_code))}
+                              className="p-1 text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          {/* Leg connector — distance + time */}
+                          {next && (
+                            <div className="flex items-center gap-3 px-4 py-2">
+                              <div className="w-0.5 h-5 bg-gray-200 ml-3 flex-shrink-0" />
+                              {legDist !== null ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
+                                    {legDist.toFixed(1)} km
+                                  </span>
+                                  <span className="text-xs text-gray-400">
+                                    ~{legH > 0 ? `${legH}h ` : ''}{legM} min drive
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-gray-300">No coordinates</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Summary + action */}
+                {visitList.length > 1 && (() => {
+                  let totalDist = 0;
+                  for (let i = 0; i < visitList.length - 1; i++) {
+                    const a = visitList[i], b = visitList[i + 1];
+                    if (a.latitude && a.longitude && b.latitude && b.longitude)
+                      totalDist += calculateDistance(a.latitude!, a.longitude!, b.latitude!, b.longitude!);
+                  }
+                  const totalMins = Math.round((totalDist / 40) * 60);
+                  const h = Math.floor(totalMins / 60);
+                  const m = totalMins % 60;
+                  return (
+                    <div className="border-t border-gray-100 p-5 bg-gray-50 flex-shrink-0 space-y-4">
+                      <div className="flex items-center justify-around">
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500 mb-0.5">Total Distance</p>
+                          <p className="text-xl font-bold text-gray-900">{totalDist.toFixed(1)} <span className="text-sm font-normal text-gray-500">km</span></p>
+                        </div>
+                        <div className="w-px h-10 bg-gray-200" />
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500 mb-0.5">Drive Time</p>
+                          <p className="text-xl font-bold text-gray-900">{h > 0 ? `${h}h ` : ''}{m} <span className="text-sm font-normal text-gray-500">min</span></p>
+                        </div>
+                        <div className="w-px h-10 bg-gray-200" />
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500 mb-0.5">Stops</p>
+                          <p className="text-xl font-bold text-gray-900">{visitList.length}</p>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-gray-400 text-center">Distances are straight-line (Haversine) · actual road distance will be higher</p>
+                      <button
+                        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors"
+                        onClick={() => {
+                          const origin = visitList[0];
+                          const destination = visitList[visitList.length - 1];
+                          const waypoints = visitList.slice(1, -1);
+                          const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}${waypoints.length ? `&waypoints=${waypoints.map(c => `${c.latitude},${c.longitude}`).join('|')}` : ''}&travelmode=driving`;
+                          window.open(url, '_blank');
+                        }}
+                      >
+                        Get turn-by-turn in Google Maps <Share2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })()}
               </motion.div>
             </div>
           )}
@@ -1312,15 +1420,15 @@ function CollegeMapContent() {
         {/* Legend - Top Left */}
         <div className="absolute top-24 left-6 z-[40] hidden sm:block">
           <div className="bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200 p-5 shadow-xl">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
+            <h4 className="text-xs font-semibold text-gray-500 mb-3 flex items-center gap-2">
               <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
-              Admission Chance Guide
+              Admission Chance
             </h4>
             <div className="flex flex-col gap-3">
-              {[{ label: "Very High (>80%)", color: "#10B981" }, { label: "High (60-80%)", color: "#3B82F6" }, { label: "Moderate (40-60%)", color: "#8B5CF6" }, { label: "Low (<40%)", color: "#EF4444" }].map(item => (
-                <div key={item.label} className="flex items-center gap-3">
-                  <div className="w-3.5 h-3.5 rounded-full shadow-inner border border-white" style={{ backgroundColor: item.color }} />
-                  <span className="text-xs font-bold text-gray-600">{item.label}</span>
+              {[{ label: ">80% chance", color: "#10B981" }, { label: "60–80%", color: "#3B82F6" }, { label: "40–60%", color: "#8B5CF6" }, { label: "<40%", color: "#EF4444" }].map(item => (
+                <div key={item.label} className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="text-xs text-gray-600">{item.label}</span>
                 </div>
               ))}
             </div>

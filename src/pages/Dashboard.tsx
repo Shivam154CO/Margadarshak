@@ -559,31 +559,31 @@ export default function Dashboard() {
           {/* Profile Quick Access */}
           {profile && (
             <div className="bg-white rounded-xl border border-slate-200 p-5 mb-8 shadow-sm transition-all duration-300">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <User className="w-6 h-6 text-indigo-600" />
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 uppercase tracking-tight">
                       Your Profile Overview
                     </h3>
-                    <p className="text-sm text-slate-500 font-medium">
+                    <p className="text-sm text-slate-500 font-medium line-clamp-1">
                       Managed by Ikigai Smart Analysis Engine
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2 text-sm text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200">
-                    <Database className="w-4 h-4" />
-                    <span>AI Analysis</span>
+                <div className="flex items-center space-x-3 w-full sm:w-auto">
+                  <div className="flex items-center justify-center space-x-2 text-sm text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-200 flex-1 sm:flex-none">
+                    <Database className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">AI Analysis</span>
                   </div>
                   <button
                     onClick={() => navigate("/profile-view")}
-                    className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm inline-flex items-center space-x-2"
+                    className="bg-indigo-600 text-white px-5 py-2 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm inline-flex justify-center items-center space-x-2 flex-1 sm:flex-none"
                   >
-                    <User className="w-4 h-4" />
-                    <span>View Profile</span>
+                    <User className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">View Profile</span>
                   </button>
                 </div>
               </div>
@@ -687,8 +687,8 @@ export default function Dashboard() {
 
         {/* Search and Filter Controls */}
         <div className="mb-8">
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="relative flex-grow w-full sm:w-auto">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div className="relative flex-grow w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
@@ -698,13 +698,13 @@ export default function Dashboard() {
                 className="pl-10 pr-4 py-2.5 w-full bg-white border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm hover:shadow-md"
               />
             </div>
-            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-grow sm:flex-grow-0">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full lg:w-auto">
+              <div className="relative w-full sm:w-[160px] md:w-[180px]">
                 <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <select
                   value={selectedBranch}
                   onChange={(e) => handleBranchFilter(e.target.value)}
-                  className="pl-10 pr-8 py-2.5 bg-white border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none transition-all shadow-sm hover:shadow-md w-full sm:w-auto"
+                  className="pl-10 pr-8 py-2.5 bg-white border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none transition-all shadow-sm hover:shadow-md w-full truncate"
                 >
                   <option value="">All Branches</option>
                   {branches.map((b) => (
@@ -712,12 +712,12 @@ export default function Dashboard() {
                   ))}
                 </select>
               </div>
-              <div className="relative flex-grow sm:flex-grow-0">
+              <div className="relative w-full sm:w-[140px] md:w-[160px]">
                 <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <select
                   value={selectedCity}
                   onChange={(e) => handleCityFilter(e.target.value)}
-                  className="pl-10 pr-8 py-2.5 bg-white border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none transition-all shadow-sm hover:shadow-md w-full sm:w-auto"
+                  className="pl-10 pr-8 py-2.5 bg-white border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none transition-all shadow-sm hover:shadow-md w-full truncate"
                 >
                   <option value="">All Cities</option>
                   {cities.map((city) => (
@@ -725,12 +725,12 @@ export default function Dashboard() {
                   ))}
                 </select>
               </div>
-              <div className="relative flex-grow sm:flex-grow-0">
+              <div className="relative w-full sm:w-[140px] md:w-[160px]">
                 <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <select
                   value={selectedDistrict}
                   onChange={(e) => handleDistrictFilter(e.target.value)}
-                  className="pl-10 pr-8 py-2.5 bg-white border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none transition-all shadow-sm hover:shadow-md w-full sm:w-auto"
+                  className="pl-10 pr-8 py-2.5 bg-white border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none transition-all shadow-sm hover:shadow-md w-full truncate"
                 >
                   <option value="">All Districts</option>
                   {districts.map((district) => (
@@ -943,26 +943,26 @@ export default function Dashboard() {
                         </div>
 
                         {/* 4-Grid Metrics */}
-                        <div className="grid grid-cols-4 gap-2 mb-6">
-                          <div className="flex flex-col justify-center bg-white p-2 text-center">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
+                          <div className="flex flex-col justify-center bg-white p-2 text-center border-b md:border-b-0 border-r md:border-r-0 border-slate-100">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cutoff</span>
                             <span className="text-sm font-black text-slate-800">
                               {college.cutoff_rank > 0 ? college.cutoff_rank : Math.round(college.cutoff_percentile)}
                             </span>
                           </div>
-                          <div className="flex flex-col justify-center bg-white p-2 text-center border-l border-slate-100">
+                          <div className="flex flex-col justify-center bg-white p-2 text-center border-b md:border-b-0 md:border-l border-slate-100">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Seats</span>
                             <span className="text-sm font-black text-slate-800">
                               {college.seats || "N/A"}
                             </span>
                           </div>
-                          <div className="flex flex-col justify-center bg-white p-2 text-center border-l border-slate-100">
+                          <div className="flex flex-col justify-center bg-white p-2 text-center border-r md:border-r-0 md:border-l border-slate-100">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Fees</span>
                             <span className="text-sm font-black text-slate-800">
                               {college.fees ? `₹${(college.fees / 100000).toFixed(1)}L` : "N/A"}
                             </span>
                           </div>
-                          <div className="flex flex-col justify-center bg-white p-2 text-center border-l border-slate-100">
+                          <div className="flex flex-col justify-center bg-white p-2 text-center md:border-l border-slate-100">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Placements</span>
                             <span className="text-sm font-black text-emerald-600">
                               {college.placement_rate ? `${college.placement_rate.toFixed(0)}%` : "N/A"}
@@ -989,12 +989,12 @@ export default function Dashboard() {
                         {/* Package Highlights */}
                         {(college.average_package_lpa > 0 || college.highest_package_lpa > 0) && (
                           <div className="mb-6 bg-slate-50 rounded-xl border border-slate-200/60 p-3 mt-auto">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 flex-shrink-0">
                                 <Trophy className="w-3.5 h-3.5 text-indigo-500" />
                                 <span>Package (LPA)</span>
                               </span>
-                              <div className="text-right flex items-center gap-3">
+                              <div className="flex flex-wrap items-center gap-3">
                                 {college.average_package_lpa > 0 && (
                                   <div className="text-[11px] font-black text-slate-800">Avg: {college.average_package_lpa.toFixed(1)}L</div>
                                 )}

@@ -59,7 +59,8 @@ import {
   PieChart,
   GraduationCap,
   ExternalLink,
-  ClipboardList
+  ClipboardList,
+  Zap
 } from 'lucide-react';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -255,6 +256,59 @@ const FALLBACK_IMAGES = [
 const getRandomFallbackImage = (): string => {
   return FALLBACK_IMAGES[Math.floor(Math.random() * FALLBACK_IMAGES.length)];
 };
+
+const RECOMMENDED_SCHOLARSHIPS: Scholarship[] = [
+  {
+    id: "s1",
+    name: "MahaDBT Post-Matric Scholarship",
+    provider: "Social Justice & Special Assistance Dept",
+    amount: "100% Tuition Fee",
+    eligibility: "SC/ST Category Students, Income < 2.5 LPA",
+    application_link: "https://mahadbt.maharashtra.gov.in/",
+    deadline: "Dec 31, 2025",
+    type: "Government"
+  },
+  {
+    id: "s2",
+    name: "EBC Fee Reimbursement Scheme",
+    provider: "Directorate of Technical Education",
+    amount: "50% Tuition Fee",
+    eligibility: "Open/SEBC/EWS category, Income < 8 LPA",
+    application_link: "https://mahadbt.maharashtra.gov.in/",
+    deadline: "Nov 30, 2025",
+    type: "Government"
+  },
+  {
+    id: "s3",
+    name: "OBC/VJNT Post-Matric Scholarship",
+    provider: "VJNT, OBC & SBC Welfare Department",
+    amount: "50-100% Tuition Fee",
+    eligibility: "OBC/VJNT/SBC category, Income < 1.5 LPA (100%), 1.5-8L (50%)",
+    application_link: "https://mahadbt.maharashtra.gov.in/",
+    deadline: "Dec 31, 2025",
+    type: "Government"
+  },
+  {
+    id: "s4",
+    name: "Dr. Panjabrao Deshmukh Hostel Allowance",
+    provider: "Directorate of Technical Education",
+    amount: "₹30,000 per year",
+    eligibility: "Children of Registered Laborers / Small Land Holders",
+    application_link: "https://mahadbt.maharashtra.gov.in/",
+    deadline: "Jan 15, 2026",
+    type: "Government"
+  },
+  {
+    id: "s5",
+    name: "Tuition Fee Waiver Scheme (TFWS)",
+    provider: "State Common Entrance Test Cell",
+    amount: "100% Tuition Fee",
+    eligibility: "Merit based seat, Parents' income < 8 LPA",
+    application_link: "https://cetcell.mahacet.org/",
+    deadline: "July 31, 2025",
+    type: "National"
+  }
+];
 
 interface CollegeImageProps {
   collegeCode: string;
@@ -1492,16 +1546,16 @@ export default function CollegeDetails() {
   const StatCard = ({ label, value, icon: Icon, color, bgColor }: any) => (
     <motion.div
       whileHover={{ scale: 1.02, y: -2 }}
-      className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-gray-200/50 hover:shadow-lg transition-all duration-300 relative overflow-hidden group"
+      className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 sm:p-5 shadow-sm border border-gray-200/50 hover:shadow-lg transition-all duration-300 relative overflow-hidden group"
     >
       <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
-      <div className="flex items-center space-x-4 relative z-10">
-        <div className={`w-12 h-12 ${bgColor} rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
-          <Icon className={`w-6 h-6 ${color}`} />
+      <div className="flex items-center space-x-3 relative z-10">
+        <div className={`w-10 h-10 sm:w-12 sm:h-12 ${bgColor} rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
+          <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${color}`} />
         </div>
-        <div className="flex-1">
-          <p className="text-sm text-gray-600 font-medium">{label}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm text-gray-600 font-medium truncate">{label}</p>
+          <p className="text-lg sm:text-2xl font-bold text-gray-900 mt-1 truncate">{value}</p>
         </div>
       </div>
     </motion.div>
@@ -1545,11 +1599,11 @@ export default function CollegeDetails() {
 
     return (
       <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
           <h3 className="text-xl font-bold text-gray-900">Seat Matrix - {college.branch_name}</h3>
           <button
             onClick={() => setIsSeatMatrixExpanded(!isSeatMatrixExpanded)}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
+            className="self-start sm:self-auto flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
           >
             {isSeatMatrixExpanded ? (
               <>
@@ -1634,38 +1688,38 @@ export default function CollegeDetails() {
     const branches = college.branches || [];
 
     return (
-      <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-gray-900">Available Branches</h3>
-          <span className="text-sm text-gray-600">{branches.length} branches available</span>
+      <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
+        <div className="flex flex-wrap justify-between items-center mb-4 sm:mb-6 gap-2">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900">Available Branches</h3>
+          <span className="text-xs sm:text-sm text-gray-600">{branches.length} branches available</span>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {branches.map((branch, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className={`p-6 rounded-xl border transition-all duration-300 ${branch.branch_name === selectedBranch
+              className={`p-4 sm:p-6 rounded-xl border transition-all duration-300 ${branch.branch_name === selectedBranch
                 ? 'border-blue-500 bg-blue-50/50 shadow-md'
                 : 'border-gray-200 bg-gray-50/50 hover:border-gray-300 hover:shadow-sm'
                 }`}
               onClick={() => handleBranchSelect(branch.branch_name)}
             >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h4 className="font-bold text-gray-900 text-lg mb-1">{branch.branch_name}</h4>
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <span>Total Intake: {branch.total_intake} seats</span>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 sm:mb-4 gap-2">
+                <div className="min-w-0">
+                  <h4 className="font-bold text-gray-900 text-base sm:text-lg mb-1 break-words">{branch.branch_name}</h4>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                    <span>Intake: {branch.total_intake} seats</span>
                     {branch.branch_name === selectedBranch && (
-                      <span className="text-blue-600 font-medium">Currently Selected</span>
+                      <span className="text-blue-600 font-medium">✓ Selected</span>
                     )}
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-500 mb-1">Seat Distribution</div>
-                  <div className="flex flex-wrap gap-2 justify-end">
+                <div className="sm:text-right flex-shrink-0">
+                  <div className="text-xs text-gray-500 mb-1">Seat Distribution</div>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 sm:justify-end">
                     {branch.categories && branch.categories.map((category: any, catIndex: number) => (
                       <div key={catIndex} className="flex items-center space-x-1">
                         <div
@@ -1802,10 +1856,10 @@ export default function CollegeDetails() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-semibold text-gray-900">{step.title}</h4>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 gap-1">
+                        <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{step.title}</h4>
                         {step.deadline && (
-                          <span className="text-sm bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                          <span className="self-start text-xs sm:text-sm bg-amber-100 text-amber-800 px-2 py-1 rounded whitespace-nowrap">
                             Deadline: {step.deadline}
                           </span>
                         )}
@@ -1890,82 +1944,139 @@ export default function CollegeDetails() {
 
   // Render Scholarships Section
   const renderScholarshipsSection = () => {
-    const scholarships = college.scholarships || [];
+    const collegeScholarships = college.scholarships || [];
+
+    // Filter recommended scholarships based on user's category
+    const userCategory = (profile?.category || "").toUpperCase();
+    const recommended = RECOMMENDED_SCHOLARSHIPS.filter(s => {
+      const eligibility = s.eligibility.toUpperCase();
+      if (userCategory.includes("SC") || userCategory.includes("ST")) {
+        return eligibility.includes("SC") || eligibility.includes("ST") || eligibility.includes("ALL");
+      }
+      if (userCategory.includes("OBC") || userCategory.includes("VJ") || userCategory.includes("NT") || userCategory.includes("SBC")) {
+        return eligibility.includes("OBC") || eligibility.includes("VJ") || eligibility.includes("NT") || eligibility.includes("SBC") || eligibility.includes("ALL");
+      }
+      if (userCategory.includes("OPEN") || userCategory.includes("EWS") || userCategory.includes("SEBC")) {
+        return eligibility.includes("OPEN") || eligibility.includes("EWS") || eligibility.includes("SEBC") || eligibility.includes("ALL");
+      }
+      return true;
+    });
+
+    const scholarshipsToShow = collegeScholarships.length > 0 ? collegeScholarships : recommended;
+
+    const handleDownloadBrochure = (scholarship: Scholarship) => {
+      // In a real app, this would be a real PDF
+      // For now, we'll simulate a download by opening the portal
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in';
+      toast.textContent = `Downloading details for ${scholarship.name}...`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+
+      window.open(scholarship.application_link, '_blank');
+    };
 
     return (
-      <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-gray-900">Scholarship Opportunities</h3>
-          <span className="text-sm text-gray-600">{scholarships.length} scholarships available</span>
+      <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">Scholarship Opportunities</h3>
+            <p className="text-sm text-gray-600">
+              {collegeScholarships.length > 0
+                ? `${collegeScholarships.length} scholarships identified for this college`
+                : `We've found ${recommended.length} scholarships matching your category: ${profile?.category || 'General'}`}
+            </p>
+          </div>
+          {collegeScholarships.length === 0 && (
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">
+              <Zap className="w-3.5 h-3.5 fill-amber-500" />
+              AI Recommended for You
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
-          {scholarships.map((scholarship, index) => (
+          {scholarshipsToShow.map((scholarship, index) => (
             <motion.div
-              key={index}
+              key={scholarship.id || index}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="p-5 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200/50 hover:border-blue-200 hover:shadow-sm transition-all duration-300"
+              className="p-4 sm:p-5 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-200/50 hover:border-blue-200 hover:shadow-sm transition-all duration-300"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h4 className="font-bold text-gray-900 text-lg mb-1">{scholarship.name}</h4>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm text-gray-600">Provider: {scholarship.provider}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${scholarship.type === 'Government'
-                      ? 'bg-green-100 text-green-800'
+              <div className="flex flex-col sm:flex-row justify-between items-start mb-3 sm:mb-4 gap-3">
+                <div className="flex-1">
+                  <h4 className="font-bold text-gray-900 text-base sm:text-lg mb-1 break-words">{scholarship.name}</h4>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-sm text-gray-600 flex items-center gap-1">
+                      <Building className="w-3 h-3" />
+                      {scholarship.provider}
+                    </span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${scholarship.type === 'Government'
+                      ? 'bg-green-100 text-green-700 border border-green-200'
                       : scholarship.type === 'National'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-purple-100 text-purple-800'
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : 'bg-indigo-100 text-indigo-700 border border-indigo-200'
                       }`}>
                       {scholarship.type}
                     </span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-emerald-600">{scholarship.amount}</div>
-                  <div className="text-sm text-gray-500">Scholarship Amount</div>
+                <div className="flex flex-col items-start md:items-end">
+                  <div className="text-2xl font-black text-emerald-600">{scholarship.amount}</div>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Scholarship Value</div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Eligibility Criteria:</p>
-                  <p className="text-gray-600 text-sm">{scholarship.eligibility}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6">
+                <div className="bg-white/50 p-3 rounded-xl border border-dashed border-gray-200">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <CheckCircle className="w-3 h-3 text-emerald-500" />
+                    Eligibility Criteria
+                  </p>
+                  <p className="text-gray-700 text-sm font-medium leading-relaxed">{scholarship.eligibility}</p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Important Dates:</p>
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Clock className="w-4 h-4" />
-                    <span>Application Deadline: {scholarship.deadline}</span>
+                <div className="bg-white/50 p-3 rounded-xl border border-dashed border-gray-200">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <Clock className="w-3 h-3 text-amber-500" />
+                    Crucial Timeline
+                  </p>
+                  <div className="flex items-center space-x-2 text-sm text-gray-700 font-bold">
+                    <span>Deadline:</span>
+                    <span className="text-rose-600">{scholarship.deadline}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mt-4 pt-4 border-t border-gray-100">
                 <a
                   href={scholarship.application_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium"
+                  className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-slate-900 transition-all shadow-md active:scale-95"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  <span>Apply Now</span>
+                  <span>Official Application Portal</span>
                 </a>
-                <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-700">
+                <button
+                  onClick={() => handleDownloadBrochure(scholarship)}
+                  className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-white border border-slate-200 text-slate-700 px-6 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition-all shadow-sm active:scale-95"
+                >
                   <Download className="w-4 h-4" />
-                  <span>Download Brochure</span>
+                  <span>Download Info Brochure</span>
                 </button>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {scholarships.length === 0 && (
-          <div className="text-center py-12">
-            <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600">No scholarship information available</p>
+        {scholarshipsToShow.length === 0 && (
+          <div className="text-center py-16 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+            <Award className="w-20 h-20 text-slate-200 mx-auto mb-4" />
+            <h4 className="text-xl font-bold text-slate-400">No Scholarships Identified</h4>
+            <p className="text-slate-500 text-sm max-w-xs mx-auto">
+              We couldn't find any specific scholarships matching your profile at the moment.
+            </p>
           </div>
         )}
       </div>
@@ -1980,8 +2091,8 @@ export default function CollegeDetails() {
         {renderScholarshipsSection()}
 
         {/* Hostel Section */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 shadow-sm">
-          <div className="flex items-center space-x-4 mb-8">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-8 border border-gray-200/50 shadow-sm">
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-5 sm:mb-8">
             <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
               <Home className="w-6 h-6 text-emerald-600" />
             </div>
@@ -1991,7 +2102,7 @@ export default function CollegeDetails() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="p-6 bg-slate-50 rounded-2xl border border-gray-100">
               <p className="text-sm text-gray-500 mb-1">Hostel Available</p>
               <p className="text-xl font-bold text-gray-900">{college.hostel_available || "N/A"}</p>
@@ -2033,21 +2144,21 @@ export default function CollegeDetails() {
     }
 
     return (
-      <div className="space-y-8">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white relative overflow-hidden shadow-lg">
+      <div className="space-y-6 sm:space-y-8">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-4 sm:p-8 text-white relative overflow-hidden shadow-lg">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32 blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/20 rounded-full translate-y-24 -translate-x-24 blur-2xl"></div>
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-            <div className="flex items-center space-x-5">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 shadow-inner">
-                <Bot className="w-10 h-10 text-white" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+            <div className="flex items-center space-x-3 sm:space-x-5">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 shadow-inner flex-shrink-0">
+                <Bot className="w-7 h-7 sm:w-10 sm:h-10 text-white" />
               </div>
               <div>
-                <h2 className="text-3xl font-extrabold tracking-tight mb-1">Ultimate Automation</h2>
-                <p className="text-blue-100 font-medium flex items-center gap-2">
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                  AI Seat Matrix Analysis Engine 2025-26
+                <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight mb-1">Ultimate Automation</h2>
+                <p className="text-blue-100 font-medium flex items-center gap-2 text-sm sm:text-base">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0"></span>
+                  AI Seat Matrix Analysis 2025-26
                 </p>
               </div>
             </div>
@@ -2174,7 +2285,7 @@ export default function CollegeDetails() {
                     </div>
 
                     <div className="flex items-center gap-2 bg-amber-50 border border-amber-200/50 px-3 py-1.5 rounded-lg shrink-0">
-                      <span className="text-amber-500 text-lg leading-none">★</span>
+                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                       <span className="font-bold text-amber-700">{review.overall_rating.toFixed(1)}</span>
                     </div>
                   </div>
@@ -2411,18 +2522,18 @@ export default function CollegeDetails() {
     const hasPlacementData = placementData.placementRate > 0 || placementData.averagePackage > 0;
 
     return (
-      <div className="space-y-8">
-        <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-8 text-white relative overflow-hidden">
+      <div className="space-y-6 sm:space-y-8">
+        <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-4 sm:p-8 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-24 translate-x-24"></div>
-          <div className="flex flex-col md:flex-row md:items-center justify-between relative z-10">
-            <div className="mb-6 md:mb-0">
-              <h2 className="text-2xl font-bold mb-2">Placement Statistics</h2>
-              <p className="text-purple-100">Career opportunities and placement records</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between relative z-10 gap-3">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">Placement Statistics</h2>
+              <p className="text-purple-100 text-sm sm:text-base">Career opportunities and placement records</p>
             </div>
             {hasPlacementData && (
-              <div className="text-right">
-                <div className="text-4xl font-bold mb-1">{placementData.placementRate}%</div>
-                <div className="text-purple-100">Placement Rate</div>
+              <div className="sm:text-right flex-shrink-0">
+                <div className="text-3xl sm:text-4xl font-bold mb-1">{placementData.placementRate}%</div>
+                <div className="text-purple-100 text-sm">Placement Rate</div>
               </div>
             )}
           </div>
@@ -2430,7 +2541,7 @@ export default function CollegeDetails() {
 
         {hasPlacementData ? (
           <div className="space-y-8">
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {[
                 { label: "Placement Rate", value: `${placementData.placementRate}%`, gradient: "from-blue-500 to-indigo-600", icon: TrendingUp, show: placementData.placementRate > 0 },
                 { label: "Average Package", value: `${placementData.averagePackage} LPA`, gradient: "from-emerald-500 to-teal-600", icon: DollarSign, show: placementData.averagePackage > 0 },
@@ -2442,23 +2553,23 @@ export default function CollegeDetails() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className={`bg-gradient-to-br ${metric.gradient} rounded-2xl p-6 text-white relative overflow-hidden group hover:shadow-xl transition-shadow duration-300`}
+                  className={`bg-gradient-to-br ${metric.gradient} rounded-2xl p-4 sm:p-6 text-white relative overflow-hidden group hover:shadow-xl transition-shadow duration-300`}
                 >
                   <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-8 translate-x-8"></div>
-                  <div className="flex items-center space-x-3 mb-2 relative z-10">
-                    <metric.icon className="w-6 h-6" />
-                    <h3 className="text-lg font-semibold">{metric.label}</h3>
+                  <div className="flex items-center space-x-2 mb-2 relative z-10">
+                    <metric.icon className="w-4 h-4 sm:w-6 sm:h-6 flex-shrink-0" />
+                    <h3 className="text-xs sm:text-lg font-semibold leading-tight">{metric.label}</h3>
                   </div>
-                  <div className="text-3xl font-bold mb-1 relative z-10">{metric.value}</div>
-                  <div className="text-white/80 text-sm relative z-10">Current Year</div>
+                  <div className="text-2xl sm:text-3xl font-bold mb-1 relative z-10">{metric.value}</div>
+                  <div className="text-white/80 text-xs sm:text-sm relative z-10">Current Year</div>
                 </motion.div>
               ))}
             </div>
 
             {placementData.topRecruiters.length > 0 && (
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-gray-900">Top Recruiting Companies</h3>
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
+                <div className="flex flex-wrap items-center justify-between mb-4 sm:mb-6 gap-2">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">Top Recruiting Companies</h3>
                   <div className="text-sm text-gray-500">{placementData.topRecruiters.length} companies</div>
                 </div>
                 <div className="flex flex-wrap gap-3">
@@ -2516,19 +2627,20 @@ export default function CollegeDetails() {
           </div>
         </div>
 
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-900">College Campus</h3>
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">College Campus</h3>
             <button
               onClick={() => setShowImageModal(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-300"
+              className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-300 text-sm"
             >
-              <Eye className="w-4 h-4" />
-              <span>View Fullscreen</span>
+              <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">View Fullscreen</span>
+              <span className="sm:hidden">Fullscreen</span>
             </button>
           </div>
 
-          <div className="relative h-64 md:h-96 rounded-xl overflow-hidden cursor-pointer group"
+          <div className="relative h-48 sm:h-64 md:h-96 rounded-xl overflow-hidden cursor-pointer group"
             onClick={() => setShowImageModal(true)}
           >
             {college.college_code ? (
@@ -2554,7 +2666,7 @@ export default function CollegeDetails() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
             <h3 className="text-xl font-bold text-gray-900 mb-6">Contact Information</h3>
             <div className="space-y-4">
@@ -2766,9 +2878,9 @@ export default function CollegeDetails() {
           </motion.div>
         </div>
 
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Detailed Seat Matrix</h3>
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-8 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
+          <div className="mb-5 sm:mb-8">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Detailed Seat Matrix</h3>
             <p className="text-gray-600">Category-wise seat allocation for {college.branch_name}</p>
           </div>
 
@@ -2850,16 +2962,16 @@ export default function CollegeDetails() {
   };
 
   const renderOverview = () => (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {quickStats.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {quickStats.map((stat, index) => (
             <StatCard key={index} {...stat} />
           ))}
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         <div className="lg:col-span-2 space-y-8">
           {/* Seat Matrix */}
           {renderSeatMatrixSection()}
@@ -2867,10 +2979,10 @@ export default function CollegeDetails() {
           {/* Available Branches */}
           {renderAvailableBranches()}
 
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">College Overview</h3>
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">College Overview</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
               <div className="space-y-4">
                 <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200/50">
                   <Calendar className="w-5 h-5 text-blue-600" />
@@ -2999,7 +3111,7 @@ export default function CollegeDetails() {
           </InfoCard>
 
           {/* Right Sidebar: Required Documents (Moved from Dashboard) */}
-          <div className="bg-white rounded-[24px] border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-[24px] border border-slate-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2.5 bg-indigo-50 rounded-xl">
                 <ClipboardList className="w-5 h-5 text-indigo-600" />
@@ -3066,7 +3178,7 @@ export default function CollegeDetails() {
 
           {/* Distance Calculator */}
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
               <div className="flex items-center space-x-3">
                 <Navigation className="w-6 h-6 text-blue-600" />
                 <h3 className="text-lg font-semibold text-gray-900">Distance Calculator</h3>
@@ -3074,7 +3186,7 @@ export default function CollegeDetails() {
               <button
                 onClick={handleGetLocation}
                 disabled={isGettingLocation}
-                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                className="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-sm"
               >
                 {isGettingLocation ? (
                   <>
@@ -3101,15 +3213,15 @@ export default function CollegeDetails() {
 
             {distance !== null ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 gap-3">
                   <div className="flex items-center space-x-3">
-                    <Route className="w-6 h-6 text-green-600" />
+                    <Route className="w-6 h-6 text-green-600 flex-shrink-0" />
                     <div>
                       <p className="text-sm text-gray-600">Distance from your location</p>
                       <p className="text-2xl font-bold text-gray-900">{distance.toFixed(1)} km</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="sm:text-right">
                     <p className="text-sm text-gray-500">Approx. travel time</p>
                     <p className="text-lg font-semibold text-gray-700">
                       {distance < 10 ? `${Math.round(distance * 6)} min` :
@@ -3255,25 +3367,25 @@ export default function CollegeDetails() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
       <Navbar activeTab="search" />
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="group flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-medium transition-colors px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 hover:border-gray-300 hover:shadow-sm"
+              className="group flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-medium transition-colors px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 hover:border-gray-300 hover:shadow-sm self-start"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span>Back to Dashboard</span>
             </button>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={handleSaveCollege}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-xl border transition-all duration-300 ${saved
+                className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 rounded-xl border transition-all duration-300 ${saved
                   ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md'
                   : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:shadow-sm'
                   }`}
@@ -3283,7 +3395,7 @@ export default function CollegeDetails() {
               </button>
               <button
                 onClick={handleShare}
-                className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 hover:border-gray-400 hover:shadow-sm transition-all duration-300"
+                className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 hover:border-gray-400 hover:shadow-sm transition-all duration-300"
               >
                 <Share2 className="w-4 h-4" />
                 <span>Share</span>
@@ -3291,10 +3403,10 @@ export default function CollegeDetails() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-white to-gray-50/50 backdrop-blur-sm rounded-3xl p-8 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
-            <div className="flex items-start gap-6">
-              <div className="relative">
-                <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-br from-white to-gray-50/50 backdrop-blur-sm rounded-3xl p-4 sm:p-8 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
+            <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+              <div className="relative flex-shrink-0">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg overflow-hidden">
                   {college.college_code ? (
                     <CollegeImage
                       collegeCode={college.college_code}
@@ -3309,38 +3421,38 @@ export default function CollegeDetails() {
                 <div className="absolute -inset-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur-xl opacity-20 -z-10"></div>
               </div>
 
-              <div className="flex-1">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{college.college_name}</h1>
-                    <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-3">
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="w-4 h-4" />
-                        <span>{college.city}{college.district && college.district !== "N/A" ? `, ${college.district}` : ''}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-2 leading-tight">{college.college_name}</h1>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-gray-600 mb-3 text-sm">
+                      <div className="flex items-center space-x-1.5">
+                        <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="truncate">{college.city}{college.district && college.district !== "N/A" ? `, ${college.district}` : ''}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <BookOpen className="w-4 h-4" />
-                        <span>{college.branch_name}</span>
+                      <div className="flex items-center space-x-1.5">
+                        <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="truncate">{college.branch_name}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Tag className="w-4 h-4" />
+                      <div className="flex items-center space-x-1.5">
+                        <Tag className="w-3.5 h-3.5 flex-shrink-0" />
                         <span>{college.category}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Award className="w-4 h-4" />
+                      <div className="flex items-center space-x-1.5">
+                        <Award className="w-3.5 h-3.5 flex-shrink-0" />
                         <span>{academicData.accreditation}</span>
                       </div>
                     </div>
                   </div>
                   {college.is_most_probable && (
-                    <div className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-sm font-semibold">
+                    <div className="self-start px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap">
                       🎯 Most Probable
                     </div>
                   )}
                 </div>
 
                 {college.university && college.university !== "N/A" && (
-                  <p className="text-gray-500">
+                  <p className="text-sm text-gray-500">
                     Affiliated to: <span className="font-medium text-gray-700">{college.university}</span>
                   </p>
                 )}
@@ -3349,7 +3461,7 @@ export default function CollegeDetails() {
           </div>
         </motion.div>
 
-        <div className="sticky top-4 z-10 mb-8">
+        <div className="sticky top-0 sm:top-4 z-10 mb-4 sm:mb-8">
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/50 overflow-hidden">
             <div className="flex overflow-x-auto scrollbar-hide">
               {[

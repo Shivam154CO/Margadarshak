@@ -30,21 +30,6 @@ export default function DataPipeline() {
         <div className="min-h-screen bg-slate-50 flex flex-col">
             <Navbar activeTab="automation" />
 
-            {/* Header */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-lg">
-                            <Database className="w-8 h-8 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Zero-Maintenance Pipeline</h1>
-                            <p className="text-lg text-gray-600 mt-1">Automated DTE/CET Cell Data Ingestion & OCR parsing.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
 
                 {/* Top Dash */}

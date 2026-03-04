@@ -416,14 +416,14 @@ export default function Favorites() {
             <span className="font-medium">Back to Dashboard</span>
           </button>
 
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Heart className="w-5 h-5 text-indigo-600" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">My Favorites</h1>
-                <p className="text-gray-600">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Favorites</h1>
+                <p className="text-gray-600 text-sm sm:text-base">
                   {savedColleges.length} saved colleges
                 </p>
               </div>
@@ -472,13 +472,13 @@ export default function Favorites() {
               </button>
             </div>
 
-            <div className="flex items-center space-x-3">
-              <div className="relative">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-none">
                 <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <select
                   value={selectedBranch}
                   onChange={(e) => setSelectedBranch(e.target.value)}
-                  className="pl-10 pr-8 py-2.5 bg-white border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none transition-all shadow-sm hover:shadow-md"
+                  className="pl-10 pr-8 py-2.5 w-full bg-white border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none transition-all shadow-sm hover:shadow-md"
                 >
                   <option value="">All Branches</option>
                   {uniqueBranches.map((b) => (

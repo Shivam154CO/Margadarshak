@@ -122,21 +122,6 @@ export default function ScorecardOcr() {
         <div className="min-h-screen bg-slate-50 flex flex-col">
             <Navbar activeTab="automation" />
 
-            {/* Hero Section */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg">
-                            <ScanLine className="w-8 h-8 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Smart Auto-Fill</h1>
-                            <p className="text-lg text-gray-600 mt-1">Upload your scorecard and let AI extract your ranks & percentiles instantly.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
 
                 <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">

@@ -417,7 +417,7 @@ export default function Profile() {
     );
 
   return (
-    <div className="min-h-screen bg-[#fafafa] p-4 md:p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#fafafa] p-3 sm:p-4 md:p-6 relative overflow-hidden">
       {/* Dynamic Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-rose-500/5 blur-[120px] rounded-full" />
@@ -461,14 +461,30 @@ export default function Profile() {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full"
         >
-          <div className="flex flex-col lg:flex-row bg-white/60 backdrop-blur-3xl border border-white/20 rounded-[40px] shadow-[0_40px_100px_rgba(0,0,0,0.05)] overflow-hidden min-h-[700px]">
+          <div className="flex flex-col lg:flex-row bg-white/60 backdrop-blur-3xl border border-white/20 rounded-[40px] shadow-[0_40px_100px_rgba(0,0,0,0.05)] overflow-hidden min-h-[600px]">
 
-            {/* Left Panel - Hero Section */}
+            {/* Mobile Header Strip - visible only on small screens */}
+            <div className="lg:hidden bg-slate-900 px-6 py-5 flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
+                <GraduationCap className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-sm font-black text-white tracking-widest uppercase">Smart College Finder</h1>
+                <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Profile Setup · Step {currentStep + 1} of {steps.length}</p>
+              </div>
+              <div className="ml-auto">
+                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden w-24">
+                  <div className="h-full bg-rose-500 transition-all duration-500 ease-out" style={{ width: `${((currentStep) / steps.length) * 100}%` }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Left Panel - Hero Section - hidden on mobile */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2, duration: 0.5 }}
-              className="lg:w-[400px] xl:w-[480px] bg-slate-900 p-10 lg:p-12 flex flex-col justify-between relative overflow-hidden flex-shrink-0"
+              className="hidden lg:flex lg:w-[400px] xl:w-[480px] bg-slate-900 p-12 flex-col justify-between relative overflow-hidden flex-shrink-0"
             >
               {/* Decorative circles */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/20 blur-[100px] rounded-full pointer-events-none" />
@@ -557,7 +573,7 @@ export default function Profile() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3, duration: 0.5 }}
-              className="flex-1 p-8 lg:p-12 xl:p-16 flex flex-col bg-white/40 backdrop-blur-xl"
+              className="flex-1 p-5 sm:p-8 lg:p-12 xl:p-16 flex flex-col bg-white/40 backdrop-blur-xl"
             >
               <div className="flex items-center justify-between mb-8">
                 <div>

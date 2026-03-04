@@ -519,36 +519,36 @@ export default function CollegeSearch() {
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-slate-900">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">Discover Your <span className="text-indigo-400">Dream College</span></h1>
-          <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">AI-powered predictions for India's premier engineering institutes.</p>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-white mb-4 sm:mb-6">Discover Your <span className="text-indigo-400">Dream College</span></h1>
+          <p className="text-base sm:text-xl text-white/80 mb-6 sm:mb-8 max-w-3xl mx-auto px-2">AI-powered predictions for India's premier engineering institutes.</p>
 
-          <div className="inline-flex bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 mb-8 border border-white/10">
-            <button onClick={() => setViewMode("predicted")} className={`px-8 py-4 rounded-xl font-semibold flex items-center gap-3 ${viewMode === "predicted" ? "text-white bg-indigo-600" : "text-white/60"}`}>
-              <Brain className="w-5 h-5" /> AI Predictions
+          <div className="inline-flex bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 mb-6 sm:mb-8 border border-white/10 w-full sm:w-auto">
+            <button onClick={() => setViewMode("predicted")} className={`flex-1 sm:flex-none px-4 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base ${viewMode === "predicted" ? "text-white bg-indigo-600" : "text-white/60"}`}>
+              <Brain className="w-4 h-4 sm:w-5 sm:h-5" /> AI Predictions
             </button>
-            <button onClick={() => setViewMode("all")} className={`px-8 py-4 rounded-xl font-semibold flex items-center gap-3 ${viewMode === "all" ? "text-white bg-white/10" : "text-white/60"}`}>
-              <Database className="w-5 h-5" /> All Colleges
+            <button onClick={() => setViewMode("all")} className={`flex-1 sm:flex-none px-4 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base ${viewMode === "all" ? "text-white bg-white/10" : "text-white/60"}`}>
+              <Database className="w-4 h-4 sm:w-5 sm:h-5" /> All Colleges
             </button>
           </div>
 
-          <div className="relative max-w-4xl mx-auto">
-            <div className="flex items-center bg-white rounded-2xl p-1 shadow-2xl">
-              <Search className="w-5 h-5 text-slate-400 ml-5" />
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search colleges, branches, or locations..." className="flex-1 py-5 px-4 outline-none text-slate-900 placeholder-slate-400 text-lg" />
-              <button className="px-8 py-3.5 bg-indigo-600 text-white rounded-xl font-semibold ml-2 hover:bg-indigo-700">Search</button>
+          <div className="relative max-w-4xl mx-auto w-full">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-white rounded-2xl p-1 shadow-2xl gap-1 sm:gap-0">
+              <Search className="hidden sm:block w-5 h-5 text-slate-400 ml-5" />
+              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search colleges, branches, cities..." className="flex-1 py-4 sm:py-5 px-4 outline-none text-slate-900 placeholder-slate-400 text-base sm:text-lg rounded-xl sm:rounded-none" />
+              <button className="px-6 sm:px-8 py-3 sm:py-3.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 mx-1 sm:mx-0">Search</button>
             </div>
           </div>
         </div>
       </div>
 
       <main className="max-w-7xl mx-auto px-4 py-12 flex-1">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div className="flex items-center gap-2">
             <button onClick={() => setActiveTab("grid")} className={`p-3 rounded-xl ${activeTab === "grid" ? "bg-indigo-50 text-indigo-600" : "bg-white text-slate-400"}`}><Grid3x3 className="w-5 h-5" /></button>
             <button onClick={() => setActiveTab("list")} className={`p-3 rounded-xl ${activeTab === "list" ? "bg-indigo-50 text-indigo-600" : "bg-white text-slate-400"}`}><List className="w-5 h-5" /></button>
           </div>
 
-          <div className="hidden lg:flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200">
+          <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl border border-slate-200 w-full sm:w-auto">
             <FilterSelect
               label="Institute Type"
               value={filters.collegeType}

@@ -808,20 +808,20 @@ function CollegeComparison() {
               Back
             </button>
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">College Comparison</h1>
-                <p className="text-gray-600 mt-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">College Comparison</h1>
+                <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
                   Compare up to 4 colleges side-by-side with detailed metrics and visualizations
                 </p>
               </div>
 
-              <div className="flex items-center space-x-3">
+              <div className="flex flex-wrap items-center gap-3">
                 {activeTab === "compare" && selectedColleges.length > 0 && (
                   <>
                     <button
                       onClick={shareComparison}
-                      className="flex items-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity"
+                      className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity"
                     >
                       {copied ? <CheckCheck className="w-4 h-4 mr-2" /> : <Share2 className="w-4 h-4 mr-2" />}
                       {copied ? "Copied!" : "Share"}
@@ -830,7 +830,7 @@ function CollegeComparison() {
                     <button
                       onClick={exportToPDF}
                       disabled={exporting}
-                      className="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                      className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
                     >
                       <Download className="w-4 h-4 mr-2" />
                       {exporting ? "Exporting..." : "Export PDF"}
@@ -1123,37 +1123,37 @@ function CollegeComparison() {
             >
               {/* Comparison Summary */}
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-6 border border-gray-200">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Comparison Summary</h2>
-                  <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Comparison Summary</h2>
+                  <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => setComparisonView("table")}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${comparisonView === "table"
+                      className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${comparisonView === "table"
                         ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
                         : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                         }`}
                     >
-                      <BarChart3 className="w-4 h-4 mr-2" />
+                      <BarChart3 className="w-4 h-4 mr-1.5" />
                       Table
                     </button>
                     <button
                       onClick={() => setComparisonView("radar")}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${comparisonView === "radar"
+                      className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${comparisonView === "radar"
                         ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
                         : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                         }`}
                     >
-                      <Target className="w-4 h-4 mr-2" />
+                      <Target className="w-4 h-4 mr-1.5" />
                       Radar
                     </button>
                     <button
                       onClick={() => setComparisonView("bar")}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${comparisonView === "bar"
+                      className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${comparisonView === "bar"
                         ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
                         : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                         }`}
                     >
-                      <BarChart3 className="w-4 h-4 mr-2" />
+                      <BarChart3 className="w-4 h-4 mr-1.5" />
                       Bar
                     </button>
                   </div>
