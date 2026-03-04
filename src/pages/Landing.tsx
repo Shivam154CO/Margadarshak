@@ -11,13 +11,40 @@ import Magnetic from "../components/Magnetic";
 
 // Import custom illustrations
 import clgImg from "../assets/illustrations/clg.png";
-import problemOverwhelmed from "../assets/illustrations/problem-overwhelmed.png";
-import dataAnalysis from "../assets/illustrations/data-analysis.png";
-import problemUncertainty from "../assets/illustrations/problem-uncertainty.png";
+
+// Import rich problem showcase
+import ProblemShowcase from "../components/ui/spatial-product-showcase";
 
 export default function Landing() {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isNavDark, setIsNavDark] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+
+  // Scroll-aware navbar: detect when over dark sections
+  useEffect(() => {
+    const handleScroll = () => {
+      const nav = navRef.current;
+      if (!nav) return;
+      const navRect = nav.getBoundingClientRect();
+      const navCenter = navRect.top + navRect.height / 2;
+
+      // Find all dark sections
+      const darkSections = document.querySelectorAll('[data-theme="dark"]');
+      let overDark = false;
+      darkSections.forEach((section) => {
+        const rect = section.getBoundingClientRect();
+        if (navCenter >= rect.top && navCenter <= rect.bottom) {
+          overDark = true;
+        }
+      });
+      setIsNavDark(overDark);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   const sectionRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -46,14 +73,7 @@ export default function Landing() {
 
   const heroScrollY = useTransform(scrollYProgress, [0, 0.2], [0, 100]);
 
-  const problemRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: problemScrollY } = useScroll({
-    target: problemRef,
-    offset: ["start end", "end start"]
-  });
-  const parallax1 = useTransform(problemScrollY, [0, 1], [80, -80]);
-  const parallax2 = useTransform(problemScrollY, [0, 1], [-80, 80]);
-  const parallax3 = useTransform(problemScrollY, [0, 1], [80, -80]);
+
 
   const journeySteps = useMemo(() => [
     { title: "Enter Your Diploma Rank", description: "Share your rank and category details.", icon: "student" as const },
@@ -63,12 +83,12 @@ export default function Landing() {
   ], []);
 
   const features = useMemo(() => [
-    { title: "Caste-Wise Seats", desc: "Instantly see how ranking shifts based on your category and seat availability.", showcase: "caste" },
-    { title: "AI Assistant", desc: "Expert guidance for your legal and technical admission doubts, available 24/7.", showcase: "ai" },
-    { title: "Distance Tracker", desc: "Calculate exact travel times from your home to any college campus in Maharashtra.", showcase: "distance" },
-    { title: "Scholarship Guide", desc: "Unlock fee benefits like Post-Matric and TFWS with our automated checklist.", showcase: "scholarship" },
-    { title: "Trend Pulse", desc: "Analyze placement statistics and median packages for every college branch.", showcase: "trend" },
-    { title: "Precision Match", desc: "Our neural engine predicts your best college match with 95.7% accuracy.", showcase: "match" },
+    { title: "Caste-Wise Seats", desc: "Instantly see how ranking shifts based on your category and seat availability.", showcase: "caste", badge: "Real-Time" },
+    { title: "AI Assistant", desc: "Expert guidance for your legal and technical admission doubts, available 24/7.", showcase: "ai", badge: "AI Powered" },
+    { title: "Distance Tracker", desc: "Calculate exact travel times from your home to any college campus in Maharashtra.", showcase: "distance", badge: "Maps API" },
+    { title: "Scholarship Guide", desc: "Unlock fee benefits like Post-Matric and TFWS with our automated checklist.", showcase: "scholarship", badge: "Official Data" },
+    { title: "Trend Pulse", desc: "Analyze placement statistics and median packages for every college branch.", showcase: "trend", badge: "Live Feed" },
+    { title: "Precision Match", desc: "Our neural engine predicts your best college match with 95.7% accuracy.", showcase: "match", badge: "95.7% Accurate" },
   ], []);
 
   return (
@@ -79,26 +99,26 @@ export default function Landing() {
         keywords="engineering admission predictor, Maharashtra diploma, CET cutoff, college finder, seat matrix, placement stats"
       />
       {/* Navigation */}
-      <nav className="fixed w-full z-[100] px-4 py-4 md:px-6 md:py-8">
-        <div className="max-w-7xl mx-auto flex justify-between items-center bg-white/80 backdrop-blur-2xl border border-slate-100/50 rounded-2xl px-6 py-4 md:px-10 md:h-20 shadow-[0_20px_50px_rgba(0,0,0,0.05)] relative z-50">
-          <IkigaiLogo size="sm" showText={true} />
+      <nav ref={navRef} className="fixed w-full z-[100] px-4 py-4 md:px-6 md:py-8">
+        <div className={`max-w-7xl mx-auto flex justify-between items-center backdrop-blur-2xl rounded-2xl px-6 py-4 md:px-10 md:h-20 relative z-50 transition-all duration-500 ${isNavDark ? 'bg-white/5 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)]' : 'bg-white/80 border border-slate-100/50 shadow-[0_20px_50px_rgba(0,0,0,0.05)]'}`}>
+          <IkigaiLogo size="sm" showText={true} lightText={isNavDark} />
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-12">
             {['Predictor', 'How it Works', 'Colleges'].map(item => (
-              <button key={item} className="text-slate-600 font-semibold text-xs uppercase tracking-[0.2em] hover:text-slate-900 transition-colors">{item}</button>
+              <button key={item} className={`font-semibold text-xs uppercase tracking-[0.2em] transition-colors ${isNavDark ? 'text-white/60 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{item}</button>
             ))}
           </div>
 
           <div className="hidden md:flex items-center gap-8">
-            <button onClick={() => navigate("/login")} className="text-slate-900 font-extrabold text-xs uppercase tracking-widest hover:opacity-70 transition-opacity">Login</button>
-            <button onClick={() => navigate("/signup")} className="px-8 py-3 bg-slate-900 text-white rounded-xl font-extrabold text-xs uppercase tracking-widest hover:bg-black hover:scale-105 transition-all shadow-lg active:scale-95">Get Started</button>
+            <button onClick={() => navigate("/login")} className={`font-extrabold text-xs uppercase tracking-widest hover:opacity-70 transition-all ${isNavDark ? 'text-white' : 'text-slate-900'}`}>Login</button>
+            <button onClick={() => navigate("/signup")} className={`px-8 py-3 rounded-xl font-extrabold text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 ${isNavDark ? 'bg-white text-slate-900 hover:bg-white/90' : 'bg-slate-900 text-white hover:bg-black'}`}>Get Started</button>
           </div>
 
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-slate-900"
+            className={`md:hidden p-2 transition-colors ${isNavDark ? 'text-white' : 'text-slate-900'}`}
           >
             {isMobileMenuOpen ? (
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -232,123 +252,11 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Problem Section - The Diploma Struggle */}
-      <section ref={problemRef} className="py-20 md:py-40 px-6 bg-white relative z-30 overflow-hidden">
-        <div className="max-w-7xl mx-auto space-y-24 md:space-y-40">
-
-          {/* Problem 1: Choice Chaos */}
-          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
-            <ScrollAnimationWrapper animation="slideRight">
-              <div className="space-y-10">
-                <div className="inline-flex items-center px-4 py-1.5 bg-rose-50 border border-rose-100 rounded-full text-rose-600 font-extrabold text-[10px] uppercase tracking-widest">Problem #01</div>
-                <h2 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[0.85] tracking-tighter">
-                  Too Many <br /> <span className="text-rose-600 italic text-4xl md:text-5xl lg:text-7xl">Colleges.</span>
-                </h2>
-                <p className="text-xl text-slate-600 font-medium leading-relaxed max-w-lg">
-                  With over 340 colleges and 2,000+ branches, picking just one is a nightmare for most diploma students.
-                </p>
-                <div className="flex items-center gap-6 pt-6 underline decoration-rose-100 decoration-4 underline-offset-8">
-                  <div className="text-4xl font-extrabold text-slate-900">340+</div>
-                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Choice Combinations</div>
-                </div>
-              </div>
-            </ScrollAnimationWrapper>
-            <ScrollAnimationWrapper animation="scale">
-              <div className="relative p-6 md:p-10 rounded-[60px] overflow-hidden group border border-slate-100 shadow-2xl max-w-lg mx-auto flex justify-center">
-                {/* Glass Background Layer - Isolated to prevent blur */}
-                <div className="absolute inset-0 bg-white/60 backdrop-blur-2xl z-0" />
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-rose-100/40 blur-3xl rounded-full z-0" />
-
-                {/* Image Content - Above glass layer */}
-                <div className="relative z-10 flex justify-center py-4">
-                  <motion.img
-                    style={{ y: parallax1 }}
-                    src={problemOverwhelmed}
-                    alt="Too Many Choices"
-                    className="w-full h-auto rounded-[30px] shadow-lg transform transition-transform duration-700"
-                  />
-                </div>
-              </div>
-            </ScrollAnimationWrapper>
-          </div>
-
-          {/* Problem 2: Data Overload */}
-          <div className="grid lg:grid-cols-2 gap-24 items-center">
-            <ScrollAnimationWrapper animation="scale" className="order-2 lg:order-1">
-              <div className="relative p-6 md:p-10 rounded-[60px] overflow-hidden group border border-slate-100 shadow-2xl max-w-lg mx-auto flex justify-center">
-                {/* Glass Background Layer */}
-                <div className="absolute inset-0 bg-white/60 backdrop-blur-2xl z-0" />
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-slate-100/60 blur-3xl rounded-full z-0" />
-
-                {/* Image Content */}
-                <div className="relative z-10 flex justify-center py-4">
-                  <motion.img
-                    style={{ y: parallax2 }}
-                    src={dataAnalysis}
-                    alt="Complex Cutoffs"
-                    className="w-full h-auto rounded-[30px] shadow-lg transform transition-transform duration-700"
-                  />
-                </div>
-              </div>
-            </ScrollAnimationWrapper>
-            <ScrollAnimationWrapper animation="slideLeft" className="order-1 lg:order-2">
-              <div className="space-y-10">
-                <div className="inline-flex items-center px-4 py-1.5 bg-rose-50 border border-rose-100 rounded-full text-rose-600 font-extrabold text-[10px] uppercase tracking-widest">Problem #02</div>
-                <h2 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[0.85] tracking-tighter">
-                  Complex <br /> <span className="text-rose-600 italic text-4xl md:text-5xl lg:text-7xl">Data Overload.</span>
-                </h2>
-                <p className="text-xl text-slate-600 font-medium leading-relaxed max-w-lg">
-                  Searching through hundreds of pages of PDF cutoffs manually is slow, boring, and leads to mistakes.
-                </p>
-                <div className="flex items-center gap-6 pt-6 underline decoration-rose-100 decoration-4 underline-offset-8">
-                  <div className="text-4xl font-extrabold text-slate-900">500+</div>
-                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Pages of Raw Data</div>
-                </div>
-              </div>
-            </ScrollAnimationWrapper>
-          </div>
-
-          {/* Problem 3: Uncertain Trends */}
-          <div className="grid lg:grid-cols-2 gap-24 items-center">
-            <ScrollAnimationWrapper animation="slideRight">
-              <div className="space-y-10">
-                <div className="inline-flex items-center px-4 py-1.5 bg-rose-50 border border-rose-100 rounded-full text-rose-600 font-extrabold text-[10px] uppercase tracking-widest">Problem #03</div>
-                <h2 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[0.85] tracking-tighter">
-                  Uncertain <br /> <span className="text-rose-600 italic text-4xl md:text-5xl lg:text-7xl">Yearly Changes.</span>
-                </h2>
-                <p className="text-xl text-slate-600 font-medium leading-relaxed max-w-lg">
-                  Cutoffs change every year. Relying on old ranks is risky and can lead to you losing your dream seat.
-                </p>
-                <div className="flex items-center gap-6 pt-6 underline decoration-rose-100 decoration-4 underline-offset-8">
-                  <div className="text-4xl font-extrabold text-slate-900">20%</div>
-                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Average Yearly Shift</div>
-                </div>
-              </div>
-            </ScrollAnimationWrapper>
-            <ScrollAnimationWrapper animation="scale">
-              <div className="relative p-6 md:p-10 rounded-[60px] overflow-hidden group border border-slate-100 shadow-2xl max-w-lg mx-auto flex justify-center">
-                {/* Glass Background Layer */}
-                <div className="absolute inset-0 bg-white/60 backdrop-blur-2xl z-0" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-rose-500/10 blur-3xl rounded-full z-0" />
-
-                {/* Image Content */}
-                <div className="relative z-10 flex justify-center py-4">
-                  <motion.img
-                    style={{ y: parallax3 }}
-                    src={problemUncertainty}
-                    alt="Uncertain Trends"
-                    className="w-full h-auto rounded-[30px] shadow-lg transform transition-transform duration-700"
-                  />
-                </div>
-              </div>
-            </ScrollAnimationWrapper>
-          </div>
-
-        </div>
-      </section>
+      {/* Problem Section - Spatial Showcase */}
+      <ProblemShowcase />
 
       {/* Visual USP - The "Proof" Section (Showing Project Power) */}
-      <section className="py-20 md:py-40 px-6 bg-[#080808] relative overflow-hidden">
+      <section className="py-20 md:py-40 px-6 bg-[#080808] relative overflow-hidden" data-theme="dark">
         {/* Ambient Glows */}
         <div className="absolute top-1/4 -left-20 w-96 h-96 bg-rose-500/10 blur-[150px] rounded-full" />
         <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-orange-500/10 blur-[150px] rounded-full" />
@@ -460,7 +368,7 @@ export default function Landing() {
             </ScrollAnimationWrapper>
 
             {/* Row 2: Advanced Feature Blocks */}
-            <ScrollAnimationWrapper animation="slideUp" delay={0.3} className="lg:col-span-4">
+            <ScrollAnimationWrapper animation="slideUp" delay={0.3} className="lg:col-span-6">
               <div className="bg-gradient-to-br from-white/5 to-transparent backdrop-blur-3xl border border-white/10 rounded-[40px] md:rounded-[60px] p-8 md:p-12 h-full relative group">
                 <div className="space-y-6">
                   <div className="w-12 h-12 bg-rose-500/20 rounded-2xl flex items-center justify-center border border-rose-500/30">
@@ -472,19 +380,7 @@ export default function Landing() {
               </div>
             </ScrollAnimationWrapper>
 
-            <ScrollAnimationWrapper animation="slideUp" delay={0.4} className="lg:col-span-4">
-              <div className="bg-gradient-to-br from-white/5 to-transparent backdrop-blur-3xl border border-white/10 rounded-[40px] md:rounded-[60px] p-8 md:p-12 h-full relative group">
-                <div className="space-y-6">
-                  <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
-                    <LiveFeatureIcon type="target" size={24} />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white">Distance Tracker.</h3>
-                  <p className="text-white/60 text-sm leading-relaxed">Calculate the exact distance and travel time from your doorstep to every potential college campus.</p>
-                </div>
-              </div>
-            </ScrollAnimationWrapper>
-
-            <ScrollAnimationWrapper animation="slideUp" delay={0.5} className="lg:col-span-4">
+            <ScrollAnimationWrapper animation="slideUp" delay={0.5} className="lg:col-span-6">
               <div className="bg-gradient-to-br from-white/5 to-transparent backdrop-blur-3xl border border-white/10 rounded-[40px] md:rounded-[60px] p-8 md:p-12 h-full relative group">
                 <div className="space-y-6">
                   <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
@@ -535,7 +431,7 @@ export default function Landing() {
                   <div className="mt-auto pt-2">
                     <div className="flex items-center gap-1.5 text-[9px] font-black text-rose-500 uppercase tracking-[0.2em] bg-rose-50/50 px-3 py-1 rounded-full border border-rose-100/50">
                       <div className="w-1 h-1 rounded-full bg-rose-500 animate-pulse" />
-                      Live Feed
+                      {feature.badge}
                     </div>
                   </div>
                 </div>
@@ -546,7 +442,7 @@ export default function Landing() {
       </section>
 
       {/* Cinematic 3D Depth Journey */}
-      <section ref={sectionRef} className="relative h-[500vh] bg-[#050505]">
+      <section ref={sectionRef} className="relative h-[400vh] bg-[#050505]" data-theme="dark">
         <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
 
           {/* Tunnel Atmosphere */}
@@ -662,7 +558,7 @@ export default function Landing() {
       </section>
 
       {/* Dedicated CET 2026 Launch Section - The "Wow" Experience */}
-      <section className="py-20 md:py-40 px-4 md:px-6 relative overflow-hidden bg-[#0a0a0a]">
+      <section className="py-20 md:py-40 px-4 md:px-6 relative overflow-hidden bg-[#0a0a0a]" data-theme="dark">
         {/* Massive Ambient Background Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-rose-500/5 blur-[200px] rounded-full" />
 
@@ -682,7 +578,7 @@ export default function Landing() {
                 </h2>
 
                 <p className="text-xl md:text-3xl text-white/70 font-semibold max-w-4xl mx-auto leading-relaxed">
-                  We're re-engineering our precision models for the 2026 Maharashtra diploma engineeering prediction cycle.
+                  We're re-engineering our precision models for the 2026 Maharashtra diploma engineering prediction cycle.
                   Get ready for the most accurate prediction engine ever built.
                 </p>
 
