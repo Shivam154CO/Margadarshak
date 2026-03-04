@@ -29,6 +29,12 @@ const CapRoundGenerator = lazy(() => import("./pages/CapRoundGenerator"));
 const DataPipeline = lazy(() => import("./pages/DataPipeline"));
 const ScorecardOcr = lazy(() => import("./pages/ScorecardOcr"));
 const Community = lazy(() => import("./pages/Community"));
+const AdmissionTimeline = lazy(() => import("./pages/AdmissionTimeline"));
+const DocumentChecklist = lazy(() => import("./pages/DocumentChecklist"));
+const SeatVacancy = lazy(() => import("./pages/SeatVacancy"));
+const ScholarshipFinder = lazy(() => import("./pages/ScholarshipFinder"));
+const CutoffTrends = lazy(() => import("./pages/CutoffTrends"));
+const PostAdmission = lazy(() => import("./pages/PostAdmission"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Scroll Restorer component
@@ -74,6 +80,12 @@ const AnimatedRoutes = () => {
           <Route path="/scorecard-ocr" element={<PageTransition><ScorecardOcr /></PageTransition>} />
           <Route path="/help" element={<PageTransition><Help /></PageTransition>} />
           <Route path="/community" element={<PageTransition><Community /></PageTransition>} />
+          <Route path="/admission-timeline" element={<PageTransition><AdmissionTimeline /></PageTransition>} />
+          <Route path="/documents" element={<PageTransition><DocumentChecklist /></PageTransition>} />
+          <Route path="/seat-vacancy" element={<PageTransition><SeatVacancy /></PageTransition>} />
+          <Route path="/scholarships" element={<PageTransition><ScholarshipFinder /></PageTransition>} />
+          <Route path="/cutoff-trends" element={<PageTransition><CutoffTrends /></PageTransition>} />
+          <Route path="/post-admission" element={<PageTransition><PostAdmission /></PageTransition>} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </AnimatePresence>

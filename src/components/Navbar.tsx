@@ -18,6 +18,13 @@ import {
   Scan,
   MessageSquare,
   X,
+  Calendar,
+  CheckSquare,
+  Users,
+  Award,
+  TrendingUp,
+  GraduationCap,
+  Compass,
 } from "lucide-react";
 
 interface UserProfile {
@@ -49,7 +56,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [automationDropdownOpen, setAutomationDropdownOpen] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   // Always have access to the profile — fetches once, then reads from shared cache
   const { data: cachedProfile } = useQuery<UserProfile | null>({
@@ -73,6 +80,20 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
     { id: "map", label: "Map", icon: MapPin, path: "/college-map" },
     { id: "compare", label: "Compare", path: "/compare-college" },
     { id: "favorites", label: "Favorites", path: "/favorites" },
+    {
+      id: "student-hub",
+      label: "Student Hub",
+      icon: Compass,
+      hasDropdown: true,
+      dropdownItems: [
+        { id: "timeline", label: "Admission Timeline", icon: Calendar, path: "/admission-timeline" },
+        { id: "documents", label: "Document Checklist", icon: CheckSquare, path: "/documents" },
+        { id: "vacancy", label: "Seat Vacancy", icon: Users, path: "/seat-vacancy" },
+        { id: "scholarships", label: "Scholarships", icon: Award, path: "/scholarships" },
+        { id: "cutoff-trends", label: "Cutoff Trends", icon: TrendingUp, path: "/cutoff-trends" },
+        { id: "post-admission", label: "Post-Admission", icon: GraduationCap, path: "/post-admission" },
+      ]
+    },
     {
       id: "automation",
       label: "Automation",
@@ -117,14 +138,14 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
                   <button
                     onClick={() => {
                       if (item.hasDropdown) {
-                        setAutomationDropdownOpen(!automationDropdownOpen);
+                        setOpenDropdownId(openDropdownId === item.id ? null : item.id);
                       } else {
-                        setAutomationDropdownOpen(false);
+                        setOpenDropdownId(null);
                         navigate(item.path);
                       }
                     }}
                     aria-label={`Open ${item.label}`}
-                    className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${item.id === activeTab || (item.hasDropdown && automationDropdownOpen)
+                    className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${item.id === activeTab || (item.hasDropdown && openDropdownId === item.id)
                       ? "bg-indigo-600 text-white shadow-sm"
                       : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
                       }`}
@@ -132,16 +153,16 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
                     {item.icon && <item.icon className="w-4 h-4" />}
                     <span>{item.label}</span>
                     {item.hasDropdown && (
-                      <ChevronDown className={`w-3.5 h-3.5 transition-transform ${automationDropdownOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform ${openDropdownId === item.id ? 'rotate-180' : ''}`} />
                     )}
                   </button>
-                  {item.hasDropdown && automationDropdownOpen && (
-                    <div className="absolute top-12 left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200/60 overflow-hidden z-50">
+                  {item.hasDropdown && openDropdownId === item.id && (
+                    <div className="absolute top-12 left-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-200/60 overflow-hidden z-50">
                       {item.dropdownItems.map((subItem: any) => (
                         <button
                           key={subItem.id}
                           onClick={() => {
-                            setAutomationDropdownOpen(false);
+                            setOpenDropdownId(null);
                             navigate(subItem.path);
                           }}
                           className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2 border-b border-gray-100 last:border-0 transition-colors"
@@ -239,23 +260,23 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
                   {item.hasDropdown ? (
                     <div>
                       <button
-                        onClick={() => setAutomationDropdownOpen(!automationDropdownOpen)}
-                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${automationDropdownOpen ? "bg-indigo-50 text-indigo-700" : "text-gray-700 hover:bg-gray-50 bg-transparent"
+                        onClick={() => setOpenDropdownId(openDropdownId === item.id ? null : item.id)}
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${openDropdownId === item.id ? "bg-indigo-50 text-indigo-700" : "text-gray-700 hover:bg-gray-50 bg-transparent"
                           }`}
                       >
                         <div className="flex items-center gap-3">
                           {item.icon && <item.icon className="w-5 h-5" />}
                           <span>{item.label}</span>
                         </div>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${automationDropdownOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-4 h-4 transition-transform ${openDropdownId === item.id ? 'rotate-180' : ''}`} />
                       </button>
-                      {automationDropdownOpen && (
+                      {openDropdownId === item.id && (
                         <div className="mt-1 ml-4 pl-4 border-l-2 border-indigo-100 space-y-1">
                           {item.dropdownItems.map((subItem: any) => (
                             <button
                               key={subItem.id}
                               onClick={() => {
-                                setAutomationDropdownOpen(false);
+                                setOpenDropdownId(null);
                                 setMobileMenuOpen(false);
                                 navigate(subItem.path);
                               }}
