@@ -611,64 +611,13 @@ function CollegeMapContent() {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen bg-[#f8fafc] overflow-hidden">
+      <div className="flex flex-col h-screen bg-slate-50 overflow-hidden">
         <Navbar activeTab="map" userProfile={profile} />
         <main className="flex-1 relative w-full overflow-hidden flex flex-col items-center justify-center">
-          {/* Subtle themed background elements */}
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-40">
-            <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-100 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-50 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-          </div>
-
-          <div className="relative z-10 text-center space-y-8 max-w-md px-6">
-            <div className="relative mx-auto w-24 h-24">
-              <motion.div
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.1, 0.2, 0.1],
-                }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute inset-0 bg-blue-500 rounded-full blur-3xl"
-              />
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="relative w-full h-full border-2 border-dashed border-blue-200 rounded-full flex items-center justify-center"
-              >
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl rotate-12 shadow-xl flex items-center justify-center">
-                  <Globe className="w-8 h-8 text-white -rotate-12" />
-                </div>
-              </motion.div>
-            </div>
-
-            <div className="space-y-3">
-              <h3 className="text-2xl font-black text-gray-900 tracking-tight">Syncing Live Map</h3>
-              <p className="text-gray-500 text-sm font-medium leading-relaxed">
-                Aggregating real-time database results for over 13,000 engineering colleges...
-              </p>
-            </div>
-
-            {/* Skeleton Loading Bar */}
-            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden shadow-inner">
-              <motion.div
-                initial={{ x: "-100%" }}
-                animate={{ x: "100%" }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                className="w-1/2 h-full bg-gradient-to-r from-transparent via-blue-600 to-transparent"
-              />
-            </div>
-
-            <div className="flex justify-center gap-8 pt-4">
-              <div className="text-center">
-                <div className="text-lg font-bold text-gray-900">13K+</div>
-                <div className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Colleges</div>
-              </div>
-              <div className="w-px h-8 bg-gray-200" />
-              <div className="text-center">
-                <div className="text-lg font-bold text-blue-600">LIVE</div>
-                <div className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Database</div>
-              </div>
-            </div>
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <h3 className="text-xl font-semibold text-slate-900">Loading Map</h3>
+            <p className="text-slate-500 text-sm">Fetching college data...</p>
           </div>
         </main>
       </div>
