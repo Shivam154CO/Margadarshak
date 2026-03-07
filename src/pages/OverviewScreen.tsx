@@ -5,6 +5,7 @@ import axios from "axios";
 import { supabase } from "../lib/supabase";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { Briefcase, IndianRupee, X, CheckCircle2, FileText, Calendar, ShieldCheck, AlertCircle, ChevronRight, ChevronDown } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -173,8 +174,66 @@ export default function OverviewScreen() {
     const bf = colleges.filter(c => (c.fit === "Best Fit" || c.probability_level === "Best Fit") && !c.is_most_probable);
     const gf = colleges.filter(c => c.fit === "Good Fit" || c.probability_level === "Good Fit");
     const st = colleges.filter(c => c.fit === "Stretch" || c.probability_level === "Stretch");
-    return { mostProbable: mp.length, bestFit: bf.length, goodFit: gf.length, stretch: st.length, total: colleges.length, unique: new Set(colleges.map(c => c.college_code)).size };
+    return { mostProbable: mp, bestFit: bf, goodFit: gf, stretch: st, total: colleges, unique: new Set(colleges.map(c => c.college_code)).size };
   }, [colleges]);
+
+  const [expandedCity, setExpandedCity] = useState<string | null>(null);
+  const [expandedTier, setExpandedTier] = useState<string | null>(null);
+  const [expandedFeeTier, setExpandedFeeTier] = useState<string | null>(null);
+  const [expandedBranch, setExpandedBranch] = useState<string | null>(null);
+
+  // States for Admission Action Plan deep-input
+  const [expandedAction, setExpandedAction] = useState<string | null>(null);
+  const [readyDocs, setReadyDocs] = useState<string[]>([]);
+
+  // States for AI Mad-Libs Query Engine
+  const [mlTier, setMlTier] = useState<string>("Best Fit");
+  const [mlCity, setMlCity] = useState<string>("Any City");
+  const [mlBranch, setMlBranch] = useState<string>("Any Branch");
+  const [mlFee, setMlFee] = useState<string>("Any Fee");
+
+  const mlCities = useMemo(() => ["Any City", ...Array.from(new Set(colleges.map(c => c.city))).sort()], [colleges]);
+  const mlBranches = useMemo(() => ["Any Branch", ...Array.from(new Set(colleges.map(c => c.branch))).sort()], [colleges]);
+
+  const mlResults = useMemo(() => {
+    return [...colleges].filter(c => {
+      if (mlTier !== "Any Tier") {
+        const tierMapping: Record<string, string> = { "Most Probable": "Most Probable", "Best Fit": "Best Fit", "Good Fit": "Good Fit", "Stretch": "Stretch" };
+        const cFitText = c.probability_level || c.fit || "Unknown";
+        if (cFitText !== tierMapping[mlTier] && !(mlTier === "Most Probable" && c.is_most_probable)) return false;
+      }
+      if (mlCity !== "Any City" && c.city !== mlCity) return false;
+      if (mlBranch !== "Any Branch" && c.branch !== mlBranch) return false;
+      if (mlFee !== "Any Fee") {
+        const fee = c.fees ?? Infinity;
+        if (mlFee === "Under ₹50K" && fee > 50000) return false;
+        if (mlFee === "Under ₹1 Lakh" && fee > 100000) return false;
+        if (mlFee === "Under ₹2 Lakhs" && fee > 200000) return false;
+      }
+      return true;
+    }).sort((a, b) => (b.admission_chance ?? 0) - (a.admission_chance ?? 0)).slice(0, 10);
+  }, [colleges, mlTier, mlCity, mlBranch, mlFee]);
+
+  // Calculate dynamic documents based on user category
+  const requiredDocuments = useMemo(() => {
+    if (!profile) return [];
+    const baseDocs = ["10th / SSC Marksheet", "12th / HSC / Diploma Marksheet", "MHT-CET / JEE Scorecard", "Domicile & Nationality Certificate", "Leaving Certificate (LC)"];
+    const cat = profile.category?.toUpperCase() || "OPEN";
+
+    if (["SC", "ST"].includes(cat)) {
+      baseDocs.push("Caste Certificate", "Caste Validity Certificate");
+    } else if (["OBC", "SBC", "VJDT(NTA)", "NTB", "NTC", "NTD"].includes(cat)) {
+      baseDocs.push("Caste Certificate", "Caste Validity Certificate", "Non-Creamy Layer (NCL) Certificate (Valid up to 31 March)");
+    } else if (cat === "SEBC") {
+      baseDocs.push("SEBC Caste Certificate", "SEBC Non-Creamy Layer (NCL)", "Caste Validity Certificate (if applicable)");
+    } else if (cat === "EWS") {
+      baseDocs.push("EWS Certificate for Maharashtra State");
+    }
+    // Assume all Open might want Income cert just in case
+    baseDocs.push("Income Certificate (Optional but recommended)");
+
+    return baseDocs;
+  }, [profile]);
 
 
 
@@ -427,19 +486,187 @@ export default function OverviewScreen() {
             {/* ═══════════ SECTION 1: Fit Distribution Stats ═══════════ */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
               {[
-                { label: "Most Probable", count: stats.mostProbable, sub: "Near-exact match", accent: "border-l-purple-500" },
-                { label: "Best Fit", count: stats.bestFit, sub: "High chance", accent: "border-l-emerald-500" },
-                { label: "Good Fit", count: stats.goodFit, sub: "Solid match", accent: "border-l-blue-500" },
-                { label: "Stretch", count: stats.stretch, sub: "Backup option", accent: "border-l-orange-400" },
-                { label: "Total Matches", count: stats.total, sub: `${stats.unique} unique colleges`, accent: "border-l-slate-400" },
-              ].map(s => (
-                <div key={s.label} className={`bg-white border border-slate-200 border-l-4 ${s.accent} rounded-xl p-5 shadow-sm hover:-translate-y-0.5 transition-transform cursor-default`}>
-                  <span className="text-3xl font-bold text-slate-800">{s.count}</span>
-                  <p className="text-sm font-semibold text-slate-700 mt-2">{s.label}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{s.sub}</p>
-                </div>
-              ))}
+                { label: "Most Probable", data: stats.mostProbable, sub: "Near-exact match", accent: "border-l-purple-500", key: "Most Probable" },
+                { label: "Best Fit", data: stats.bestFit, sub: "High chance", accent: "border-l-emerald-500", key: "Best Fit" },
+                { label: "Good Fit", data: stats.goodFit, sub: "Solid match", accent: "border-l-blue-500", key: "Good Fit" },
+                { label: "Stretch", data: stats.stretch, sub: "Backup option", accent: "border-l-orange-400", key: "Stretch" },
+                { label: "Total Matches", data: stats.total, sub: `${stats.unique} unique colleges`, accent: "border-l-slate-400", key: "Total" },
+              ].map((s) => {
+                const isSelected = expandedTier === s.key && s.key !== "Total";
+                return (
+                  <div
+                    key={s.label}
+                    onClick={() => s.key !== "Total" && setExpandedTier(isSelected ? null : s.key)}
+                    className={`bg-white border border-l-4 rounded-xl p-5 shadow-sm transition-all duration-300 ${s.key === "Total" ? 'cursor-default border-slate-200 ' + s.accent : 'cursor-pointer hover:-translate-y-1 hover:shadow-md ' + (isSelected ? `ring-2 ring-offset-2 ${s.key === 'Most Probable' ? 'ring-purple-500 border-purple-500' : s.key === 'Best Fit' ? 'ring-emerald-500 border-emerald-500' : s.key === 'Good Fit' ? 'ring-blue-500 border-blue-500' : 'ring-orange-400 border-orange-400'} bg-slate-50` : 'border-slate-200 ' + s.accent)}`}
+                  >
+                    <span className={`text-3xl font-bold ${isSelected ? 'text-indigo-600' : 'text-slate-800'}`}>{s.data.length}</span>
+                    <p className="text-sm font-semibold text-slate-700 mt-2">{s.label}</p>
+                    <p className={`text-xs mt-0.5 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`}>{s.sub}</p>
+                    {s.key !== "Total" && (
+                      <div className={`mt-2 text-[10px] font-bold tracking-wide uppercase ${isSelected ? 'text-indigo-500' : 'text-slate-300 group-hover:text-slate-400'}`}>
+                        {isSelected ? 'Close Panel ▼' : 'Click to View ▶'}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
+
+            {/* EXPANDED TIER PANEL */}
+            <div className={`transition-all duration-500 origin-top overflow-hidden ${expandedTier ? 'max-h-[1000px] opacity-100 mb-8' : 'max-h-0 opacity-0 mb-0'}`}>
+              {expandedTier && (() => {
+                const dataMap: Record<string, College[]> = { "Most Probable": stats.mostProbable, "Best Fit": stats.bestFit, "Good Fit": stats.goodFit, "Stretch": stats.stretch };
+                const activeData = dataMap[expandedTier] || [];
+
+                if (activeData.length === 0) return (
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 text-center">
+                    <p className="text-slate-500 font-semibold">No colleges match this tier currently.</p>
+                  </div>
+                );
+
+                // Sort logic for subpanels
+                const highestPkg = [...activeData].sort((a, b) => (b.average_package_lpa ?? 0) - (a.average_package_lpa ?? 0)).slice(0, 3);
+                const lowestFee = [...activeData].filter(c => c.fees && c.fees > 0).sort((a, b) => (a.fees ?? 0) - (b.fees ?? 0)).slice(0, 3);
+
+                return (
+                  <div className="bg-white border text-left border-indigo-100 rounded-2xl shadow-lg shadow-indigo-100/50 p-6 flex flex-col md:flex-row gap-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 z-0"></div>
+
+                    <div className="flex-1 relative z-10 bg-gradient-to-br from-emerald-50 to-teal-50/50 rounded-xl p-5 border border-emerald-100/50">
+                      <h4 className="text-emerald-800 font-bold mb-4 flex items-center gap-2"><Briefcase className="w-5 h-5 text-emerald-600" /> Highest Package in "{expandedTier}"</h4>
+                      <div className="space-y-3">
+                        {highestPkg.map((c, idx) => (
+                          <div key={idx} onClick={() => navigate("/college-details", { state: { college_code: c.college_code, branch: c.branch, college: c } })} className="flex items-center justify-between bg-white/80 backdrop-blur p-3 rounded-lg border border-emerald-100 hover:border-emerald-300 hover:shadow-sm cursor-pointer transition-all">
+                            <div className="min-w-0 pr-4">
+                              <p className="text-sm font-bold text-slate-700 truncate">{c.college_name}</p>
+                              <p className="text-[10px] text-slate-500 uppercase tracking-wide truncate mt-0.5">{c.branch} • {c.city}</p>
+                            </div>
+                            <span className="text-emerald-600 font-black text-sm whitespace-nowrap">₹{c.average_package_lpa}L</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 relative z-10 bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-xl p-5 border border-blue-100/50">
+                      <h4 className="text-blue-800 font-bold mb-4 flex items-center gap-2"><IndianRupee className="w-5 h-5 text-blue-600" /> Most Affordable in "{expandedTier}"</h4>
+                      <div className="space-y-3">
+                        {lowestFee.map((c, idx) => (
+                          <div key={idx} onClick={() => navigate("/college-details", { state: { college_code: c.college_code, branch: c.branch, college: c } })} className="flex items-center justify-between bg-white/80 backdrop-blur p-3 rounded-lg border border-blue-100 hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all">
+                            <div className="min-w-0 pr-4">
+                              <p className="text-sm font-bold text-slate-700 truncate">{c.college_name}</p>
+                              <p className="text-[10px] text-slate-500 uppercase tracking-wide truncate mt-0.5">{c.branch} • {c.city}</p>
+                            </div>
+                            <span className="text-blue-600 font-black text-sm whitespace-nowrap">₹{((c.fees ?? 0) / 1000).toFixed(0)}K</span>
+                          </div>
+                        ))}
+                        {lowestFee.length === 0 && <p className="text-xs text-slate-400 italic">No fee data available</p>}
+                      </div>
+                    </div>
+
+                    <button onClick={() => setExpandedTier(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-white shadow-sm border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center z-20">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* ═══════════ SECTION 2: Admission Action Plan & Smart Checklist ═══════════ */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-8 overflow-hidden">
+              <SectionTitle title="MHT-CET Admission Roadmap" />
+              <p className="text-sm text-slate-500 mb-6">Interactive deep-dive roadmap customized for your <span className="font-bold text-slate-700">{profile?.category}</span> profile.</p>
+
+              <div className="space-y-4">
+                {[
+                  { id: "reg", title: "1. CAP Round Registration", icon: <Calendar className="w-5 h-5 text-indigo-500" />, desc: "Create your central admission portal account.", status: "Upcoming" },
+                  { id: "docs", title: "2. Document Verification", icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />, desc: `Requires ${requiredDocuments.length} mandatory documents based on your category.`, status: "Action Required" },
+                  { id: "form", title: "3. Option Form Filling", icon: <FileText className="w-5 h-5 text-blue-500" />, desc: "Submit your final college preferences.", status: "Locked" }
+                ].map(step => {
+                  const isExpanded = expandedAction === step.id;
+                  return (
+                    <div key={step.id} className={`border rounded-xl transition-all duration-300 ${isExpanded ? 'border-indigo-300 shadow-md bg-indigo-50/20' : 'border-slate-200 hover:border-indigo-200 hover:shadow-sm bg-white'}`}>
+                      <div
+                        onClick={() => setExpandedAction(isExpanded ? null : step.id)}
+                        className="p-4 flex flex-col sm:flex-row sm:items-center justify-between cursor-pointer gap-4"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${isExpanded ? 'bg-white border-indigo-200 shadow-sm' : 'bg-slate-50 border-transparent'}`}>
+                            {step.icon}
+                          </div>
+                          <div>
+                            <h4 className={`font-bold transition-colors ${isExpanded ? 'text-indigo-900' : 'text-slate-800'}`}>{step.title}</h4>
+                            <p className="text-xs text-slate-500 font-medium mt-0.5">{step.desc}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 self-start sm:self-auto">
+                          <span className={`text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md border ${step.status === 'Action Required' ? 'bg-orange-50 text-orange-600 border-orange-200' : step.status === 'Locked' ? 'bg-slate-50 text-slate-500 border-slate-200' : 'bg-blue-50 text-blue-600 border-blue-200'}`}>{step.status}</span>
+                          {isExpanded ? <ChevronDown className="w-5 h-5 text-indigo-400" /> : <ChevronRight className="w-5 h-5 text-slate-300" />}
+                        </div>
+                      </div>
+
+                      {/* Deep-Input Panel Content */}
+                      <div className={`transition-all duration-500 overflow-hidden ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="p-5 border-t border-slate-100 bg-white/50 backdrop-blur">
+                          {step.id === 'docs' && (
+                            <div className="space-y-4">
+                              <div className="flex items-start gap-3 p-3 bg-emerald-50 border border-emerald-100 rounded-lg">
+                                <AlertCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                                <div>
+                                  <p className="text-sm font-bold text-emerald-900">Customized Checklist for {profile?.category} Category</p>
+                                  <p className="text-xs text-emerald-700 mt-1">Check off the documents as you collect them. The state saves your progress locally.</p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {requiredDocuments.map(doc => {
+                                  const isReady = readyDocs.includes(doc);
+                                  return (
+                                    <div
+                                      key={doc}
+                                      onClick={() => setReadyDocs(p => isReady ? p.filter(d => d !== doc) : [...p, doc])}
+                                      className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none ${isReady ? 'bg-indigo-50 border-indigo-200 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300'}`}
+                                    >
+                                      <div className={`mt-0.5 w-5 h-5 rounded-md flex items-center justify-center border transition-all ${isReady ? 'bg-indigo-500 border-indigo-600 text-white' : 'bg-slate-50 border-slate-300 text-transparent'}`}>
+                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                      </div>
+                                      <span className={`text-sm font-medium transition-colors ${isReady ? 'text-indigo-900' : 'text-slate-700'}`}>{doc}</span>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+
+                              <div className="flex justify-end mt-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="h-2 w-32 bg-slate-100 rounded-full overflow-hidden">
+                                    <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: `${(readyDocs.length / requiredDocuments.length) * 100}%` }}></div>
+                                  </div>
+                                  <span className="text-xs font-bold text-slate-500">{readyDocs.length} / {requiredDocuments.length} Ready</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {step.id === 'reg' && (
+                            <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                              <p className="text-sm text-slate-600">You cannot start registration yet. Keep checking the official State CET Cell website for dates.</p>
+                            </div>
+                          )}
+
+                          {step.id === 'form' && (
+                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center">
+                              <ShieldCheck className="w-8 h-8 text-slate-300 mb-2" />
+                              <p className="text-sm font-bold text-slate-400">Locked Feature</p>
+                              <p className="text-xs text-slate-400 mt-1">This feature generates a smart option form. It unlocks after document verification.</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+
 
             {/* ═══════════ SECTION 3: Two-Column — AI Spotlight + Fit Chart ═══════════ */}
             <div className="mb-6">
@@ -533,48 +760,189 @@ export default function OverviewScreen() {
             {/* ═══════════ SECTION 5: Two-Column — City Heatmap + Branch Stats ═══════════ */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
 
-              {/* City Heatmap */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                <SectionTitle title="City Distribution Heatmap" action="Open Map" onAction={() => navigate("/college-map")} />
-                <div className="space-y-3">
-                  {cityDistribution.slice(0, 10).map(([city, count], i) => {
-                    const maxCount = cityDistribution[0]?.[1] ?? 1;
-                    const pct = Math.round((count / maxCount) * 100);
-                    const coords = CITY_COORDS[city];
+              {/* City Breakdown Heatmap */}
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 overflow-hidden">
+                <SectionTitle title="Region Wise Distribution" action="Explore All" onAction={() => navigate("/college-explorer")} />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {cityDistribution.slice(0, 9).map(([city, count], i) => {
+                    const isExpanded = expandedCity === city;
+                    const cityColleges = colleges.filter(c => c.city === city);
+
                     return (
-                      <div key={city} className="flex items-center gap-3">
-                        <span className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-bold ${i < 3 ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-500"}`}>{i + 1}</span>
-                        <span className="text-sm font-semibold text-slate-700 w-28 truncate">{city}</span>
-                        <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full transition-all duration-500 ${i < 3 ? "bg-indigo-500" : i < 6 ? "bg-blue-400" : "bg-slate-300"}`} style={{ width: `${pct}%` }} />
+                      <div key={city} className="col-span-1">
+                        <div
+                          onClick={() => setExpandedCity(isExpanded ? null : city)}
+                          className={`cursor-pointer group flex flex-col p-4 rounded-xl border transition-all duration-300 ${isExpanded ? 'bg-indigo-600 border-indigo-700 shadow-md transform scale-[1.02]' : 'bg-slate-50 border-slate-200 hover:border-indigo-300 hover:bg-white hover:shadow-sm'}`}
+                        >
+                          <div className="flex justify-between items-center mb-2">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold transition-colors ${isExpanded ? 'bg-white/20 text-white' : i < 3 ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'}`}>
+                              {i + 1}
+                            </div>
+                            <span className={`text-xl font-black ${isExpanded ? 'text-white/90' : 'text-slate-300 group-hover:text-indigo-200'}`}>{count}</span>
+                          </div>
+                          <span className={`text-sm font-bold truncate ${isExpanded ? 'text-white' : 'text-slate-700 group-hover:text-indigo-900'}`}>{city}</span>
+                          <span className={`text-xs mt-0.5 ${isExpanded ? 'text-indigo-100' : 'text-slate-400'}`}>{count === 1 ? 'College' : 'Colleges'}</span>
                         </div>
-                        <span className="text-sm font-bold text-slate-600 w-10 text-right">{count}</span>
-                        {coords && <span className="text-xs text-slate-300">{coords[0].toFixed(1)}°N</span>}
                       </div>
                     );
                   })}
                 </div>
+
+                {/* Expanded City College List */}
+                <div className={`transition-all duration-500 origin-top overflow-hidden ${expandedCity ? 'max-h-[800px] opacity-100 mt-6' : 'max-h-0 opacity-0 mt-0'}`}>
+                  {expandedCity && (
+                    <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+                      <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
+                        <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                          Colleges in {expandedCity}
+                        </h3>
+                        <button onClick={() => setExpandedCity(null)} className="text-xs font-bold text-slate-400 hover:text-slate-700 px-2 py-1 bg-white rounded-md border border-slate-200 shadow-sm">Close</button>
+                      </div>
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        {colleges.filter(c => c.city === expandedCity).map((c, idx) => {
+                          const fc = fitColor(c.probability_level || c.fit || "Stretch");
+                          return (
+                            <div key={idx} onClick={() => navigate("/college-details", { state: { college_code: c.college_code, branch: c.branch, college: c } })} className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-100 hover:border-indigo-200 hover:shadow-sm cursor-pointer transition-all">
+                              <div className="min-w-0 pr-4">
+                                <p className="text-sm font-bold text-slate-700 truncate">{c.college_name}</p>
+                                <p className="text-xs text-slate-400 truncate mt-0.5">{c.branch}</p>
+                              </div>
+                              <span className={`text-[10px] whitespace-nowrap font-bold px-2 py-1 rounded-md border ${fc.bg} ${fc.text}`}>
+                                {c.probability_level || c.fit}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Branch Performance */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                <SectionTitle title="Branch-wise Performance" action="Explore" onAction={() => navigate("/college-explorer")} />
-                <div className="space-y-3">
-                  {branchStats.slice(0, 8).map((b, i) => (
-                    <div key={b.branch} className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold ${b.avgChance >= 70 ? "bg-emerald-100 text-emerald-700" : b.avgChance >= 50 ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"}`}>
-                        {i + 1}
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col">
+                <SectionTitle title="Branch-wise Match Rate" action="Explore All" onAction={() => navigate("/college-explorer")} />
+                <div className="space-y-4 flex-grow overflow-y-auto pr-2 custom-scrollbar max-h-[500px]">
+                  {branchStats.slice(0, 10).map((b, i) => {
+                    const isExpanded = expandedBranch === b.branch;
+                    const branchColleges = colleges.filter(c => c.branch === b.branch).sort((x, y) => (y.admission_chance ?? 0) - (x.admission_chance ?? 0)).slice(0, 3);
+
+                    return (
+                      <div key={b.branch} className={`rounded-xl border transition-all duration-300 ${isExpanded ? 'bg-indigo-50/30 border-indigo-200 shadow-sm' : 'border-transparent hover:border-slate-100 hover:bg-slate-50'}`}>
+                        <div onClick={() => setExpandedBranch(isExpanded ? null : b.branch)} className="flex items-center gap-4 group p-3 cursor-pointer">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm transition-transform group-hover:scale-110 ${b.avgChance >= 70 ? "bg-emerald-100 text-emerald-700" : b.avgChance >= 50 ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"}`}>
+                            {i + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-bold truncate transition-colors ${isExpanded ? 'text-indigo-800' : 'text-slate-800 group-hover:text-indigo-700'}`}>{b.branch}</p>
+                            <p className="text-xs font-semibold text-slate-400 truncate mt-0.5 group-hover:text-slate-500">{b.topCollege}</p>
+                          </div>
+                          <div className="text-right flex-shrink-0 flex items-center gap-3">
+                            <div>
+                              <div className="flex items-baseline justify-end gap-1">
+                                <span className={`text-base font-black ${b.avgChance >= 70 ? "text-emerald-600" : b.avgChance >= 50 ? "text-blue-600" : "text-orange-500"}`}>{Math.round(b.avgChance)}%</span>
+                              </div>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-1">{b.count} Match{b.count !== 1 ? 'es' : ''}</p>
+                            </div>
+                            {isExpanded ? <ChevronDown className="w-4 h-4 text-indigo-400" /> : <ChevronRight className="w-4 h-4 text-slate-300" />}
+                          </div>
+                        </div>
+
+                        {/* Deep-Input Panel Content */}
+                        <div className={`transition-all duration-500 overflow-hidden ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                          <div className="p-4 mx-2 mb-2 bg-white rounded-lg border border-indigo-100 shadow-sm">
+                            <h5 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-3">Safest Bets for this Branch</h5>
+                            <div className="space-y-2">
+                              {branchColleges.map((c, idx) => {
+                                const fc = fitColor(c.probability_level || c.fit || "Stretch");
+                                return (
+                                  <div key={idx} onClick={() => navigate("/college-details", { state: { college_code: c.college_code, branch: c.branch, college: c } })} className="flex items-center justify-between p-2 rounded-md hover:bg-slate-50 cursor-pointer transition-colors border border-transparent hover:border-slate-100">
+                                    <div className="min-w-0 pr-3">
+                                      <p className="text-sm font-bold text-slate-700 truncate">{c.college_name}</p>
+                                      <p className="text-[10px] font-medium text-slate-400 mt-0.5">{c.city}</p>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                      <span className="text-sm font-black text-indigo-600">{c.admission_chance_percentage}</span>
+                                      <span className={`mt-1 text-[9px] uppercase font-bold px-1.5 py-0.5 rounded border leading-none ${fc.bg} ${fc.text}`}>{c.probability_level || c.fit}</span>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-700 truncate">{b.branch}</p>
-                        <p className="text-xs text-slate-400 truncate">{b.topCollege}</p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-sm font-bold text-slate-800">{Math.round(b.avgChance)}%</p>
-                        <p className="text-xs text-slate-400">{b.count} entries</p>
-                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* ═══════════ SECTION 5.5: AI Mad-Libs Query Engine ═══════════ */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8 mb-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/30 rounded-full blur-3xl -mr-20 -mt-20 z-0 pointer-events-none"></div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-indigo-50 border border-indigo-100 flex items-center justify-center rounded-xl">
+                    <Briefcase className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">AI Strategy Sandbox</h3>
+                    <p className="text-sm text-slate-500 mt-0.5">Build your exact goal. The AI will find it instantly.</p>
+                  </div>
+                </div>
+
+                <div className="text-xl sm:text-2xl md:text-3xl font-medium leading-[2.5] sm:leading-[2.5] text-slate-600">
+                  "I am looking for a
+                  <select value={mlTier} onChange={(e) => setMlTier(e.target.value)} className="mx-2 bg-indigo-50/50 border-b-2 border-indigo-400 text-indigo-600 font-bold px-3 py-1 rounded-t-md hover:bg-indigo-50 cursor-pointer outline-none transition-colors appearance-none text-center min-w-[140px]">
+                    {["Any Tier", "Most Probable", "Best Fit", "Good Fit", "Stretch"].map(t => <option key={t} value={t} className="bg-white text-slate-800 text-base">{t}</option>)}
+                  </select>
+                  college in
+                  <select value={mlCity} onChange={(e) => setMlCity(e.target.value)} className="mx-2 bg-pink-50/50 border-b-2 border-pink-400 text-pink-600 font-bold px-3 py-1 rounded-t-md hover:bg-pink-50 cursor-pointer outline-none transition-colors appearance-none text-center">
+                    {mlCities.map(c => <option key={c} value={c} className="bg-white text-slate-800 text-base">{c}</option>)}
+                  </select>
+                  for
+                  <select value={mlBranch} onChange={(e) => setMlBranch(e.target.value)} className="mx-2 bg-emerald-50/50 border-b-2 border-emerald-400 text-emerald-600 font-bold px-3 py-1 rounded-t-md hover:bg-emerald-50 cursor-pointer outline-none transition-colors appearance-none text-center max-w-[200px] truncate">
+                    {mlBranches.map(b => <option key={b} value={b} className="bg-white text-slate-800 text-base">{b}</option>)}
+                  </select>
+                  with fees
+                  <select value={mlFee} onChange={(e) => setMlFee(e.target.value)} className="mx-2 bg-amber-50/50 border-b-2 border-amber-400 text-amber-600 font-bold px-3 py-1 rounded-t-md hover:bg-amber-50 cursor-pointer outline-none transition-colors appearance-none text-center">
+                    {["Any Fee", "Under ₹50K", "Under ₹1 Lakh", "Under ₹2 Lakhs"].map(f => <option key={f} value={f} className="bg-white text-slate-800 text-base">{f}</option>)}
+                  </select>."
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-slate-100">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Found {mlResults.length} Exact Matches</p>
+
+                  {mlResults.length === 0 ? (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
+                      <p className="font-semibold text-slate-600">No colleges perfectly match your sentence.</p>
+                      <p className="text-sm text-slate-400 mt-1">Try changing a word to expand the search.</p>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar snap-x">
+                      {mlResults.map((c, idx) => {
+                        const fc = fitColor(c.probability_level || c.fit || "Stretch");
+                        return (
+                          <div key={idx} onClick={() => navigate("/college-details", { state: { college_code: c.college_code, branch: c.branch, college: c } })} className="snap-start flex-shrink-0 w-72 bg-white border border-slate-200 hover:border-indigo-300 shadow-sm hover:shadow-md rounded-xl p-4 cursor-pointer transition-all group">
+                            <div className="flex justify-between items-start mb-3">
+                              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-md whitespace-nowrap ${fc.bg} ${fc.text}`}>
+                                {c.probability_level || c.fit}
+                              </span>
+                              <span className="text-sm font-black text-indigo-600">{c.admission_chance_percentage}</span>
+                            </div>
+                            <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors">{c.college_name}</p>
+                            <p className="text-xs text-slate-500 mt-2 truncate">{c.branch}</p>
+                            <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-50">
+                              <p className="text-xs font-medium text-slate-400">{c.city}</p>
+                              <p className="text-xs font-bold text-emerald-600">₹{((c.fees ?? 0) / 1000).toFixed(0)}K</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -641,21 +1009,66 @@ export default function OverviewScreen() {
                       </div>
                     ))}
                   </div>
-                  {/* Fee ranges bar chart */}
+                  {/* Fee ranges bar chart - CLICKABLE ROI SANDBOX */}
                   <div className="space-y-3">
-                    <p className="text-sm font-semibold text-slate-600 mb-2">Fee Distribution</p>
-                    {feeAnalysis.ranges.map(r => (
-                      <div key={r.label}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm text-slate-600">{r.label}</span>
-                          <span className="text-sm font-bold text-slate-700">{r.count}</span>
+                    <p className="text-sm font-semibold text-slate-600 mb-2">Fee Distribution (Click to view)</p>
+                    {feeAnalysis.ranges.map(r => {
+                      const isExpanded = expandedFeeTier === r.label;
+                      return (
+                        <div key={r.label} onClick={() => r.count > 0 && setExpandedFeeTier(isExpanded ? null : r.label)} className={`group cursor-pointer p-2 -mx-2 rounded-lg transition-colors ${r.count > 0 ? 'hover:bg-slate-50' : 'opacity-50 cursor-default'} ${isExpanded ? 'bg-slate-50 ring-1 ring-slate-200' : ''}`}>
+                          <div className="flex items-center justify-between mb-1 px-1">
+                            <span className={`text-sm font-semibold transition-colors ${isExpanded ? 'text-indigo-600' : 'text-slate-600 group-hover:text-slate-900'}`}>{r.label}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-slate-700">{r.count}</span>
+                              {r.count > 0 && <span className={`text-[10px] uppercase font-bold text-slate-300 transition-opacity ${isExpanded ? 'opacity-100 text-indigo-400' : 'opacity-0 group-hover:opacity-100'}`}>{isExpanded ? 'Selected' : 'View ROI'}</span>}
+                            </div>
+                          </div>
+                          <div className="w-full h-3 mx-1 bg-slate-100 rounded-full overflow-hidden">
+                            <div className={`h-full ${r.color} rounded-full transition-all duration-500`} style={{ width: `${feeAnalysis.total ? (r.count / feeAnalysis.total) * 100 : 0}%` }} />
+                          </div>
                         </div>
-                        <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                          <div className={`h-full ${r.color} rounded-full transition-all duration-500`} style={{ width: `${feeAnalysis.total ? (r.count / feeAnalysis.total) * 100 : 0}%` }} />
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
+
+                  {/* EXPANDED ROI SANDBOX PANEL */}
+                  <div className={`lg:col-span-3 transition-all duration-500 origin-top overflow-hidden ${expandedFeeTier ? 'max-h-[800px] opacity-100 mt-2' : 'max-h-0 opacity-0 mt-0'}`}>
+                    {expandedFeeTier && (() => {
+                      let filtered = [];
+                      if (expandedFeeTier === "Under ₹50K") filtered = colleges.filter(c => (c.fees ?? 0) > 0 && (c.fees ?? 0) < 50000);
+                      if (expandedFeeTier === "₹50K – 1L") filtered = colleges.filter(c => (c.fees ?? 0) >= 50000 && (c.fees ?? 0) < 100000);
+                      if (expandedFeeTier === "₹1L – 2L") filtered = colleges.filter(c => (c.fees ?? 0) >= 100000 && (c.fees ?? 0) < 200000);
+                      if (expandedFeeTier === "Above ₹2L") filtered = colleges.filter(c => (c.fees ?? 0) >= 200000);
+
+                      // Sort by best placement rate to act as an ROI calculator
+                      const sortedRoi = filtered.sort((a, b) => (b.placement_rate ?? 0) - (a.placement_rate ?? 0));
+
+                      return (
+                        <div className="bg-gradient-to-br from-slate-50 to-indigo-50/30 border border-slate-200 rounded-xl p-5 relative">
+                          <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
+                            <div>
+                              <h4 className="text-slate-800 font-bold text-sm">Best ROI for "{expandedFeeTier}"</h4>
+                              <p className="text-xs text-slate-500 mt-0.5">Sorted by highest placement rate</p>
+                            </div>
+                            <button onClick={() => setExpandedFeeTier(null)} className="text-slate-400 hover:text-slate-700 bg-white shadow-sm border border-slate-200 rounded-full p-1"><X className="w-4 h-4" /></button>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            {sortedRoi.slice(0, 6).map((c, idx) => (
+                              <div key={idx} onClick={() => navigate("/college-details", { state: { college_code: c.college_code, branch: c.branch, college: c } })} className="bg-white p-3 rounded-lg border border-slate-100 hover:border-indigo-300 hover:shadow-sm cursor-pointer transition-all">
+                                <p className="text-sm font-bold text-slate-800 line-clamp-1">{c.college_name}</p>
+                                <p className="text-[10px] font-semibold text-slate-400 mt-0.5 truncate">{c.branch} • {c.city}</p>
+                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
+                                  <span className="text-xs font-black text-indigo-600">₹{((c.fees ?? 0) / 1000).toFixed(0)}K</span>
+                                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">{c.placement_rate ?? 0}% Placed</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </div>
+
                   {/* Most affordable */}
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <p className="text-sm font-semibold text-slate-700 mb-3">Most Affordable Match</p>

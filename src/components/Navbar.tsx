@@ -25,6 +25,9 @@ import {
   TrendingUp,
   GraduationCap,
   Compass,
+  Layers,
+  Heart,
+  Wrench
 } from "lucide-react";
 
 interface UserProfile {
@@ -76,14 +79,22 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
   const navItems: any[] = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
     { id: "search", label: "Colleges", icon: Search, path: "/college-explorer" },
-    { id: "community", label: "Community", icon: MessageSquare, path: "/community" },
-    { id: "map", label: "Map", icon: MapPin, path: "/college-map" },
-    { id: "compare", label: "Compare", path: "/compare-college" },
-    { id: "favorites", label: "Favorites", path: "/favorites" },
+    {
+      id: "explore",
+      label: "Explore",
+      icon: Compass,
+      hasDropdown: true,
+      dropdownItems: [
+        { id: "compare", label: "Compare Colleges", icon: Layers, path: "/compare-college" },
+        { id: "map", label: "Interactive Map", icon: MapPin, path: "/college-map" },
+        { id: "favorites", label: "My Favorites", icon: Heart, path: "/favorites" },
+        { id: "community", label: "Community Forums", icon: MessageSquare, path: "/community" },
+      ]
+    },
     {
       id: "student-hub",
       label: "Student Hub",
-      icon: Compass,
+      icon: GraduationCap,
       hasDropdown: true,
       dropdownItems: [
         { id: "timeline", label: "Admission Timeline", icon: Calendar, path: "/admission-timeline" },
@@ -91,21 +102,21 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
         { id: "vacancy", label: "Seat Vacancy", icon: Users, path: "/seat-vacancy" },
         { id: "scholarships", label: "Scholarships", icon: Award, path: "/scholarships" },
         { id: "cutoff-trends", label: "Cutoff Trends", icon: TrendingUp, path: "/cutoff-trends" },
-        { id: "post-admission", label: "Post-Admission", icon: GraduationCap, path: "/post-admission" },
+        { id: "post-admission", label: "Post-Admission", icon: HelpCircle, path: "/post-admission" },
       ]
     },
     {
-      id: "automation",
-      label: "Automation",
-      icon: Settings,
+      id: "tools",
+      label: "Tools",
+      icon: Wrench,
       hasDropdown: true,
       dropdownItems: [
-        { id: "cap-generator", label: "CAP Form", icon: FileText, path: "/cap-generator" },
+        { id: "cap-generator", label: "Smart CAP Form", icon: FileText, path: "/cap-generator" },
         { id: "data-pipeline", label: "Data Pipeline", icon: BarChart3, path: "/data-pipeline" },
-        { id: "scorecard-ocr", label: "OCR Auto-fill", icon: Scan, path: "/scorecard-ocr" }
+        { id: "scorecard-ocr", label: "OCR Auto-fill", icon: Scan, path: "/scorecard-ocr" },
+        { id: "analytics", label: "Advanced Analytics", icon: TrendingUp, path: "/analytics" }
       ]
     },
-    { id: "analytics", label: "Analytics", icon: BarChart3, path: "/analytics" },
     { id: "help", label: "Help", icon: HelpCircle, path: "/help" },
   ];
 

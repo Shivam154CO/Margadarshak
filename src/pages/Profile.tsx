@@ -126,11 +126,11 @@ export default function Profile() {
           console.error("Profile fetch error:", profileError);
         }
 
-        // If profile is complete, go to overview
-        if (profile && profile.profile_complete) {
-          navigate("/overview", { replace: true });
-          return;
-        }
+        // Intentionally allowing users with completed profiles to stay on this page to update their details
+        // if (profile && profile.profile_complete) {
+        //   navigate("/overview", { replace: true });
+        //   return;
+        // }
 
         // Load existing data or start fresh
         if (profile) {
