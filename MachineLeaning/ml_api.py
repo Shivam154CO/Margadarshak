@@ -8,8 +8,22 @@ from supabase import create_client, Client
 
 warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_caching import Cache
+
 app = Flask(__name__)
 CORS(app)
+
+# Initialize Limiter
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+# Configure in-memory cache
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
 
 SUPABASE_URL = "https://vypalkyefnogrcjvlbfg.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5cGFsa3llZm5vZ3JjanZsYmZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyMDU4MzEsImV4cCI6MjA4MTc4MTgzMX0.wZBHG-yjEP3MPU-eX5Tk9YHDvHKCKl6RW-aIonTeFfc"
@@ -809,6 +823,7 @@ def get_colleges():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/predict_admission", methods=["POST", "OPTIONS"])
+@limiter.limit("20 per minute")
 def predict_admission():
     if request.method == "OPTIONS":
         return jsonify({"status": "ok"}), 200
@@ -1094,11 +1109,13 @@ def get_most_probable_colleges():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/branches", methods=["GET"])
+@cache.cached(timeout=3600)
 def get_branches():
     branches = sorted(df['branch_name'].unique().tolist())
     return jsonify({"branches": branches})
 
 @app.route("/cities", methods=["GET"])
+@cache.cached(timeout=3600)
 def get_cities():
     cities = sorted(df['city'].unique().tolist())
     return jsonify({"cities": cities})
