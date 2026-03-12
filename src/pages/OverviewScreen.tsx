@@ -6,6 +6,9 @@ import { supabase } from "../lib/supabase";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Briefcase, IndianRupee, X, CheckCircle2, FileText, Calendar, ShieldCheck, AlertCircle, ChevronRight, ChevronDown } from "lucide-react";
+import { CollegeCardImage } from "../components/ui/CollegeCardImage";
+
+const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,11 +62,7 @@ interface UserProfile {
 const getCollegeImage = (code: string) =>
   code ? `/src/assets/${code}/campus.png` : "/src/assets/fallback-campus.jpg";
 
-const FALLBACK_IMGS = [
-  "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=800&q=80",
-];
+
 
 const fitColor = (fit: string) => {
   if (fit === "Most Probable") return { bg: "bg-purple-50 border-purple-200", text: "text-purple-700", bar: "bg-purple-500" };
@@ -95,18 +94,13 @@ function SectionTitle({ title, action, onAction }: { title: string; action?: str
 }
 
 function MiniCollegeImg({ code, className = "" }: { code: string; className?: string }) {
-  const [src, setSrc] = useState(getCollegeImage(code));
-
-  useEffect(() => {
-    setSrc(getCollegeImage(code));
-  }, [code]);
-
+  const fallbackIdx = parseInt(code.replace(/\D/g, '') || '0', 10);
   return (
-    <img
-      src={src}
-      alt=""
-      className={`object-cover ${className}`}
-      onError={() => setSrc(FALLBACK_IMGS[Math.floor(Math.random() * FALLBACK_IMGS.length)])}
+    <CollegeCardImage
+      src={getCollegeImage(code)}
+      className={`object-cover w-full h-full ${className}`}
+      fallbackIndex={fallbackIdx}
+      sizes="128px"
     />
   );
 }
@@ -142,7 +136,7 @@ export default function OverviewScreen() {
       try {
         const score = profile.exam_type === "CET" ? parseFloat(profile.cet_score || "0") : parseFloat(profile.diploma_score || "0");
         const rank = profile.exam_type === "CET" ? parseFloat(profile.cet_rank || "0") : parseFloat(profile.diploma_rank || "0");
-        const res = await axios.post("http://127.0.0.1:5001/predict_admission",
+        const res = await axios.post(`${ML_API_URL}/predict_admission`,
           { score, rank, category: profile.category, branches: profile.preferred_branches },
           { timeout: 30000 }
         );

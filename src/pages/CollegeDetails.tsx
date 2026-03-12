@@ -779,8 +779,40 @@ export default function CollegeDetails() {
         setReviewsLoading(false);
       }
     };
+    
     fetchCollegeReviews();
+
+    if (!college.college_code) return;
+
+    // Supabase Realtime subscription for reviews specific to this college
+    const channel = supabase
+      .channel(`public:college_reviews:${college.college_code}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'college_reviews', filter: `college_code=eq.${college.college_code}` },
+        (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            setCollegeReviews((prev) =>
+              prev.map((r) =>
+                r.id === payload.new.id
+                  ? { ...r, upvotes: payload.new.upvotes }
+                  : r
+              )
+            );
+          } else if (payload.eventType === 'INSERT') {
+            fetchCollegeReviews();
+          } else if (payload.eventType === 'DELETE') {
+            setCollegeReviews((prev) => prev.filter((r) => r.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [college.college_code]);
+
 
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackComment, setFeedbackComment] = useState("");

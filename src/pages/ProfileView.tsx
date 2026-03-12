@@ -43,6 +43,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
+const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
+
 // ==================== INTERFACES ====================
 
 interface UserProfile {
@@ -407,7 +409,7 @@ export default function ProfileView() {
             };
 
             const response = await axios.post(
-              "http://127.0.0.1:5001/predict_admission",
+              `${ML_API_URL}/predict_admission`,
               requestData,
               {
                 headers: { "Content-Type": "application/json" },

@@ -14,7 +14,6 @@ import {
   Star,
   Sparkles,
   Layers,
-  MessageSquare,
   Send,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -22,6 +21,10 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
+
+import FaqImg from "../assets/FAQ.svg";
+import CustomerSupportImg from "../assets/Customer-support.svg";
+import NoResultsImg from "../assets/No-results-found.svg";
 
 interface FAQItem {
   id: string;
@@ -271,10 +274,10 @@ export default function Help() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* ===== FAQs Section ===== */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-3xl border border-gray-200/60 shadow-lg p-6">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center shadow-sm">
-                  <MessageSquare className="w-4 h-4 text-indigo-600" />
+            <div className="bg-white rounded-3xl border border-gray-200/60 shadow-lg p-6 relative overflow-hidden">
+              <div className="flex items-center space-x-3 mb-6 relative z-10">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm">
+                  <img src={FaqImg} alt="FAQ" className="w-10 h-10" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900">Frequently Asked Questions</h3>
               </div>
@@ -306,11 +309,10 @@ export default function Help() {
               </div>
 
               {filteredFAQs.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search className="w-6 h-6 text-gray-400" />
-                  </div>
-                  <p className="text-gray-600">No FAQs found matching your search.</p>
+                <div className="text-center py-12">
+                  <img src={NoResultsImg} alt="No results" className="w-32 h-32 mx-auto mb-4 opacity-80" />
+                  <p className="text-gray-900 font-bold text-lg">No FAQs found.</p>
+                  <p className="text-gray-500 text-sm">Try adjusting your search terms.</p>
                 </div>
               )}
             </div>
@@ -363,10 +365,10 @@ export default function Help() {
             </div>
 
             {/* ===== Contact Support ===== */}
-            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6 backdrop-blur-sm">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center">
-                  <MessageCircle className="w-4 h-4 text-indigo-600" />
+            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6 backdrop-blur-sm relative overflow-hidden">
+              <div className="flex items-center space-x-3 mb-6 relative z-10">
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center">
+                  <img src={CustomerSupportImg} alt="Customer Support" className="w-10 h-10" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Need More Help?</h3>
               </div>

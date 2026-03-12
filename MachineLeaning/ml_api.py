@@ -5,6 +5,11 @@ import pandas as pd
 import os
 import warnings
 from supabase import create_client, Client
+from dotenv import load_dotenv
+
+# Load .env file automatically (for local dev and Railway/Render deployments)
+load_dotenv()
+
 
 warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
@@ -25,8 +30,18 @@ limiter = Limiter(
 # Configure in-memory cache
 cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
 
-SUPABASE_URL = "https://vypalkyefnogrcjvlbfg.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5cGFsa3llZm5vZ3JjanZsYmZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyMDU4MzEsImV4cCI6MjA4MTc4MTgzMX0.wZBHG-yjEP3MPU-eX5Tk9YHDvHKCKl6RW-aIonTeFfc"
+# ─── Supabase credentials from environment variables ─────────────────────────
+# Set these in your .env file or Railway/Render dashboard:
+#   SUPABASE_URL=https://xxxxx.supabase.co
+#   SUPABASE_KEY=eyJhbGciOiJI...
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise EnvironmentError(
+        "Missing SUPABASE_URL or SUPABASE_KEY environment variables. "
+        "Create a .env file or set them in your deployment dashboard."
+    )
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -1152,5 +1167,7 @@ if __name__ == "__main__":
     print(f"Categories: {df['category'].nunique()}")
     print(f"Cities: {df['city'].nunique()}")
     print("="*70 + "\n")
-    
-    app.run(host="0.0.0.0", port=5001, debug=True)
+
+    # debug=False for production safety
+    # For production, use gunicorn: gunicorn -w 2 -b 0.0.0.0:5001 ml_api:app
+    app.run(host="0.0.0.0", port=5001, debug=False)

@@ -8,6 +8,8 @@ import {
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
+const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
+
 export default function ScorecardOcr() {
     const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,7 +54,7 @@ export default function ScorecardOcr() {
         formData.append("file", file);
 
         try {
-            const response = await axios.post("http://127.0.0.1:5001/extract_scorecard", formData, {
+            const response = await axios.post(`${ML_API_URL}/extract_scorecard`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }

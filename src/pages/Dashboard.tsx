@@ -28,6 +28,16 @@ import { useColleges } from "../context/CollegesContext";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
 import Navbar from "../components/Navbar";
+import { CollegeCardImage } from "../components/ui/CollegeCardImage";
+
+export const getCollegeImage = (collegeCode: string): string => {
+  if (!collegeCode) {
+    return "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+  }
+  return new URL(`../assets/${collegeCode}/campus.png`, import.meta.url).href;
+};
+
+const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 
 interface College {
   college_code: string;
@@ -88,24 +98,6 @@ interface UserProfile {
   updated_at: string;
 }
 
-const getCollegeImage = (collegeCode: string): string => {
-  if (!collegeCode) {
-    return "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-  }
-  return new URL(`../assets/${collegeCode}/campus.png`, import.meta.url).href;
-};
-
-const FALLBACK_IMAGES = [
-  "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=2064&q=80",
-  "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-  "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-  "https://images.unsplash.com/photo-1523580494863-6f3031224c94?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-  "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-];
-
-const getRandomFallbackImage = (): string => {
-  return FALLBACK_IMAGES[Math.floor(Math.random() * FALLBACK_IMAGES.length)];
-};
 
 interface CollegeImageProps {
   collegeCode: string;
@@ -120,38 +112,16 @@ const CollegeImage: React.FC<CollegeImageProps> = ({
   alt = 'College campus',
   priority = false,
 }) => {
-  const [imgSrc, setImgSrc] = useState<string>(getCollegeImage(collegeCode));
-  const [hasError, setHasError] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    setImgSrc(getCollegeImage(collegeCode));
-    setHasError(false);
-    setLoaded(false);
-  }, [collegeCode]);
-
-  const handleError = () => {
-    if (!hasError) {
-      setHasError(true);
-      setImgSrc(getRandomFallbackImage());
-    }
-  };
-
+  const fallbackIdx = parseInt(collegeCode.replace(/\D/g, '') || '0', 10);
   return (
     <div className={`relative ${className} overflow-hidden bg-gray-200`}>
-      {!loaded && !hasError && (
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse flex items-center justify-center z-10">
-          <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
-      <img
-        src={imgSrc}
+      <CollegeCardImage
+        src={getCollegeImage(collegeCode)}
         alt={alt}
-        className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'} ${hasError ? 'grayscale opacity-75' : ''}`}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         loading={priority ? "eager" : "lazy"}
-        fetchPriority={priority ? "high" : "auto"}
-        onLoad={() => setLoaded(true)}
-        onError={handleError}
+        className="w-full h-full object-cover"
+        fallbackIndex={fallbackIdx}
       />
     </div>
   );
@@ -223,7 +193,7 @@ export default function Dashboard() {
           limit: 100,
         };
 
-        const response = await axios.post("http://127.0.0.1:5001/predict_admission", requestData, {
+        const response = await axios.post(`${ML_API_URL}/predict_admission`, requestData, {
           headers: { "Content-Type": "application/json" },
           timeout: 5000,
         });

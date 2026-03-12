@@ -12,6 +12,8 @@ import Footer from "../components/Footer";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
+
 interface CollegeResult {
     college_code: string;
     college_name: string;
@@ -129,7 +131,7 @@ export default function CapRoundGenerator() {
                 branches: preferences.branches
             };
 
-            const response = await axios.post("http://127.0.0.1:5001/generate_cap_form", payload);
+            const response = await axios.post(`${ML_API_URL}/generate_cap_form`, payload);
 
             if (response.data && response.data.form) {
                 setResults(response.data.form);

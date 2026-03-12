@@ -1,9 +1,16 @@
-# requirements.txt
-scikit-learn>=1.0.2
-pandas>=1.5.0
-numpy>=1.21.0
-joblib>=1.2.0
-flask>=2.0.0
-flask-cors>=3.0.0
-xgboost>=1.5.0
-lightgbm>=3.3.0
+# requirements.txt — SmartCF ML API
+# Install: pip install -r requirements.txt
+# Production: gunicorn -w 2 -b 0.0.0.0:5001 ml_api:app
+
+flask>=3.0.0
+flask-cors>=4.0.0
+flask-limiter>=3.5.0
+flask-caching>=2.1.0
+numpy>=1.26.0
+pandas>=2.1.0
+scikit-learn>=1.4.0
+supabase>=2.0.0
+python-dotenv>=1.0.0
+
+# Production WSGI server (use instead of flask dev server)
+gunicorn>=21.0.0

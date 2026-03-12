@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { auth, db } from "../firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
 import axios from "axios";
 import { supabase } from "../lib/supabase";
 import type { College, RawCollege } from "../types/college";
+
+const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? "http://127.0.0.1:5001";
 
 export function useCollegeData() {
     const [predictedColleges, setPredictedColleges] = useState<College[]>([]);
@@ -15,31 +14,21 @@ export function useCollegeData() {
     const [loading, setLoading] = useState(true);
     const [aiLoading, setAiLoading] = useState(false);
 
-    // ... helper functions ... (skipping for match)
+    // Maps a city string to a state name
     const getStateFromCity = (city: string): string => {
         const cityStateMap: Record<string, string> = {
-            "Mumbai": "Maharashtra",
-            "Pune": "Maharashtra",
-            "Nagpur": "Maharashtra",
-            "Delhi": "Delhi",
-            "Bangalore": "Karnataka",
-            "Chennai": "Tamil Nadu",
-            "Hyderabad": "Telangana",
-            "Kolkata": "West Bengal",
-            "Ahmedabad": "Gujarat",
-            "Jaipur": "Rajasthan",
-            "Lucknow": "Uttar Pradesh",
-            "Bhopal": "Madhya Pradesh",
-            "Chandigarh": "Chandigarh",
-            "Thiruvananthapuram": "Kerala",
-            "Bhubaneswar": "Odisha",
-            "Guwahati": "Assam",
-            "Patna": "Bihar",
+            "Mumbai": "Maharashtra", "Pune": "Maharashtra", "Nagpur": "Maharashtra",
+            "Nashik": "Maharashtra", "Aurangabad": "Maharashtra", "Thane": "Maharashtra",
+            "Delhi": "Delhi", "Bangalore": "Karnataka", "Chennai": "Tamil Nadu",
+            "Hyderabad": "Telangana", "Kolkata": "West Bengal", "Ahmedabad": "Gujarat",
+            "Jaipur": "Rajasthan", "Lucknow": "Uttar Pradesh", "Bhopal": "Madhya Pradesh",
+            "Chandigarh": "Chandigarh", "Thiruvananthapuram": "Kerala",
+            "Bhubaneswar": "Odisha", "Guwahati": "Assam", "Patna": "Bihar",
         };
         return cityStateMap[city] || "Maharashtra";
     };
 
-    // ... helper function ... 
+    // Groups raw ML prediction rows by college_code
     const groupCollegesByCode = (rawColleges: RawCollege[]): College[] => {
         const collegeMap = new Map<string, College>();
 
@@ -60,12 +49,13 @@ export function useCollegeData() {
                     branches: [],
                     is_predicted: true,
                     region: getStateFromCity(rawCollege.city),
-                    established_year: 1960 + Math.floor(Math.random() * 60),
-                    naac_grade: ["A++", "A+", "A", "B++"][Math.floor(Math.random() * 4)],
-                    website: `https://www.${rawCollege.college_name.toLowerCase().replace(/ /g, '')}.edu.in`,
-                    contact_email: `admissions@${rawCollege.college_name.toLowerCase().replace(/ /g, '')}.edu.in`,
-                    phone: `+91-${Math.floor(1000000000 + Math.random() * 9000000000)}`,
-                    address: `${rawCollege.college_name}, ${rawCollege.city}, ${getStateFromCity(rawCollege.city)} - ${Math.floor(100000 + Math.random() * 900000)}`
+                    // Real data only — no random generation
+                    established_year: rawCollege.established_year || undefined,
+                    naac_grade: rawCollege.naac_grade || undefined,
+                    website: rawCollege.website || rawCollege.website_url || undefined,
+                    contact_email: rawCollege.contact_email || undefined,
+                    phone: rawCollege.contact_phone || undefined,
+                    address: rawCollege.address || `${rawCollege.college_name}, ${rawCollege.city}`
                 } as College);
             }
 
@@ -93,32 +83,40 @@ export function useCollegeData() {
         }));
     };
 
+    // Fetches all colleges from Supabase (paginated to avoid 50k row blowup)
     const fetchAllCollegesFromSupabase = async (): Promise<College[]> => {
         try {
-            let { data: dbColleges, error } = await supabase
-                .from('collegess_2025')
-                .select('*')
-                .limit(50000);
+            const PAGE_SIZE = 1000;
+            let allRows: any[] = [];
+            let from = 0;
+            let hasMore = true;
 
-            if (!dbColleges || dbColleges.length === 0) {
-                const fallback = await supabase
-                    .from('collegess_2025')
-                    .select('*')
-                    .limit(50000);
-                if (fallback.data && fallback.data.length > 0) {
-                    dbColleges = fallback.data;
-                    error = fallback.error;
+            while (hasMore) {
+                const { data: batch, error } = await supabase
+                    .from('colleges_2025')
+                    .select('college_code, college_name, city, autonomy_status, hostel_available, placement_rate, average_package_lpa, highest_package_lpa, branch_name, branch_code, cutoff_rank, cutoff_percentile, seats, fees, established_year, naac_grade, website_url, contact_email, contact_phone')
+                    .range(from, from + PAGE_SIZE - 1);
+
+                if (error) {
+                    console.error("Supabase fetch error:", error);
+                    break;
+                }
+
+                if (!batch || batch.length === 0) {
+                    hasMore = false;
+                } else {
+                    allRows = [...allRows, ...batch];
+                    from += PAGE_SIZE;
+                    if (batch.length < PAGE_SIZE) hasMore = false;
                 }
             }
 
-            if (error || !dbColleges) return [];
-
             const collegeMap = new Map<string, College>();
 
-            dbColleges.forEach((college: any) => {
-                const collegeCode = (college.college_code || college.College_code || college.id || "UNKNOWN").toString();
-                const collegeName = college.college_name || college.College_name || "Unknown College";
-                const city = college.city || college.City || "Unknown";
+            allRows.forEach((college: any) => {
+                const collegeCode = (college.college_code || college.id || "UNKNOWN").toString();
+                const collegeName = college.college_name || "Unknown College";
+                const city = college.city || "Unknown";
 
                 if (!collegeCode || collegeCode === "UNKNOWN") return;
 
@@ -127,35 +125,35 @@ export function useCollegeData() {
                         college_code: collegeCode,
                         college_name: collegeName,
                         city: city,
-                        image: college.image_url || college.Image_url || "",
-                        autonomy_status: college.autonomy_status || college.Autonomy_status || "Government",
-                        hostel_available: college.hostel_available || college.Hostel_available || "No",
-                        placement_rate: parseFloat(college.placement_rate || college.Placement_rate || 0),
-                        average_package_lpa: parseFloat(college.average_package_lpa || college.Average_package_lpa || 0),
-                        highest_package_lpa: parseFloat(college.highest_package_lpa || college.Highest_package_lpa || 0),
+                        image: college.image_url || "",
+                        autonomy_status: college.autonomy_status || "Government",
+                        hostel_available: college.hostel_available || "No",
+                        placement_rate: parseFloat(college.placement_rate || 0),
+                        average_package_lpa: parseFloat(college.average_package_lpa || 0),
+                        highest_package_lpa: parseFloat(college.highest_package_lpa || 0),
                         branches: [],
                         is_predicted: false,
                         region: getStateFromCity(city),
-                        established_year: college.established_year || college.Established_year || 0,
-                        naac_grade: college.naac_grade || college.NAAC_grade || "N/A",
-                        website: college.website_url || college.Website_url || "",
-                        contact_email: college.contact_email || college.Contact_email || "",
-                        phone: college.contact_phone || college.Contact_phone || "",
+                        established_year: college.established_year || undefined,
+                        naac_grade: college.naac_grade || undefined,
+                        website: college.website_url || undefined,
+                        contact_email: college.contact_email || undefined,
+                        phone: college.contact_phone || undefined,
                         address: `${collegeName}, ${city}`
                     } as College);
                 }
 
                 const existingCollege = collegeMap.get(collegeCode)!;
-                const branchCode = (college.branch_code || college.Branch_code || "N/A").toString();
+                const branchCode = (college.branch_code || "N/A").toString();
 
                 if (!existingCollege.branches?.find(b => b.branch_code === branchCode)) {
                     existingCollege.branches?.push({
-                        branch_name: college.branch_name || college.Branch_name || "N/A",
+                        branch_name: college.branch_name || "N/A",
                         branch_code: branchCode,
-                        cutoff_rank: college.cutoff_rank || college.Cutoff_rank || 0,
-                        cutoff_percentile: college.cutoff_percentile || college.Cutoff_percentile || 0,
-                        seats: college.seats || college.Seats || 0,
-                        fees: college.fees || college.Fees || 0,
+                        cutoff_rank: college.cutoff_rank || 0,
+                        cutoff_percentile: college.cutoff_percentile || 0,
+                        seats: college.seats || 0,
+                        fees: college.fees || 0,
                         admission_chance: 0,
                         admission_chance_percentage: "0%",
                         match_score: 0,
@@ -188,71 +186,104 @@ export function useCollegeData() {
         const fetchData = async () => {
             try {
                 setLoading(true);
+
+                // 1. Fetch all colleges from Supabase
                 const allCollegesFromDB = await fetchAllCollegesFromSupabase();
                 setAllColleges(allCollegesFromDB);
 
-                const unsub = onAuthStateChanged(auth, async (user) => {
-                    if (!user) {
-                        setLoading(false);
-                        setAiLoading(false);
-                        return;
-                    }
+                // 2. Get current Supabase session (replaces Firebase auth)
+                const { data: { session } } = await supabase.auth.getSession();
 
-                    const snap = await getDoc(doc(db, "users", user.uid));
-                    const prof = snap.exists() ? (snap.data() as any) : {};
-                    const rank = prof.rank || prof.cetRank || prof.diplomaRank || null;
-                    const score = prof.cetScore || prof.diplomaScore || null;
-                    const category = prof.category || "OPEN";
-                    const branches = prof.preferredBranches || [];
-
-                    setUserRank(rank);
-                    setUserCategory(category);
-                    setUserProfile(prof);
-
-                    if (rank && score && branches.length) {
-                        try {
-                            setAiLoading(true);
-                            const res = await axios.post("http://127.0.0.1:5001/predict_admission", {
-                                score: parseFloat(score),
-                                rank: parseInt(rank),
-                                category,
-                                branches,
-                            });
-
-                            const raw: RawCollege[] = res.data.colleges || [];
-                            const predicted = deduplicateColleges(groupCollegesByCode(raw));
-
-                            setPredictedColleges(predicted);
-
-                            const allCollegesMap = new Map<string, College>();
-                            allCollegesFromDB.forEach(c => allCollegesMap.set(c.college_code, c));
-
-                            predicted.forEach(p => {
-                                if (allCollegesMap.has(p.college_code)) {
-                                    const existing = allCollegesMap.get(p.college_code)!;
-                                    allCollegesMap.set(p.college_code, {
-                                        ...existing,
-                                        ...p,
-                                        is_predicted: true
-                                    });
-                                } else {
-                                    allCollegesMap.set(p.college_code, p);
-                                }
-                            });
-
-                            setAllColleges(Array.from(allCollegesMap.values()));
-                        } catch (err) {
-                            console.error("❌ Prediction API failed", err);
-                        } finally {
-                            setAiLoading(false);
-                        }
-                    }
+                if (!session) {
                     setLoading(false);
+                    setAiLoading(false);
+                    return;
+                }
+
+                // 3. Fetch user profile from Supabase users table
+                const { data: prof, error: profError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                if (profError) {
+                    console.error("Profile fetch error:", profError);
+                    setLoading(false);
+                    return;
+                }
+
+                if (!prof) {
+                    setLoading(false);
+                    return;
+                }
+
+                const rank = prof.diploma_rank || prof.cet_rank || null;
+                const score = prof.diploma_score || prof.cet_score || null;
+                const category = prof.category || "OPEN";
+                const branches = prof.preferred_branches || [];
+
+                setUserRank(rank ? Number(rank) : null);
+                setUserCategory(category);
+                setUserProfile(prof);
+
+                // 4. Call ML API if user has rank + score + branches
+                if (rank && score && branches.length) {
+                    try {
+                        setAiLoading(true);
+                        const res = await axios.post(`${ML_API_URL}/predict_admission`, {
+                            score: parseFloat(score),
+                            rank: parseInt(rank),
+                            category,
+                            branches,
+                        });
+
+                        const raw: RawCollege[] = res.data.colleges || [];
+                        const predicted = deduplicateColleges(groupCollegesByCode(raw));
+
+                        setPredictedColleges(predicted);
+
+                        // Merge predicted into all colleges map
+                        const allCollegesMap = new Map<string, College>();
+                        allCollegesFromDB.forEach(c => allCollegesMap.set(c.college_code, c));
+
+                        predicted.forEach(p => {
+                            if (allCollegesMap.has(p.college_code)) {
+                                const existing = allCollegesMap.get(p.college_code)!;
+                                allCollegesMap.set(p.college_code, {
+                                    ...existing,
+                                    ...p,
+                                    is_predicted: true
+                                });
+                            } else {
+                                allCollegesMap.set(p.college_code, p);
+                            }
+                        });
+
+                        setAllColleges(Array.from(allCollegesMap.values()));
+                    } catch (err) {
+                        console.error("❌ Prediction API failed:", err);
+                    } finally {
+                        setAiLoading(false);
+                    }
+                }
+
+                setLoading(false);
+
+                // 5. Listen for auth state changes (e.g., logout)
+                const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+                    if (event === 'SIGNED_OUT') {
+                        setPredictedColleges([]);
+                        setUserRank(null);
+                        setUserCategory("");
+                        setUserProfile(null);
+                    }
                 });
 
-                return unsub;
+                return () => subscription.unsubscribe();
+
             } catch (err) {
-                console.error("❌ Data load failed", err);
+                console.error("❌ Data load failed:", err);
                 setLoading(false);
             }
         };

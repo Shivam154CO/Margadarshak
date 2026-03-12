@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -9,9 +9,13 @@ import {
   Building, Cpu, MapPin, ChevronDown,
   Grid3x3, List, Brain, Database,
   Search, X, Mail, Briefcase, Bookmark, BookmarkCheck,
-  Award, SearchX, Info, Layers
+  Award, Info, Layers
 } from "lucide-react";
 import SEO from "../components/SEO";
+import { CollegeCardImage } from "../components/ui/CollegeCardImage";
+import NoResultsFoundImg from "../assets/No-results-found.svg";
+
+const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 
 
 // ---------- TYPES ----------
@@ -108,10 +112,8 @@ const getCollegeImage = (collegeCode: string): string => {
   }
 };
 
-const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-  e.currentTarget.src = "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-  e.currentTarget.onerror = null;
-};
+
+
 
 // Helper function to get state from city
 const getStateFromCity = (city: string): string => {
@@ -336,7 +338,7 @@ function useCollegeData() {
 
           if (rank && score && branches.length) {
             try {
-              const res = await axios.post("http://127.0.0.1:5001/predict_admission", {
+              const res = await axios.post(`${ML_API_URL}/predict_admission`, {
                 score,
                 rank,
                 category,
@@ -419,9 +421,9 @@ export default function CollegeSearch() {
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        const branchesResponse = await axios.get("http://127.0.0.1:5001/branches");
+        const branchesResponse = await axios.get(`${ML_API_URL}/branches`);
         if (branchesResponse.data.branches) setAvailableBranches(branchesResponse.data.branches);
-        const citiesResponse = await axios.get("http://127.0.0.1:5001/cities");
+        const citiesResponse = await axios.get(`${ML_API_URL}/cities`);
         if (citiesResponse.data.cities) setAvailableLocations(citiesResponse.data.cities);
       } catch (error) {
         if (allColleges.length > 0) {
@@ -590,7 +592,7 @@ export default function CollegeSearch() {
             )
           ) : (
             <div className="text-center py-20 bg-white rounded-3xl border border-slate-100">
-              <SearchX className="w-20 h-20 text-slate-200 mx-auto mb-4" />
+              <img src={NoResultsFoundImg} alt="No results found" className="w-48 h-48 mx-auto mb-6 opacity-90" />
               <h3 className="text-xl font-bold text-slate-900">No colleges matched your filters</h3>
               <button onClick={clearFilters} className="mt-4 text-indigo-600 font-bold">Clear all filters</button>
             </div>
@@ -630,7 +632,7 @@ function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, onV
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden hover:shadow-2xl transition-all group">
       <div className="h-48 relative overflow-hidden">
-        <img src={college.image} onError={handleImageError} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+        <CollegeCardImage src={college.image} fallbackIndex={index} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
         {isPredicted && (
           <div className="absolute top-4 left-6 bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg border border-white/20 uppercase tracking-widest z-10">AI Match</div>
@@ -666,7 +668,7 @@ function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches,
   return (
     <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} className="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col md:flex-row gap-8 hover:shadow-xl transition-all">
       <div className="w-full md:w-64 h-48 rounded-2xl overflow-hidden flex-shrink-0">
-        <img src={college.image} onError={handleImageError} className="w-full h-full object-cover" />
+        <CollegeCardImage src={college.image} fallbackIndex={index} sizes="(max-width: 768px) 100vw, 256px" className="w-full h-full object-cover" />
       </div>
       <div className="flex-1 py-2">
         <div className="flex justify-between items-start mb-4">

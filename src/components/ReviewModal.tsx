@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Star, GraduationCap, Building2, Briefcase, HeartHandshake, Zap, ThumbsUp, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { UserProfile } from '../types/user';
+import { useToast } from '../context/ToastContext';
 
 interface ReviewModalProps {
     isOpen: boolean;
@@ -14,6 +15,7 @@ interface ReviewModalProps {
 }
 
 export default function ReviewModal({ isOpen, onClose, collegeCode, collegeName, profile, onSuccess }: ReviewModalProps) {
+    const { error: toastError } = useToast();
     const [step, setStep] = useState(1);
     const [submitting, setSubmitting] = useState(false);
     const [isVerified, setIsVerified] = useState(false);
@@ -65,9 +67,9 @@ export default function ReviewModal({ isOpen, onClose, collegeCode, collegeName,
 
             onSuccess();
             onClose();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            alert('Failed to submit review');
+            toastError('Review Failed', err.message || 'Failed to submit review. Please try again.');
         } finally {
             setSubmitting(false);
         }

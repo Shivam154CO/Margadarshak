@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabase";
+import { useToast } from "../context/ToastContext";
 import axios from "axios";
 import {
   ChevronRight,
@@ -14,11 +15,13 @@ import {
   ChevronDown,
 } from "lucide-react";
 
+const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
+
 export default function Profile() {
   const navigate = useNavigate();
+  const { success, error: toastError, warning, info } = useToast();
   const [loading, setLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
-  const [, setPredictionResult] = useState<string | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [branches, setBranches] = useState<string[]>([]);
   const [showCETAlert, setShowCETAlert] = useState(false);
@@ -77,7 +80,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:5001/branches");
+        const response = await axios.get(`${ML_API_URL}/branches`);
         setBranches(response.data.branches);
       } catch (error) {
         console.error("Error fetching branches:", error);
@@ -105,7 +108,7 @@ export default function Profile() {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError || !session) {
-          alert("Please log in first!");
+          info("Login Required", "Please log in to access your profile.");
           navigate("/login", { replace: true });
           return;
         }
@@ -228,36 +231,13 @@ export default function Profile() {
     setForm({ ...form, examType: type });
   };
 
-  const predictEligibility = (userScore: number, collegeCutoff: number) => {
-    const scoreDifference = Math.abs(userScore - collegeCutoff);
-    const percentageDifference = (scoreDifference / collegeCutoff) * 100;
-    if (percentageDifference <= 10) return "Best Fit";
-    if (percentageDifference <= 25) return "Good Fit";
-    if (percentageDifference <= 50) return "Stretch";
-    return "Unlikely Fit";
-  };
 
-  const getSampleColleges = async () => {
-    try {
-      const response = await axios.get("http://127.0.0.1:5001/colleges?limit=10");
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching sample colleges:", error);
-      return [
-        { id: 1, name: "Test College 1", cutoff_score: 8500 },
-        { id: 2, name: "Test College 2", cutoff_score: 9000 },
-        { id: 3, name: "Test College 3", cutoff_score: 7500 },
-        { id: 4, name: "Test College 4", cutoff_score: 9500 },
-        { id: 5, name: "Test College 5", cutoff_score: 8000 },
-      ];
-    }
-  };
 
   const handleSubmit = async () => {
     // Validate all steps before submitting
     const allValid = [0, 1, 2].every(step => validateStep(step));
     if (!allValid) {
-      alert("Please fix all errors before submitting");
+      warning("Incomplete Form", "Please fix all errors before submitting.");
       return;
     }
 
@@ -265,18 +245,18 @@ export default function Profile() {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
     if (sessionError || !session) {
-      alert("Please log in first!");
+      info("Login Required", "Please log in to save your profile.");
       navigate("/login", { replace: true });
       return;
     }
 
     if (!form.name || !form.email || form.preferredBranches.length === 0) {
-      alert("Please fill in all required fields!");
+      warning("Missing Required Fields", "Please fill in all required fields.");
       return;
     }
 
     if (form.examType === "Diploma" && (!form.diplomaRank || !form.diplomaScore)) {
-      alert("Please enter your Diploma Rank and Score!");
+      warning("Missing Score", "Please enter your Diploma Rank and Score.");
       return;
     }
 
@@ -334,68 +314,24 @@ export default function Profile() {
 
       const userScore = Number(form.diplomaScore);
       if (!userScore || userScore === 0) {
-        alert("Please enter a valid score!");
+        warning("Invalid Score", "Please enter a valid diploma score greater than 0.");
         setIsPredicting(false);
         return;
       }
 
-      // Get sample colleges for prediction
-      const sampleColleges = await getSampleColleges();
-
-      let bestFitCount = 0;
-      let goodFitCount = 0;
-      let stretchCount = 0;
-      let unlikelyCount = 0;
-
-      for (const college of sampleColleges) {
-        const collegeCutoff = college.cutoff_score || 10000;
-        const prediction = predictEligibility(userScore, collegeCutoff);
-        switch (prediction) {
-          case "Best Fit":
-            bestFitCount++;
-            break;
-          case "Good Fit":
-            goodFitCount++;
-            break;
-          case "Stretch":
-            stretchCount++;
-            break;
-          case "Unlikely Fit":
-            unlikelyCount++;
-            break;
-        }
-      }
-
-      const predictions = [
-        { type: "Best Fit", count: bestFitCount },
-        { type: "Good Fit", count: goodFitCount },
-        { type: "Stretch", count: stretchCount },
-        { type: "Unlikely Fit", count: unlikelyCount },
-      ];
-
-      const overallPrediction = predictions.reduce((prev, current) =>
-        prev.count > current.count ? prev : current
-      );
-
-      setPredictionResult(overallPrediction.type);
-
-      alert(
-        `🎓 Profile Saved Successfully!\n\nYour Eligibility Prediction: ${overallPrediction.type}\n\nBased on your score of ${userScore}, you have:\n- ${bestFitCount} Best Fit colleges\n- ${goodFitCount} Good Fit colleges\n- ${stretchCount} Stretch colleges\n- ${unlikelyCount} Unlikely colleges`
-      );
-
-      // Set flag for overview screen to refresh
+      // Profile saved — navigate to overview
+      success("Profile Saved!", "Your admission profile is ready. Fetching personalised predictions...");
       localStorage.setItem('profileComplete', 'true');
 
-      // Navigate to OVERVIEW after a short delay
       setTimeout(() => {
         setIsPredicting(false);
-        navigate("/overview", { replace: true }); // CHANGED TO OVERVIEW
-      }, 1000);
+        navigate("/overview", { replace: true });
+      }, 1200);
 
     } catch (error: any) {
-      console.error("❌ Error saving profile:", error);
+      console.error("Error saving profile:", error);
       setServerError(error.message || "Unknown error occurred");
-      alert(`Failed to save profile: ${error.message || "Please try again"}`);
+      toastError("Save Failed", error.message || "Could not save your profile. Please try again.");
       setIsPredicting(false);
     }
   };

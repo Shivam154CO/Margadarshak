@@ -18,6 +18,8 @@ import { supabase } from '../lib/supabase';
 import { useColleges } from '../context/CollegesContext';
 import { computeBI } from './analyticsHelpers';
 
+const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
+
 interface UserProfile {
     id: string; name: string; email: string; state: string; category: string;
     exam_type: string; cet_rank: string; cet_score: string; diploma_rank: string;
@@ -115,7 +117,7 @@ export default function Analytics() {
                 limit: 100,
             };
 
-            const response = await axios.post("http://127.0.0.1:5001/predict_admission", requestData, {
+            const response = await axios.post(`${ML_API_URL}/predict_admission`, requestData, {
                 headers: { "Content-Type": "application/json" },
                 timeout: 30000,
             });

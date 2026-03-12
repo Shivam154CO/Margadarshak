@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { MessageSquare, ThumbsUp, CheckCircle, Search, Filter, AlertTriangle } from 'lucide-react';
+import { MessageSquare, ThumbsUp, CheckCircle, Search, SlidersHorizontal, AlertTriangle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { useToast } from '../context/ToastContext';
 
 interface Review {
     id: string;
@@ -23,12 +24,45 @@ interface Review {
 }
 
 export default function Community() {
+    const { info, warning } = useToast();
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [filterOpen, setFilterOpen] = useState(false);
 
     useEffect(() => {
         fetchReviews();
+
+        // Establish Supabase Realtime connection
+        const channel = supabase
+            .channel('public:college_reviews')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'college_reviews' },
+                (payload) => {
+                    if (payload.eventType === 'UPDATE') {
+                        // Optimistically update the UI for upvotes without re-fetching everything
+                        setReviews((prev) =>
+                            prev.map((r) =>
+                                r.id === payload.new.id
+                                    ? { ...r, upvotes: payload.new.upvotes }
+                                    : r
+                            )
+                        );
+                    } else if (payload.eventType === 'INSERT') {
+                        // Re-fetch to get the new review + joined profile data
+                        fetchReviews();
+                    } else if (payload.eventType === 'DELETE') {
+                        setReviews((prev) => prev.filter((r) => r.id !== payload.old.id));
+                    }
+                }
+            )
+            .subscribe();
+
+        // Cleanup the subscription on unmount
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     const fetchReviews = async () => {
@@ -53,7 +87,10 @@ export default function Community() {
     const handleUpvote = async (reviewId: string, currentUpvotes: string[]) => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return alert('You must be logged in to upvote.');
+            if (!session) {
+                warning("Login Required", "Please log in to upvote reviews.");
+                return;
+            }
 
             const userId = session.user.id;
             const hasUpvoted = currentUpvotes.includes(userId);
@@ -114,9 +151,15 @@ export default function Community() {
                             className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium text-slate-700 transition-all placeholder:text-slate-400"
                         />
                     </div>
-                    <button className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-colors">
-                        <Filter className="w-5 h-5" />
-                        <span>Filters</span>
+                    <button
+                        onClick={() => setFilterOpen(!filterOpen)}
+                        className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-colors ${
+                            filterOpen ? 'bg-indigo-600 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                        }`}
+                        aria-pressed={filterOpen}
+                    >
+                        <SlidersHorizontal className="w-5 h-5" />
+                        <span>{filterOpen ? 'Hide Filters' : 'Filters'}</span>
                     </button>
                 </div>
 
@@ -210,7 +253,9 @@ export default function Community() {
                                             Helpful ({review.upvotes?.length || 0})
                                         </span>
                                     </button>
-                                    <button className="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition-colors px-4 py-2 text-sm font-bold">
+                                    <button className="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition-colors px-4 py-2 text-sm font-bold"
+                                        onClick={() => info('Replies Coming Soon', 'Threaded replies will be available in a future update.')}
+                                    >
                                         <MessageSquare className="w-4 h-4" />
                                         Reply
                                     </button>

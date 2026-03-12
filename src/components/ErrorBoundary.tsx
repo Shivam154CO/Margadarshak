@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { AlertTriangle, RefreshCcw, Home } from "lucide-react";
+import { RefreshCcw, Home } from "lucide-react";
+import NetworkErrorImg from "../assets/Network-error.svg";
 
 interface Props {
     children?: ReactNode;
@@ -30,9 +31,7 @@ class ErrorBoundary extends Component<Props, State> {
                     <div className="max-w-md w-full bg-white rounded-[32px] p-8 shadow-2xl border border-rose-100 text-center relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-1.5 bg-rose-500" />
 
-                        <div className="w-20 h-20 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <AlertTriangle className="w-10 h-10 text-rose-500" />
-                        </div>
+                        <img src={NetworkErrorImg} alt="Network Error" className="w-40 h-40 mx-auto mb-6 opacity-90" />
 
                         <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">
                             System Scavenge Failure

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Target, Sparkles, RotateCw, ZoomIn, ZoomOut,
   X, Building2, MapPin, IndianRupee, GraduationCap, ArrowRight, Activity, Layers,
-  Home, Train, Shield, Eye, Compass, Users, Share2, Navigation
+  Home, Train, Shield, Eye, Compass, Users, Share2, Navigation, Globe
 } from "lucide-react";
 import axios from "axios";
 import { supabase } from "../lib/supabase";
@@ -14,6 +14,8 @@ import { MapContainer, TileLayer, Marker as LeafletMarker, Popup as LeafletPopup
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Navbar from "../components/Navbar";
+
+const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 
 // Fix for default marker icon in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -488,7 +490,7 @@ function CollegeMapContent() {
 
           if (rank && score && preferredBranches.length) {
             try {
-              const res = await axios.post("http://127.0.0.1:5001/predict_admission", { score, rank, category, branches: preferredBranches }, { timeout: 30000 });
+              const res = await axios.post(`${ML_API_URL}/predict_admission`, { score, rank, category, branches: preferredBranches }, { timeout: 30000 });
               const rawData = res.data.colleges || [];
               const predictedMap = new Map<string, College>();
 
@@ -885,7 +887,7 @@ function CollegeMapContent() {
             >
               {/* Header Image */}
               <div className="relative h-52 w-full flex-shrink-0">
-                <img src={getCollegeImage(selectedCollege.college_code)} onError={handleImageError} className="w-full h-full object-cover" />
+                <img src={getCollegeImage(selectedCollege.college_code)} onError={handleImageError} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 <button onClick={() => setSelectedCollege(null)} className="absolute top-4 right-4 p-2 bg-black/25 hover:bg-black/50 backdrop-blur-sm rounded-full text-white transition-colors">
                   <X className="w-4 h-4" />

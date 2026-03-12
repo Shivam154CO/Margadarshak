@@ -55,6 +55,54 @@ interface NavbarProps {
   userProfile?: UserProfile | null;
 }
 
+// ─── Static nav config — defined once at module scope, never recreated ─────────
+const NAV_ITEMS = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", hasDropdown: false, dropdownItems: [] },
+  { id: "search", label: "Colleges", icon: Search, path: "/college-explorer", hasDropdown: false, dropdownItems: [] },
+  {
+    id: "explore",
+    label: "Explore",
+    icon: Compass,
+    hasDropdown: true,
+    path: "",
+    dropdownItems: [
+      { id: "compare", label: "Compare Colleges", icon: Layers, path: "/compare-college" },
+      { id: "map", label: "College Map", icon: MapPin, path: "/college-map" },
+      { id: "favorites", label: "My Favorites", icon: Heart, path: "/favorites" },
+      { id: "community", label: "Community", icon: MessageSquare, path: "/community" },
+    ]
+  },
+  {
+    id: "student-hub",
+    label: "Student Hub",
+    icon: GraduationCap,
+    hasDropdown: true,
+    path: "",
+    dropdownItems: [
+      { id: "timeline", label: "Admission Timeline", icon: Calendar, path: "/admission-timeline" },
+      { id: "documents", label: "Document Checklist", icon: CheckSquare, path: "/documents" },
+      { id: "vacancy", label: "Seat Vacancy", icon: Users, path: "/seat-vacancy" },
+      { id: "scholarships", label: "Scholarships", icon: Award, path: "/scholarships" },
+      { id: "cutoff-trends", label: "Cutoff Trends", icon: TrendingUp, path: "/cutoff-trends" },
+      { id: "post-admission", label: "Post-Admission", icon: HelpCircle, path: "/post-admission" },
+    ]
+  },
+  {
+    id: "tools",
+    label: "Tools",
+    icon: Wrench,
+    hasDropdown: true,
+    path: "",
+    dropdownItems: [
+      { id: "cap-generator", label: "Smart CAP Form", icon: FileText, path: "/cap-generator" },
+      { id: "data-pipeline", label: "Data Pipeline", icon: BarChart3, path: "/data-pipeline" },
+      { id: "scorecard-ocr", label: "OCR Auto-fill", icon: Scan, path: "/scorecard-ocr" },
+      { id: "analytics", label: "Advanced Analytics", icon: TrendingUp, path: "/analytics" },
+    ]
+  },
+  { id: "help", label: "Help", icon: HelpCircle, path: "/help", hasDropdown: false, dropdownItems: [] },
+] as const;
+
 const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: propProfile }) => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -76,49 +124,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
 
   const userProfile = cachedProfile ?? propProfile;
 
-  const navItems: any[] = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-    { id: "search", label: "Colleges", icon: Search, path: "/college-explorer" },
-    {
-      id: "explore",
-      label: "Explore",
-      icon: Compass,
-      hasDropdown: true,
-      dropdownItems: [
-        { id: "compare", label: "Compare Colleges", icon: Layers, path: "/compare-college" },
-        { id: "map", label: "Interactive Map", icon: MapPin, path: "/college-map" },
-        { id: "favorites", label: "My Favorites", icon: Heart, path: "/favorites" },
-        { id: "community", label: "Community Forums", icon: MessageSquare, path: "/community" },
-      ]
-    },
-    {
-      id: "student-hub",
-      label: "Student Hub",
-      icon: GraduationCap,
-      hasDropdown: true,
-      dropdownItems: [
-        { id: "timeline", label: "Admission Timeline", icon: Calendar, path: "/admission-timeline" },
-        { id: "documents", label: "Document Checklist", icon: CheckSquare, path: "/documents" },
-        { id: "vacancy", label: "Seat Vacancy", icon: Users, path: "/seat-vacancy" },
-        { id: "scholarships", label: "Scholarships", icon: Award, path: "/scholarships" },
-        { id: "cutoff-trends", label: "Cutoff Trends", icon: TrendingUp, path: "/cutoff-trends" },
-        { id: "post-admission", label: "Post-Admission", icon: HelpCircle, path: "/post-admission" },
-      ]
-    },
-    {
-      id: "tools",
-      label: "Tools",
-      icon: Wrench,
-      hasDropdown: true,
-      dropdownItems: [
-        { id: "cap-generator", label: "Smart CAP Form", icon: FileText, path: "/cap-generator" },
-        { id: "data-pipeline", label: "Data Pipeline", icon: BarChart3, path: "/data-pipeline" },
-        { id: "scorecard-ocr", label: "OCR Auto-fill", icon: Scan, path: "/scorecard-ocr" },
-        { id: "analytics", label: "Advanced Analytics", icon: TrendingUp, path: "/analytics" }
-      ]
-    },
-    { id: "help", label: "Help", icon: HelpCircle, path: "/help" },
-  ];
+  const navItems = NAV_ITEMS;
 
   return (
     <>

@@ -4,11 +4,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import './index.css'
 import { CollegesProvider } from './context/CollegesContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
 
 // Components
 import ScrollToTop from "./components/ScrollToTop";
 import NetworkStatus from "./components/NetworkStatus";
 import ErrorBoundary from "./components/ErrorBoundary";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Lazy load all pages for maximum performance (Code Splitting)
 const Landing = lazy(() => import("./pages/Landing"));
@@ -37,16 +39,14 @@ const CutoffTrends = lazy(() => import("./pages/CutoffTrends"));
 const PostAdmission = lazy(() => import("./pages/PostAdmission"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-// Scroll Restorer component
+// Scroll restorer
 const ScrollToTopOnRoute = () => {
   const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
 };
 
-// Simple loading spinner fallback
+// Loading spinner
 const PageLoader = () => (
   <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors" role="status" aria-label="Loading page">
     <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 dark:border-indigo-400 border-t-transparent shadow-md"></div>
@@ -54,46 +54,7 @@ const PageLoader = () => (
   </div>
 );
 
-// Wrapper component for route transitions
-const AnimatedRoutes = () => {
-  const location = useLocation();
-
-  return (
-    <ErrorBoundary>
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
-          <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
-          <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-          <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
-          <Route path="/profile-view" element={<PageTransition><ProfileView /></PageTransition>} />
-          <Route path="/favorites" element={<PageTransition><Favorites /></PageTransition>} />
-          <Route path="/analytics" element={<PageTransition><Analytics /></PageTransition>} />
-          <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
-          <Route path="/overview" element={<PageTransition><OverviewScreen /></PageTransition>} />
-          <Route path="/college-details" element={<PageTransition><CollegeDetails /></PageTransition>} />
-          <Route path="/college-map" element={<PageTransition><InteractiveCollegeMap /></PageTransition>} />
-          <Route path="/college-explorer" element={<PageTransition><CollegeExplorer /></PageTransition>} />
-          <Route path="/compare-college" element={<PageTransition><CollegeComparison /></PageTransition>} />
-          <Route path="/cap-generator" element={<PageTransition><CapRoundGenerator /></PageTransition>} />
-          <Route path="/data-pipeline" element={<PageTransition><DataPipeline /></PageTransition>} />
-          <Route path="/scorecard-ocr" element={<PageTransition><ScorecardOcr /></PageTransition>} />
-          <Route path="/help" element={<PageTransition><Help /></PageTransition>} />
-          <Route path="/community" element={<PageTransition><Community /></PageTransition>} />
-          <Route path="/admission-timeline" element={<PageTransition><AdmissionTimeline /></PageTransition>} />
-          <Route path="/documents" element={<PageTransition><DocumentChecklist /></PageTransition>} />
-          <Route path="/seat-vacancy" element={<PageTransition><SeatVacancy /></PageTransition>} />
-          <Route path="/scholarships" element={<PageTransition><ScholarshipFinder /></PageTransition>} />
-          <Route path="/cutoff-trends" element={<PageTransition><CutoffTrends /></PageTransition>} />
-          <Route path="/post-admission" element={<PageTransition><PostAdmission /></PageTransition>} />
-          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
-        </Routes>
-      </AnimatePresence>
-    </ErrorBoundary>
-  );
-};
-
-// Reusable transition wrapper
+// Page transition wrapper
 const PageTransition = ({ children }: { children: React.ReactNode }) => (
   <motion.div
     initial={{ opacity: 0, y: 15 }}
@@ -106,32 +67,83 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => (
   </motion.div>
 );
 
+// Protected page transition wrapper
+const Protected = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute>
+    <PageTransition>{children}</PageTransition>
+  </ProtectedRoute>
+);
+
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  return (
+    <ErrorBoundary>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          {/* ── Public Routes ─────────────────────────────────────── */}
+          <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
+          <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
+          <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+          <Route path="/help" element={<PageTransition><Help /></PageTransition>} />
+          <Route path="/community" element={<PageTransition><Community /></PageTransition>} />
+
+          {/* ── Protected Routes ──────────────────────────────────── */}
+          <Route path="/profile" element={<Protected><Profile /></Protected>} />
+          <Route path="/profile-view" element={<Protected><ProfileView /></Protected>} />
+          <Route path="/favorites" element={<Protected><Favorites /></Protected>} />
+          <Route path="/analytics" element={<Protected><Analytics /></Protected>} />
+          <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
+          <Route path="/overview" element={<Protected><OverviewScreen /></Protected>} />
+          <Route path="/college-details" element={<Protected><CollegeDetails /></Protected>} />
+          <Route path="/college-map" element={<Protected><InteractiveCollegeMap /></Protected>} />
+          <Route path="/college-explorer" element={<Protected><CollegeExplorer /></Protected>} />
+          <Route path="/compare-college" element={<Protected><CollegeComparison /></Protected>} />
+          <Route path="/cap-generator" element={<Protected><CapRoundGenerator /></Protected>} />
+          <Route path="/data-pipeline" element={<Protected><DataPipeline /></Protected>} />
+          <Route path="/scorecard-ocr" element={<Protected><ScorecardOcr /></Protected>} />
+          <Route path="/admission-timeline" element={<Protected><AdmissionTimeline /></Protected>} />
+          <Route path="/documents" element={<Protected><DocumentChecklist /></Protected>} />
+          <Route path="/seat-vacancy" element={<Protected><SeatVacancy /></Protected>} />
+          <Route path="/scholarships" element={<Protected><ScholarshipFinder /></Protected>} />
+          <Route path="/cutoff-trends" element={<Protected><CutoffTrends /></Protected>} />
+          <Route path="/post-admission" element={<Protected><PostAdmission /></Protected>} />
+
+          {/* ── 404 ───────────────────────────────────────────────── */}
+          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+        </Routes>
+      </AnimatePresence>
+    </ErrorBoundary>
+  );
+};
+
 import { ReactLenis } from 'lenis/react';
 
 export default function App() {
   return (
     <ThemeProvider>
-      <ReactLenis root>
-        <CollegesProvider>
-          <Router>
-            {/* Accessibility: Skip to main content link */}
-            <a
-              href="#main-content"
-              className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none"
-            >
-              Skip to main content
-            </a>
-            <ScrollToTopOnRoute />
-            <NetworkStatus />
-            <ScrollToTop />
-            <Suspense fallback={<PageLoader />}>
-              <main id="main-content">
-                <AnimatedRoutes />
-              </main>
-            </Suspense>
-          </Router>
-        </CollegesProvider>
-      </ReactLenis>
+      <ToastProvider>
+        <ReactLenis root>
+          <CollegesProvider>
+            <Router>
+              {/* Accessibility: Skip to main content */}
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none"
+              >
+                Skip to main content
+              </a>
+              <ScrollToTopOnRoute />
+              <NetworkStatus />
+              <ScrollToTop />
+              <Suspense fallback={<PageLoader />}>
+                <main id="main-content">
+                  <AnimatedRoutes />
+                </main>
+              </Suspense>
+            </Router>
+          </CollegesProvider>
+        </ReactLenis>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WifiOff, ShieldAlert, RefreshCcw } from 'lucide-react';
+import { ShieldAlert, RefreshCcw } from 'lucide-react';
+import ConnectionLostImg from '../assets/Connection-lost.svg';
 
 export default function NetworkStatus() {
     const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -35,9 +36,7 @@ export default function NetworkStatus() {
                         {/* Animated background pulse */}
                         <div className="absolute top-0 left-0 w-full h-2 bg-red-500 animate-pulse" />
 
-                        <div className="w-20 h-20 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <WifiOff className="w-10 h-10 text-red-500 animate-pulse" />
-                        </div>
+                        <img src={ConnectionLostImg} alt="Connection lost" className="w-32 h-32 mx-auto mb-6 opacity-90 animate-pulse" />
 
                         <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">
                             Network Lost

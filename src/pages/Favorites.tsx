@@ -24,6 +24,10 @@ import { useColleges } from "../context/CollegesContext";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 
+// Illustrations
+import EmptyInboxImg from "../assets/Empty-inbox.svg";
+import NoResultsImg from "../assets/No-results-found.svg";
+
 interface College {
   college_code: string;
   college_name: string;
@@ -405,7 +409,7 @@ export default function Favorites() {
       </div>
 
       {/* ===== Main Content ===== */}
-      <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col">
+      <div className="flex-grow w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col pt-24">
         {/* ===== Header Section ===== */}
         <div className="mb-6">
           <button
@@ -495,9 +499,7 @@ export default function Favorites() {
         {/* ===== Loading State ===== */}
         {savedColleges.length === 0 ? (
           <div className="text-center py-16 bg-white/50 rounded-3xl border-2 border-dashed border-gray-300/50 shadow-sm">
-            <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-              <Heart className="w-8 h-8 text-gray-400" />
-            </div>
+            <img src={EmptyInboxImg} alt="No favorites yet" className="w-40 h-40 mx-auto mb-6 opacity-90" />
             <h4 className="text-xl font-semibold text-gray-900 mb-2">
               No favorites yet
             </h4>
@@ -513,9 +515,7 @@ export default function Favorites() {
           </div>
         ) : sortedColleges.length === 0 ? (
           <div className="text-center py-16 bg-white/50 rounded-3xl border-2 border-dashed border-gray-300/50 shadow-sm">
-            <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-              <Search className="w-8 h-8 text-gray-400" />
-            </div>
+            <img src={NoResultsImg} alt="No matches found" className="w-40 h-40 mx-auto mb-6 opacity-90" />
             <h4 className="text-xl font-semibold text-gray-900 mb-2">
               No matches found
             </h4>
