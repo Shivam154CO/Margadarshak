@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
@@ -108,6 +108,15 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Always have access to the profile — fetches once, then reads from shared cache
   const { data: cachedProfile } = useQuery<UserProfile | null>({
@@ -128,28 +137,28 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
 
   return (
     <>
-      <nav className="bg-white/90 backdrop-blur-xl border-b border-gray-200/60 sticky top-0 z-50 shadow-sm">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
+      <nav className={`sticky top-0 z-50 w-full pointer-events-none transition-all duration-500 ${isScrolled ? 'py-4 md:py-6' : 'py-4 md:py-6'}`}>
+        <div className={`transition-all duration-700 pointer-events-auto ${isScrolled ? 'ml-4 md:ml-8 w-[56px] h-[56px] md:w-[72px] md:h-[72px]' : 'mx-auto w-full px-4 md:px-6'}`}>
+          <div className={`flex items-center transition-all duration-700 ${isScrolled ? 'justify-center w-full h-full bg-transparent md:bg-white/90 md:backdrop-blur-xl md:rounded-full md:border md:border-gray-200/50 md:shadow-2xl' : 'justify-between px-4 py-3 md:px-6 md:py-4 bg-white/90 backdrop-blur-xl rounded-2xl border border-gray-200/60 shadow-sm'}`}>
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className={`lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-all duration-300 ${isScrolled ? 'opacity-0 -translate-x-4 pointer-events-none' : 'opacity-100 translate-x-0'}`}
                 aria-label="Toggle mobile menu"
               >
                 <Menu className="w-5 h-5 text-gray-600" />
               </button>
               <div
-                className="flex items-center space-x-3 cursor-pointer group"
+                className="flex items-center transition-all duration-300 cursor-pointer group"
                 onClick={() => navigate('/')}
                 role="button"
                 aria-label="Go to home"
               >
-                <IkigaiLogo size="sm" showText={true} />
+                <IkigaiLogo size="sm" showText={!isScrolled} className={`transition-all duration-300 ${isScrolled ? 'scale-[0.65] md:scale-100' : 'scale-100'}`} />
               </div>
             </div>
 
-            <div className="hidden lg:flex items-center space-x-1 bg-white/80 backdrop-blur-sm rounded-2xl px-2 py-1.5 border border-gray-200/50 shadow-sm relative">
+            <div className={`hidden lg:flex items-center space-x-1 bg-white/80 backdrop-blur-sm rounded-2xl px-2 py-1.5 border border-gray-200/50 shadow-sm relative transition-all duration-500 ${isScrolled ? 'opacity-0 scale-95 pointer-events-none w-0 overflow-hidden px-0' : 'opacity-100 scale-100'}`}>
               {navItems.map((item) => (
                 <div key={item.id} className="relative">
                   <button
@@ -194,7 +203,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
               ))}
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className={`flex items-center space-x-4 transition-all duration-500 ${isScrolled ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
               <div className="relative">
                 <button
                   className="flex items-center space-x-3 bg-white backdrop-blur-sm rounded-xl px-3 py-2 border border-gray-300/50 hover:bg-gray-50 transition-all cursor-pointer group shadow-sm"

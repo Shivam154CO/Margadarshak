@@ -1,18 +1,23 @@
 import { useState } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
-    GraduationCap,
-    FileStack,
-    TrendingDown,
     ChevronRight,
     School,
     Brain,
-    BarChart3,
+    TrendingDown,
     AlertTriangle,
     Search,
     FileText,
+    BarChart3,
     type LucideIcon,
 } from 'lucide-react';
+
+// Illustrations
+import chaosMain from '../../assets/illustrations/mw.jpg';
+
+import overloadMain from '../../assets/problem-complex-data.png';
+
+import uncertaintyMain from '../../assets/illustrations/problem-uncertainty.png';
 
 // =========================================
 // 1. CONFIGURATION & DATA TYPES
@@ -29,7 +34,6 @@ export interface ProblemMetric {
 export interface ProblemData {
     id: ProblemId;
     label: string;
-    tag: string;
     title: string;
     description: string;
     colors: {
@@ -45,21 +49,22 @@ export interface ProblemData {
     };
     metrics: ProblemMetric[];
     icons: LucideIcon[];
+    illustration: string;
+    orbitImages: string[];
 }
 
 const PROBLEM_DATA: Record<ProblemId, ProblemData> = {
     chaos: {
         id: 'chaos',
         label: 'Choice Chaos',
-        tag: 'Problem #01',
         title: 'Too Many Colleges.',
         description:
             'With over 340 colleges and 2,000+ branches across Maharashtra, picking just one is a nightmare. Every diploma student faces decision paralysis.',
         colors: {
-            gradient: 'from-rose-600 to-red-900',
+            gradient: 'from-slate-100 to-slate-200',
             glow: 'bg-rose-500',
             ring: 'border-l-rose-500/50',
-            barColor: 'bg-rose-500',
+            barColor: 'bg-rose-600',
         },
         stats: {
             statusLabel: 'Overwhelming',
@@ -70,20 +75,21 @@ const PROBLEM_DATA: Record<ProblemId, ProblemData> = {
             { label: 'Confusion', value: 92, icon: Brain },
             { label: 'Colleges', value: 85, icon: School },
         ],
-        icons: [GraduationCap, School, Brain],
+        icons: [],
+        illustration: chaosMain,
+        orbitImages: [],
     },
     overload: {
         id: 'overload',
         label: 'Data Overload',
-        tag: 'Problem #02',
         title: 'Complex Data Overload.',
         description:
             'Searching through hundreds of pages of PDF cutoffs manually is slow, boring, and leads to costly mistakes that can ruin your admission.',
         colors: {
-            gradient: 'from-amber-600 to-orange-900',
-            glow: 'bg-amber-500',
-            ring: 'border-l-amber-500/50',
-            barColor: 'bg-amber-500',
+            gradient: 'from-slate-100 to-slate-200',
+            glow: 'bg-rose-500',
+            ring: 'border-l-rose-500/50',
+            barColor: 'bg-rose-600',
         },
         stats: {
             statusLabel: 'Critical',
@@ -94,20 +100,21 @@ const PROBLEM_DATA: Record<ProblemId, ProblemData> = {
             { label: 'Manual Effort', value: 96, icon: FileText },
             { label: 'Error Rate', value: 78, icon: Search },
         ],
-        icons: [FileStack, FileText, Search],
+        icons: [],
+        illustration: overloadMain,
+        orbitImages: [],
     },
     uncertainty: {
         id: 'uncertainty',
         label: 'Yearly Shifts',
-        tag: 'Problem #03',
         title: 'Uncertain Yearly Changes.',
         description:
             'Cutoffs change every year. Relying on old ranks is risky and can lead to you losing your dream seat to someone with a lower rank.',
         colors: {
-            gradient: 'from-violet-600 to-purple-900',
-            glow: 'bg-violet-500',
-            ring: 'border-l-violet-500/50',
-            barColor: 'bg-violet-500',
+            gradient: 'from-slate-100 to-slate-200',
+            glow: 'bg-rose-500',
+            ring: 'border-l-rose-500/50',
+            barColor: 'bg-rose-600',
         },
         stats: {
             statusLabel: 'Unpredictable',
@@ -118,7 +125,9 @@ const PROBLEM_DATA: Record<ProblemId, ProblemData> = {
             { label: 'Volatility', value: 88, icon: TrendingDown },
             { label: 'Risk Factor', value: 74, icon: AlertTriangle },
         ],
-        icons: [BarChart3, TrendingDown, AlertTriangle],
+        icons: [],
+        illustration: uncertaintyMain,
+        orbitImages: [],
     },
 };
 
@@ -185,10 +194,10 @@ const BackgroundGradient = ({ activeId }: { activeId: ProblemId }) => (
             animate={{
                 background:
                     activeId === 'chaos'
-                        ? 'radial-gradient(circle at 20% 50%, rgba(225, 29, 72, 0.12), transparent 55%)'
+                        ? 'radial-gradient(circle at 20% 50%, rgba(225, 29, 72, 0.03), transparent 55%)'
                         : activeId === 'overload'
-                            ? 'radial-gradient(circle at 50% 40%, rgba(245, 158, 11, 0.12), transparent 55%)'
-                            : 'radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.12), transparent 55%)',
+                            ? 'radial-gradient(circle at 50% 40%, rgba(225, 29, 72, 0.03), transparent 55%)'
+                            : 'radial-gradient(circle at 80% 50%, rgba(225, 29, 72, 0.03), transparent 55%)',
             }}
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             className="absolute inset-0"
@@ -198,10 +207,6 @@ const BackgroundGradient = ({ activeId }: { activeId: ProblemId }) => (
 
 /** Animated icon-based visual instead of a static image */
 const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) => {
-    const MainIcon = data.icons[0];
-    const SecondaryIcon = data.icons[1];
-    const TertiaryIcon = data.icons[2];
-
     return (
         <motion.div layout="position" className="relative group shrink-0">
             {/* Animated Rings */}
@@ -217,7 +222,7 @@ const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) =>
             />
 
             {/* Visual Container */}
-            <div className="relative h-72 w-72 md:h-[400px] md:w-[400px] rounded-full border border-white/5 shadow-2xl flex items-center justify-center overflow-hidden bg-black/20 backdrop-blur-sm">
+            <div className="relative h-72 w-72 md:h-[400px] md:w-[400px] rounded-full border border-slate-100 shadow-2xl flex items-center justify-center bg-white/10">
                 <motion.div
                     animate={{ y: [-8, 8, -8] }}
                     transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
@@ -232,38 +237,55 @@ const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) =>
                             exit="exit"
                             className="relative flex items-center justify-center"
                         >
-                            {/* Central Icon */}
+                            {/* Central Illustration */}
                             <motion.div
                                 animate={{ rotate: [0, 5, -5, 0] }}
                                 transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                                className={`w-28 h-28 md:w-36 md:h-36 rounded-[32px] bg-gradient-to-br ${data.colors.gradient} flex items-center justify-center shadow-[0_20px_60px_rgba(0,0,0,0.4)]`}
+                                className="w-56 h-56 md:w-80 md:h-80 rounded-full bg-white flex items-center justify-center shadow-[0_30px_100px_rgba(0,0,0,0.08)] border border-slate-100/50"
                             >
-                                <MainIcon className="w-14 h-14 md:w-20 md:h-20 text-white drop-shadow-lg" strokeWidth={1.5} />
+                                <img
+                                    src={data.illustration}
+                                    alt={data.title}
+                                    className="w-full h-full object-contain p-6 hover:scale-105 transition-transform duration-700"
+                                    loading="eager"
+                                />
                             </motion.div>
 
-                            {/* Orbiting Secondary Icon */}
-                            <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-                                className="absolute w-full h-full"
-                                style={{ transformOrigin: 'center center' }}
-                            >
-                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg">
-                                    <SecondaryIcon className="w-6 h-6 md:w-7 md:h-7 text-white/80" strokeWidth={1.5} />
-                                </div>
-                            </motion.div>
+                            {/* Orbiting Secondary Image */}
+                            {data.orbitImages[0] && (
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+                                    className="absolute w-full h-full"
+                                    style={{ transformOrigin: 'center center' }}
+                                >
+                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-20 h-20 md:w-28 md:h-28 rounded-3xl bg-white border border-slate-100 flex items-center justify-center shadow-xl overflow-hidden p-3">
+                                        <img
+                                            src={data.orbitImages[0]}
+                                            alt="detail"
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                </motion.div>
+                            )}
 
-                            {/* Orbiting Tertiary Icon (reverse) */}
-                            <motion.div
-                                animate={{ rotate: -360 }}
-                                transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
-                                className="absolute w-[140%] h-[140%]"
-                                style={{ transformOrigin: 'center center' }}
-                            >
-                                <div className="absolute bottom-0 right-0 w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                                    <TertiaryIcon className="w-5 h-5 md:w-6 md:h-6 text-white/60" strokeWidth={1.5} />
-                                </div>
-                            </motion.div>
+                            {/* Orbiting Tertiary Image */}
+                            {data.orbitImages[1] && (
+                                <motion.div
+                                    animate={{ rotate: -360 }}
+                                    transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
+                                    className="absolute w-[140%] h-[140%]"
+                                    style={{ transformOrigin: 'center center' }}
+                                >
+                                    <div className="absolute bottom-0 right-0 w-16 h-16 md:w-24 md:h-24 rounded-full bg-white border border-slate-50 flex items-center justify-center shadow-2xl overflow-hidden p-2">
+                                        <img
+                                            src={data.orbitImages[1]}
+                                            alt="secondary detail"
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                </motion.div>
+                            )}
 
                             {/* Floating Particles */}
                             {[...Array(5)].map((_, i) => (
@@ -296,7 +318,7 @@ const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) =>
                 layout="position"
                 className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap"
             >
-                <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-zinc-500 bg-zinc-950/80 px-4 py-2 rounded-full border border-white/5 backdrop-blur">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-slate-500 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm backdrop-blur">
                     <span className={`h-1.5 w-1.5 rounded-full ${data.colors.glow} animate-pulse`} />
                     {data.stats.statusLabel}
                 </div>
@@ -326,21 +348,15 @@ const ProblemDetails = ({
             exit="exit"
             className={`flex flex-col ${alignClass}`}
         >
-            <motion.div
-                variants={ANIMATIONS.item}
-                className="inline-flex items-center px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-rose-400 font-extrabold text-[10px] uppercase tracking-widest mb-4"
-            >
-                {data.tag}
-            </motion.div>
             <motion.h2
                 variants={ANIMATIONS.item}
-                className="text-3xl md:text-5xl font-extrabold tracking-tighter mb-3 text-transparent bg-clip-text bg-gradient-to-b from-white to-zinc-500 leading-tight"
+                className="text-3xl md:text-6xl font-black tracking-tighter mb-4 text-slate-900 leading-none"
             >
                 {data.title}
             </motion.h2>
             <motion.p
                 variants={ANIMATIONS.item}
-                className={`text-zinc-400 mb-8 max-w-sm leading-relaxed ${isEven ? 'ml-auto' : 'mr-auto'}`}
+                className={`text-slate-500 text-lg font-medium mb-10 max-w-sm leading-relaxed ${isEven ? 'ml-auto' : 'mr-auto'}`}
             >
                 {data.description}
             </motion.p>
@@ -348,28 +364,28 @@ const ProblemDetails = ({
             {/* Metrics Grid */}
             <motion.div
                 variants={ANIMATIONS.item}
-                className="w-full space-y-6 bg-zinc-900/40 p-6 rounded-2xl border border-white/5 backdrop-blur-sm"
+                className="w-full space-y-8 bg-white p-8 rounded-3xl border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)]"
             >
                 {data.metrics.map((metric, idx) => (
                     <div key={metric.label} className="group">
                         <div
-                            className={`flex items-center justify-between mb-3 text-sm ${flexDirClass}`}
+                            className={`flex items-center justify-between mb-3 text-sm font-bold ${flexDirClass}`}
                         >
                             <div
-                                className={`flex items-center gap-2 ${metric.value > 50 ? 'text-zinc-200' : 'text-zinc-400'}`}
+                                className={`flex items-center gap-2 ${metric.value > 50 ? 'text-slate-900' : 'text-slate-600'}`}
                             >
-                                <metric.icon size={16} /> <span>{metric.label}</span>
+                                <metric.icon size={18} className="text-rose-500" /> <span>{metric.label}</span>
                             </div>
-                            <span className="font-mono text-xs text-zinc-500">
+                            <span className="font-mono text-xs text-rose-500 bg-rose-50 px-2 py-0.5 rounded">
                                 {metric.value}%
                             </span>
                         </div>
-                        <div className="relative h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="relative h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${metric.value}%` }}
                                 transition={{ duration: 1, delay: 0.4 + idx * 0.15 }}
-                                className={`absolute top-0 bottom-0 ${barPositionClass} opacity-80`}
+                                className={`absolute top-0 bottom-0 ${barPositionClass} shadow-[0_0_10px_rgba(225,29,72,0.3)]`}
                             />
                         </div>
                     </div>
@@ -392,12 +408,12 @@ const ProblemDetails = ({
             {/* Stat */}
             <motion.div
                 variants={ANIMATIONS.item}
-                className={`mt-6 flex items-center gap-3 text-zinc-500 ${flexDirClass}`}
+                className={`mt-10 flex items-center gap-4 text-slate-400 ${flexDirClass}`}
             >
-                <span className="text-2xl font-extrabold text-white">
+                <span className="text-4xl font-black text-slate-950 tracking-tighter">
                     {data.stats.statValue}
                 </span>
-                <span className="text-xs font-semibold uppercase tracking-widest">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                     {data.stats.statLabel}
                 </span>
             </motion.div>
@@ -421,7 +437,7 @@ const Switcher = ({
         <div className="flex justify-center mt-16 md:mt-20">
             <motion.div
                 layout
-                className="flex items-center gap-1 p-1.5 rounded-full bg-zinc-900/80 backdrop-blur-2xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] ring-1 ring-white/5"
+                className="flex items-center gap-1 p-1.5 rounded-full bg-slate-100/50 border border-slate-200 shadow-lg backdrop-blur-sm"
             >
                 {options.map((opt) => (
                     <motion.button
@@ -433,22 +449,15 @@ const Switcher = ({
                         {activeId === opt.id && (
                             <motion.div
                                 layoutId="problem-surface"
-                                className="absolute inset-0 rounded-full bg-gradient-to-b from-white/10 to-white/5 shadow-inner"
+                                className="absolute inset-0 rounded-full bg-slate-950 shadow-xl"
                                 transition={{ type: 'spring', stiffness: 220, damping: 22 }}
                             />
                         )}
                         <span
-                            className={`relative z-10 transition-colors duration-300 text-xs md:text-sm whitespace-nowrap ${activeId === opt.id ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                            className={`relative z-10 transition-colors duration-300 text-xs md:text-sm whitespace-nowrap ${activeId === opt.id ? 'text-white font-bold' : 'text-slate-400 hover:text-slate-600'}`}
                         >
                             {opt.label}
                         </span>
-                        {activeId === opt.id && (
-                            <motion.span
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="absolute -bottom-1 h-1 w-6 rounded-full bg-gradient-to-r from-transparent via-white/60 to-transparent"
-                            />
-                        )}
                     </motion.button>
                 ))}
             </motion.div>
@@ -468,15 +477,13 @@ export default function ProblemShowcase() {
     const isEven = activeIndex % 2 === 1;
 
     return (
-        <div className="relative w-full bg-[#050505] text-zinc-100 overflow-hidden py-20 md:py-32" data-theme="dark">
+        <div className="relative w-full bg-white text-slate-900 overflow-hidden py-20 md:py-32" data-theme="light">
             <BackgroundGradient activeId={activeProblem} />
 
             {/* Section Header */}
             <div className="relative z-10 text-center mb-16 md:mb-24 px-6">
-                <div className="inline-flex items-center px-4 py-1.5 bg-rose-900/20 border border-rose-900/30 rounded-full text-rose-400 font-extrabold text-[10px] uppercase tracking-[0.4em] mb-6">
-                    The Diploma Struggle
-                </div>
-                <h2 className="text-4xl md:text-7xl font-black text-white/95 tracking-tighter leading-none">
+
+                <h2 className="text-4xl md:text-8xl font-black text-slate-900 tracking-tighter leading-none">
                     Why Students{' '}
                     <span className="bg-gradient-to-r from-rose-400 to-rose-600 bg-clip-text text-transparent italic">
                         Fail.

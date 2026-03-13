@@ -19,6 +19,7 @@ export default function Landing() {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNavDark, setIsNavDark] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
   // Scroll-aware navbar: detect when over dark sections
@@ -26,6 +27,9 @@ export default function Landing() {
     const handleScroll = () => {
       const nav = navRef.current;
       if (!nav) return;
+
+      setIsScrolled(window.scrollY > 20);
+
       const navRect = nav.getBoundingClientRect();
       const navCenter = navRect.top + navRect.height / 2;
 
@@ -99,18 +103,21 @@ export default function Landing() {
         keywords="engineering admission predictor, Maharashtra diploma, CET cutoff, college finder, seat matrix, placement stats"
       />
       {/* Navigation */}
-      <nav ref={navRef} className="fixed w-full z-[100] px-4 py-4 md:px-6 md:py-8">
-        <div className={`max-w-7xl mx-auto flex justify-between items-center backdrop-blur-2xl rounded-2xl px-6 py-4 md:px-10 md:h-20 relative z-50 transition-all duration-500 ${isNavDark ? 'bg-white/5 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)]' : 'bg-white/80 border border-slate-100/50 shadow-[0_20px_50px_rgba(0,0,0,0.05)]'}`}>
-          <IkigaiLogo size="sm" showText={true} lightText={isNavDark} />
+      <nav ref={navRef} className={`fixed w-full z-[100] transition-all duration-700 ${isScrolled ? 'top-4 md:top-6 px-4 md:px-6' : 'top-0 px-4 md:px-6'}`}>
+        <div className={`flex items-center transition-all duration-700 ${isScrolled 
+          ? 'w-[56px] h-[56px] md:w-[70px] md:h-[70px] justify-center bg-transparent md:bg-white/80 md:backdrop-blur-xl md:rounded-full md:border md:border-white/20 md:shadow-2xl' 
+          : `mx-auto w-full max-w-7xl h-16 md:h-20 rounded-2xl px-6 md:px-10 justify-between backdrop-blur-2xl ${isNavDark ? 'bg-white/5 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)]' : 'bg-white/80 border border-slate-100/50 shadow-[0_20px_50px_rgba(0,0,0,0.05)]'}`
+          } relative z-50`}> { /* justify-center is used only when scrolled */ }
+          <IkigaiLogo size={isScrolled ? "sm" : "sm"} showText={!isScrolled} lightText={isNavDark} className={`${isScrolled ? 'scale-75 md:scale-100' : 'scale-100'} transition-all duration-500`} />
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-12">
+          <div className={`hidden md:flex items-center gap-12 transition-all duration-500 ${isScrolled ? 'opacity-0 scale-90 pointer-events-none w-0 overflow-hidden' : 'opacity-100 scale-100'}`}>
             {['Predictor', 'How it Works', 'Colleges'].map(item => (
               <button key={item} className={`font-semibold text-xs uppercase tracking-[0.2em] transition-colors ${isNavDark ? 'text-white/60 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{item}</button>
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className={`hidden md:flex items-center gap-8 transition-all duration-500 ${isScrolled ? 'opacity-0 scale-90 pointer-events-none w-0 overflow-hidden' : 'opacity-100 scale-100'}`}>
             <button onClick={() => navigate("/login")} className={`font-extrabold text-xs uppercase tracking-widest hover:opacity-70 transition-all ${isNavDark ? 'text-white' : 'text-slate-900'}`}>Login</button>
             <button onClick={() => navigate("/signup")} className={`px-8 py-3 rounded-xl font-extrabold text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 ${isNavDark ? 'bg-white text-slate-900 hover:bg-white/90' : 'bg-slate-900 text-white hover:bg-black'}`}>Get Started</button>
           </div>
@@ -118,7 +125,7 @@ export default function Landing() {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`md:hidden p-2 transition-colors ${isNavDark ? 'text-white' : 'text-slate-900'}`}
+            className={`md:hidden p-2 transition-all duration-500 ${isNavDark ? 'text-white' : 'text-slate-900'} ${isScrolled ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}
           >
             {isMobileMenuOpen ? (
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -558,7 +565,7 @@ export default function Landing() {
       </section>
 
       {/* Dedicated CET 2026 Launch Section - The "Wow" Experience */}
-      <section className="py-20 md:py-40 px-4 md:px-6 relative overflow-hidden bg-[#0a0a0a]" data-theme="dark">
+      <section className="py-20 md:py-40 px-4 md:px-6 relative overflow-hidden bg-white" data-theme="light">
         {/* Massive Ambient Background Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-rose-500/5 blur-[200px] rounded-full" />
 
@@ -572,12 +579,12 @@ export default function Landing() {
                   The Next Generation
                 </div>
 
-                <h2 className="text-5xl md:text-[140px] font-black text-white tracking-tighter leading-[0.9] md:leading-[0.75] drop-shadow-3xl">
+                <h2 className="text-5xl md:text-[140px] font-black text-slate-900 tracking-tighter leading-[0.9] md:leading-[0.75]">
                   CET 2026 <br />
                   <span className="italic text-rose-600">Live Soon.</span>
                 </h2>
 
-                <p className="text-xl md:text-3xl text-white/70 font-semibold max-w-4xl mx-auto leading-relaxed">
+                <p className="text-xl md:text-3xl text-slate-500 font-semibold max-w-4xl mx-auto leading-relaxed">
                   We're re-engineering our precision models for the 2026 Maharashtra diploma engineering prediction cycle.
                   Get ready for the most accurate prediction engine ever built.
                 </p>
@@ -588,9 +595,9 @@ export default function Landing() {
                     { label: "Institutions", value: "340+", sub: "Official Data" },
                     { label: "Status", value: "Optimizing", sub: "Final Testing" }
                   ].map((stat, i) => (
-                    <div key={i} className="bg-white/5 border border-white/10 rounded-[40px] p-10 group-hover:border-white/20 transition-colors">
-                      <div className="text-[10px] font-extrabold text-white/40 uppercase tracking-widest mb-4">{stat.label}</div>
-                      <div className="text-4xl font-extrabold text-white mb-2">{stat.value}</div>
+                    <div key={i} className="bg-slate-50 border border-slate-200 rounded-[40px] p-10 group-hover:border-slate-300 transition-colors">
+                      <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-4">{stat.label}</div>
+                      <div className="text-4xl font-extrabold text-slate-900 mb-2">{stat.value}</div>
                       <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{stat.sub}</div>
                     </div>
                   ))}
@@ -602,10 +609,10 @@ export default function Landing() {
       </section>
 
       {/* Final Simple CTA */}
-      <section className="py-20 md:py-40 px-6 text-center bg-white">
+      <section className="py-20 md:py-40 px-6 text-center bg-[#050505]" data-theme="dark">
         <div className="max-w-4xl mx-auto space-y-10 md:space-y-16">
           <ScrollAnimationWrapper animation="slideUp">
-            <h2 className="text-4xl md:text-9xl font-extrabold text-slate-900 tracking-tighter leading-[0.85]">
+            <h2 className="text-4xl md:text-9xl font-extrabold text-white tracking-tighter leading-[0.85]">
               Secure Your <br /> <span className="italic text-rose-600">Future Today.</span>
             </h2>
             <div className="pt-16 space-y-10">
@@ -613,11 +620,11 @@ export default function Landing() {
                 onClick={() => navigate("/signup")}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-10 py-5 md:px-24 md:py-8 bg-slate-900 text-white rounded-full font-extrabold text-xl md:text-3xl shadow-3xl hover:bg-rose-700 transition-all"
+                className="px-10 py-5 md:px-24 md:py-8 bg-white text-slate-950 rounded-full font-extrabold text-xl md:text-3xl shadow-3xl hover:bg-rose-600 hover:text-white transition-all"
               >
                 Sign Up Now →
               </motion.button>
-              <p className="text-slate-400 font-extrabold text-xs uppercase tracking-[0.5em]">JOIN 52,000+ DIPLOMA ASPIRANTS</p>
+              <p className="text-white/20 font-extrabold text-xs uppercase tracking-[0.5em]">JOIN 52,000+ DIPLOMA ASPIRANTS</p>
             </div>
           </ScrollAnimationWrapper>
         </div>
