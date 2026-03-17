@@ -114,6 +114,7 @@ html,
 body,
 #root {
   min-height: 100vh;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   background-color: rgb(var(--color-bg));

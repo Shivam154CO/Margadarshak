@@ -1,18 +1,26 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { Suspense, lazy, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import './index.css'
+import { motion } from "framer-motion";
+import { ReactLenis } from 'lenis/react';
+
+// Styling
+import './index.css';
+
+// Context & Providers
 import { CollegesProvider } from './context/CollegesContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 
-// Components
+// Shared Components
 import ScrollToTop from "./components/ScrollToTop";
 import NetworkStatus from "./components/NetworkStatus";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// Lazy load all pages for maximum performance (Code Splitting)
+// Constants
+import { ROUTES } from "./constants/routes";
+
+// Lazy Pages
 const Landing = lazy(() => import("./pages/Landing"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Login = lazy(() => import("./pages/Login"));
@@ -54,7 +62,6 @@ const PageLoader = () => (
   </div>
 );
 
-// Page transition wrapper
 const PageTransition = ({ children }: { children: React.ReactNode }) => (
   <motion.div
     initial={{ opacity: 0, y: 15 }}
@@ -67,7 +74,6 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => (
   </motion.div>
 );
 
-// Protected page transition wrapper
 const Protected = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
     <PageTransition>{children}</PageTransition>
@@ -75,48 +81,43 @@ const Protected = ({ children }: { children: React.ReactNode }) => (
 );
 
 const AnimatedRoutes = () => {
-  const location = useLocation();
   return (
     <ErrorBoundary>
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          {/* ── Public Routes ─────────────────────────────────────── */}
-          <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
-          <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
-          <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-          <Route path="/help" element={<PageTransition><Help /></PageTransition>} />
-          <Route path="/community" element={<PageTransition><Community /></PageTransition>} />
+      <Routes>
+        {/* Public Routes */}
+        <Route path={ROUTES.HOME} element={<PageTransition><Landing /></PageTransition>} />
+        <Route path={ROUTES.SIGNUP} element={<PageTransition><Signup /></PageTransition>} />
+        <Route path={ROUTES.LOGIN} element={<PageTransition><Login /></PageTransition>} />
+        <Route path={ROUTES.HELP} element={<PageTransition><Help /></PageTransition>} />
+        <Route path={ROUTES.COMMUNITY} element={<PageTransition><Community /></PageTransition>} />
 
-          {/* ── Protected Routes ──────────────────────────────────── */}
-          <Route path="/profile" element={<Protected><Profile /></Protected>} />
-          <Route path="/profile-view" element={<Protected><ProfileView /></Protected>} />
-          <Route path="/favorites" element={<Protected><Favorites /></Protected>} />
-          <Route path="/analytics" element={<Protected><Analytics /></Protected>} />
-          <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
-          <Route path="/overview" element={<Protected><OverviewScreen /></Protected>} />
-          <Route path="/college-details" element={<Protected><CollegeDetails /></Protected>} />
-          <Route path="/college-map" element={<Protected><InteractiveCollegeMap /></Protected>} />
-          <Route path="/college-explorer" element={<Protected><CollegeExplorer /></Protected>} />
-          <Route path="/compare-college" element={<Protected><CollegeComparison /></Protected>} />
-          <Route path="/cap-generator" element={<Protected><CapRoundGenerator /></Protected>} />
-          <Route path="/data-pipeline" element={<Protected><DataPipeline /></Protected>} />
-          <Route path="/scorecard-ocr" element={<Protected><ScorecardOcr /></Protected>} />
-          <Route path="/admission-timeline" element={<Protected><AdmissionTimeline /></Protected>} />
-          <Route path="/documents" element={<Protected><DocumentChecklist /></Protected>} />
-          <Route path="/seat-vacancy" element={<Protected><SeatVacancy /></Protected>} />
-          <Route path="/scholarships" element={<Protected><ScholarshipFinder /></Protected>} />
-          <Route path="/cutoff-trends" element={<Protected><CutoffTrends /></Protected>} />
-          <Route path="/post-admission" element={<Protected><PostAdmission /></Protected>} />
+        {/* Protected Routes */}
+        <Route path={ROUTES.PROFILE} element={<Protected><Profile /></Protected>} />
+        <Route path={ROUTES.PROFILE_VIEW} element={<Protected><ProfileView /></Protected>} />
+        <Route path={ROUTES.FAVORITES} element={<Protected><Favorites /></Protected>} />
+        <Route path={ROUTES.ANALYTICS} element={<Protected><Analytics /></Protected>} />
+        <Route path={ROUTES.DASHBOARD} element={<Protected><Dashboard /></Protected>} />
+        <Route path={ROUTES.OVERVIEW} element={<Protected><OverviewScreen /></Protected>} />
+        <Route path={ROUTES.COLLEGE_DETAILS} element={<Protected><CollegeDetails /></Protected>} />
+        <Route path={ROUTES.COLLEGE_MAP} element={<Protected><InteractiveCollegeMap /></Protected>} />
+        <Route path={ROUTES.COLLEGE_EXPLORER} element={<Protected><CollegeExplorer /></Protected>} />
+        <Route path={ROUTES.COLLEGE_COMPARISON} element={<Protected><CollegeComparison /></Protected>} />
+        <Route path={ROUTES.CAP_ROUND_GENERATOR} element={<Protected><CapRoundGenerator /></Protected>} />
+        <Route path={ROUTES.DATA_PIPELINE} element={<Protected><DataPipeline /></Protected>} />
+        <Route path={ROUTES.SCORECARD_OCR} element={<Protected><ScorecardOcr /></Protected>} />
+        <Route path={ROUTES.ADMISSION_TIMELINE} element={<Protected><AdmissionTimeline /></Protected>} />
+        <Route path={ROUTES.DOCUMENT_CHECKLIST} element={<Protected><DocumentChecklist /></Protected>} />
+        <Route path={ROUTES.SEAT_VACANCY} element={<Protected><SeatVacancy /></Protected>} />
+        <Route path={ROUTES.SCHOLARSHIP_FINDER} element={<Protected><ScholarshipFinder /></Protected>} />
+        <Route path={ROUTES.CUTOFF_TRENDS} element={<Protected><CutoffTrends /></Protected>} />
+        <Route path={ROUTES.POST_ADMISSION} element={<Protected><PostAdmission /></Protected>} />
 
-          {/* ── 404 ───────────────────────────────────────────────── */}
-          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
-        </Routes>
-      </AnimatePresence>
+        {/* 404 */}
+        <Route path={ROUTES.NOT_FOUND} element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
     </ErrorBoundary>
   );
 };
-
-import { ReactLenis } from 'lenis/react';
 
 export default function App() {
   return (
@@ -125,7 +126,6 @@ export default function App() {
         <ReactLenis root>
           <CollegesProvider>
             <Router>
-              {/* Accessibility: Skip to main content */}
               <a
                 href="#main-content"
                 className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
@@ -30,25 +30,9 @@ import {
   Wrench
 } from "lucide-react";
 
-interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  state: string;
-  category: string;
-  exam_type: string;
-  cet_rank: string;
-  cet_score: string;
-  diploma_rank: string;
-  diploma_score: string;
-  preferred_branches: string[];
-  university_preference: string;
-  address: string;
-  receive_updates: boolean;
-  profile_complete: boolean;
-  created_at: string;
-  updated_at: string;
-}
+// Constants & Types
+import { ROUTES } from "../constants/routes";
+import type { UserProfile } from "../types/user";
 
 interface NavbarProps {
   activeTab?: string;
@@ -57,8 +41,8 @@ interface NavbarProps {
 
 // ─── Static nav config — defined once at module scope, never recreated ─────────
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", hasDropdown: false, dropdownItems: [] },
-  { id: "search", label: "Colleges", icon: Search, path: "/college-explorer", hasDropdown: false, dropdownItems: [] },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: ROUTES.DASHBOARD, hasDropdown: false, dropdownItems: [] },
+  { id: "search", label: "Colleges", icon: Search, path: ROUTES.COLLEGE_EXPLORER, hasDropdown: false, dropdownItems: [] },
   {
     id: "explore",
     label: "Explore",
@@ -66,10 +50,10 @@ const NAV_ITEMS = [
     hasDropdown: true,
     path: "",
     dropdownItems: [
-      { id: "compare", label: "Compare Colleges", icon: Layers, path: "/compare-college" },
-      { id: "map", label: "College Map", icon: MapPin, path: "/college-map" },
-      { id: "favorites", label: "My Favorites", icon: Heart, path: "/favorites" },
-      { id: "community", label: "Community", icon: MessageSquare, path: "/community" },
+      { id: "compare", label: "Compare Colleges", icon: Layers, path: ROUTES.COLLEGE_COMPARISON },
+      { id: "map", label: "College Map", icon: MapPin, path: ROUTES.COLLEGE_MAP },
+      { id: "favorites", label: "My Favorites", icon: Heart, path: ROUTES.FAVORITES },
+      { id: "community", label: "Community", icon: MessageSquare, path: ROUTES.COMMUNITY },
     ]
   },
   {
@@ -79,12 +63,12 @@ const NAV_ITEMS = [
     hasDropdown: true,
     path: "",
     dropdownItems: [
-      { id: "timeline", label: "Admission Timeline", icon: Calendar, path: "/admission-timeline" },
-      { id: "documents", label: "Document Checklist", icon: CheckSquare, path: "/documents" },
-      { id: "vacancy", label: "Seat Vacancy", icon: Users, path: "/seat-vacancy" },
-      { id: "scholarships", label: "Scholarships", icon: Award, path: "/scholarships" },
-      { id: "cutoff-trends", label: "Cutoff Trends", icon: TrendingUp, path: "/cutoff-trends" },
-      { id: "post-admission", label: "Post-Admission", icon: HelpCircle, path: "/post-admission" },
+      { id: "timeline", label: "Admission Timeline", icon: Calendar, path: ROUTES.ADMISSION_TIMELINE },
+      { id: "documents", label: "Document Checklist", icon: CheckSquare, path: ROUTES.DOCUMENT_CHECKLIST },
+      { id: "vacancy", label: "Seat Vacancy", icon: Users, path: ROUTES.SEAT_VACANCY },
+      { id: "scholarships", label: "Scholarships", icon: Award, path: ROUTES.SCHOLARSHIP_FINDER },
+      { id: "cutoff-trends", label: "Cutoff Trends", icon: TrendingUp, path: ROUTES.CUTOFF_TRENDS },
+      { id: "post-admission", label: "Post-Admission", icon: HelpCircle, path: ROUTES.POST_ADMISSION },
     ]
   },
   {
@@ -94,13 +78,13 @@ const NAV_ITEMS = [
     hasDropdown: true,
     path: "",
     dropdownItems: [
-      { id: "cap-generator", label: "Smart CAP Form", icon: FileText, path: "/cap-generator" },
-      { id: "data-pipeline", label: "Data Pipeline", icon: BarChart3, path: "/data-pipeline" },
-      { id: "scorecard-ocr", label: "OCR Auto-fill", icon: Scan, path: "/scorecard-ocr" },
-      { id: "analytics", label: "Advanced Analytics", icon: TrendingUp, path: "/analytics" },
+      { id: "cap-generator", label: "Smart CAP Form", icon: FileText, path: ROUTES.CAP_ROUND_GENERATOR },
+      { id: "scorecard-ocr", label: "OCR Auto-fill", icon: Scan, path: ROUTES.SCORECARD_OCR },
+      { id: "analytics", label: "Advanced Analytics", icon: TrendingUp, path: ROUTES.ANALYTICS },
+      { id: "data-pipeline", label: "Data Pipeline", icon: BarChart3, path: ROUTES.DATA_PIPELINE },
     ]
   },
-  { id: "help", label: "Help", icon: HelpCircle, path: "/help", hasDropdown: false, dropdownItems: [] },
+  { id: "help", label: "Help", icon: HelpCircle, path: ROUTES.HELP, hasDropdown: false, dropdownItems: [] },
 ] as const;
 
 const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: propProfile }) => {
@@ -108,15 +92,9 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const isScrolled = false;
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // Scroll collapse behavior is disabled. Navbar remains expanded.
 
   // Always have access to the profile — fetches once, then reads from shared cache
   const { data: cachedProfile } = useQuery<UserProfile | null>({
@@ -133,8 +111,6 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
 
   const userProfile = cachedProfile ?? propProfile;
 
-  const navItems = NAV_ITEMS;
-
   return (
     <>
       <nav className={`sticky top-0 z-50 w-full pointer-events-none transition-all duration-500 ${isScrolled ? 'py-4 md:py-6' : 'py-4 md:py-6'}`}>
@@ -150,7 +126,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
               </button>
               <div
                 className="flex items-center transition-all duration-300 cursor-pointer group"
-                onClick={() => navigate('/')}
+                onClick={() => navigate(ROUTES.HOME)}
                 role="button"
                 aria-label="Go to home"
               >
@@ -159,7 +135,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
             </div>
 
             <div className={`hidden lg:flex items-center space-x-1 bg-white/80 backdrop-blur-sm rounded-2xl px-2 py-1.5 border border-gray-200/50 shadow-sm relative transition-all duration-500 ${isScrolled ? 'opacity-0 scale-95 pointer-events-none w-0 overflow-hidden px-0' : 'opacity-100 scale-100'}`}>
-              {navItems.map((item) => (
+              {NAV_ITEMS.map((item) => (
                 <div key={item.id} className="relative">
                   <button
                     onClick={() => {
@@ -238,7 +214,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
                     <div className="border-t border-gray-200/60 p-4 space-y-2">
                       <button
                         onClick={() => {
-                          navigate("/profile");
+                          navigate(ROUTES.PROFILE);
                           setProfileDropdownOpen(false);
                         }}
                         className="w-full flex items-center space-x-3 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm"
@@ -249,7 +225,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
                       <button
                         onClick={async () => {
                           await supabase.auth.signOut();
-                          navigate("/login");
+                          navigate(ROUTES.LOGIN);
                           setProfileDropdownOpen(false);
                         }}
                         className="w-full flex items-center space-x-3 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all"
@@ -281,7 +257,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ activeTab, userProfile: prop
             </div>
 
             <div className="p-4 space-y-2">
-              {navItems.map((item) => (
+              {NAV_ITEMS.map((item) => (
                 <div key={item.id}>
                   {item.hasDropdown ? (
                     <div>

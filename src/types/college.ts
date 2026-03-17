@@ -62,9 +62,9 @@ export interface College {
     district?: string;
     region?: string;
     university?: string;
-    autonomy_status: string;
+    autonomy_status?: string;
     established_year?: number;
-    image: string;
+    image?: string;
     logo_url?: string;
 
     // Placement/Academics
@@ -90,16 +90,22 @@ export interface College {
     library_books?: number;
     labs_count?: number;
     wifi_available?: boolean;
-    sports_facilities?: string[];
+    wifi_campus?: string;
+    sports_facilities?: any;
     clubs?: string[];
     campus_recruiters?: string[];
+    transport_facility?: string;
+    medical_facility?: string;
+    campus_area?: number;
 
     // Admission/Contact
     admission_start?: string;
     admission_end?: string;
     merit_list_date?: string;
     website?: string;
+    website_url?: string;
     contact_email?: string;
+    contact_phone?: string;
     phone?: string;
     address?: string;
     latitude?: number;
@@ -137,7 +143,7 @@ export interface College {
     wifi_coverage?: boolean;
     research_centers?: number;
     international_tieups?: number;
-    accreditation?: string[];
+    accreditation?: string | string[];
     ranking_national?: number;
     ranking_state?: number;
     keywords?: string[];
@@ -145,6 +151,27 @@ export interface College {
     views_count?: number;
     saves_count?: number;
     compares_count?: number;
+    
+    duration_years?: number;
+    degree_type?: string;
+    shift?: string;
+    top_recruiters?: string;
+    hostel_fees?: number;
+    hostel_type?: string;
+    bus_fees?: number;
+    internship_rate?: number;
+    foreign_offers?: number;
+    placement_cell_contact?: string;
+    image_url?: string;
+    student_faculty_ratio?: number;
+    clubs_count?: number;
+    scholarship_opportunities?: string;
+    international_collaborations?: string;
+    industry_tie_ups?: number;
+    research_papers?: number;
+    patents?: number;
+    alumni_strength?: number;
+
     location_data?: {
         lat: number;
         lng: number;
@@ -195,9 +222,9 @@ export interface College {
         count: number;
     }[];
     branches?: BranchInfo[];
+    seat_matrix?: BranchSeatMatrix[];
     is_predicted?: boolean;
     rating?: number;
-    wifi_campus?: string;
     total_feedbacks?: number;
     admission_process?: AdmissionStep[];
     scholarships?: Scholarship[];

@@ -13,7 +13,7 @@ import Magnetic from "../components/Magnetic";
 import clgImg from "../assets/illustrations/clg.png";
 
 // Import rich problem showcase
-import ProblemShowcase from "../components/ui/spatial-product-showcase";
+import ProblemShowcase from "../features/landing/components/spatial-product-showcase";
 
 export default function Landing() {
   const navigate = useNavigate();

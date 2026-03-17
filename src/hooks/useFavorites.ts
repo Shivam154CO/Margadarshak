@@ -122,7 +122,11 @@ export function useFavorites() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('[useFavorites] fetch error:', error);
+        if (error.code === 'PGRST205') {
+            // Table doesn't exist yet, gracefully use local storage
+            return null;
+        }
+        console.warn('[useFavorites] fetch error:', error);
         return null;
       }
       return data as FavoriteCollege[];
