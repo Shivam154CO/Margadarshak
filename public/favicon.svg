@@ -1,0 +1,5 @@
+&lt;svg xmlns=" http://www.w3.org/2000/svg\ viewBox=\0 0 32 32\&gt;
+ &lt;rect width=\32\ height=\32\ rx=\6\ fill=\#4f46e5\/&gt;
+ &lt;path d=\M 8 10 L 16 4 L 24 10 V 18 a 2 2 0 0 1 -2 2 H 10 a 2 2 0 0 1 -2 -2 Z\ fill=\#6366f1\/&gt;
+ &lt;text x=\16\ y=\21\ font-family=\sans-serif\ font-size=\12\ font-weight=\bold\ fill=\white\ text-anchor=\middle\ dominant-baseline=\middle\&gt;SCF&lt;/text&gt;
+&lt;/svg&gt;
