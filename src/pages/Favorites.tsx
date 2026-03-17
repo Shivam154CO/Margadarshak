@@ -18,11 +18,13 @@ import {
   TrendingUp,
   TrendingDown,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useColleges } from "../context/CollegesContext";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
+import { useFavorites } from "../hooks/useFavorites";
 
 // Illustrations
 import EmptyInboxImg from "../assets/Empty-inbox.svg";
@@ -162,11 +164,13 @@ const CollegeImage: React.FC<CollegeImageProps> = ({
 export default function Favorites() {
   const navigate = useNavigate();
   useColleges();
-  const [savedColleges, setSavedColleges] = useState<College[]>([]);
   const [search, setSearch] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("");
   const [viewMode, setViewMode] = useState<'grid-3' | 'grid-4' | 'list'>('grid-3');
   const [activeFilter, setActiveFilter] = useState("all");
+
+  // ── Supabase-backed favorites ──────────────────────────────────────────────
+  const { favorites: savedColleges, isLoading: favLoading, removeFavorite } = useFavorites();
 
   const { data: profile } = useQuery({
     queryKey: ['userProfile'],
@@ -192,19 +196,6 @@ export default function Favorites() {
     refetchOnMount: false,
   });
 
-  // Load saved colleges from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('favoriteColleges');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setSavedColleges(parsed);
-      } catch (error) {
-        console.error('Error parsing saved colleges:', error);
-      }
-    }
-  }, []);
-
   // Filter colleges based on search and branch
   const filteredColleges = savedColleges.filter((college) => {
     const matchesSearch = college.college_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -214,13 +205,11 @@ export default function Favorites() {
   });
 
   // Get unique branches for filter dropdown
-  const uniqueBranches = Array.from(new Set(savedColleges.map(college => college.branch_name))).sort();
+  const uniqueBranches = Array.from(new Set(savedColleges.map(college => college.branch_name))).filter(Boolean).sort();
 
-  // Handle removing a favorite
-  const handleRemoveFavorite = (collegeCode: string) => {
-    const updated = savedColleges.filter(college => college.college_code !== collegeCode);
-    setSavedColleges(updated);
-    localStorage.setItem('favoriteColleges', JSON.stringify(updated));
+  // Handle removing a favorite — delegates to Supabase hook (optimistic)
+  const handleRemoveFavorite = (college_code: string, branch: string) => {
+    removeFavorite({ college_code, branch });
   };
 
   const getAdmissionInfo = (college: College) => {
@@ -497,7 +486,12 @@ export default function Favorites() {
         </div>
 
         {/* ===== Loading State ===== */}
-        {savedColleges.length === 0 ? (
+        {favLoading && savedColleges.length === 0 ? (
+          <div className="text-center py-20">
+            <Loader2 className="w-10 h-10 animate-spin text-indigo-500 mx-auto mb-3" />
+            <p className="text-slate-500 font-medium">Loading your saved colleges…</p>
+          </div>
+        ) : savedColleges.length === 0 ? (
           <div className="text-center py-16 bg-white/50 rounded-3xl border-2 border-dashed border-gray-300/50 shadow-sm">
             <img src={EmptyInboxImg} alt="No favorites yet" className="w-40 h-40 mx-auto mb-6 opacity-90" />
             <h4 className="text-xl font-semibold text-gray-900 mb-2">
@@ -507,7 +501,7 @@ export default function Favorites() {
               Start exploring colleges and save your favorites for quick access to your preferred matches.
             </p>
             <button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/dashboard")}
               className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm"
             >
               Explore Colleges
@@ -629,8 +623,9 @@ export default function Favorites() {
 
                       {/* Remove Button */}
                       <button
-                        onClick={() => handleRemoveFavorite(college.college_code)}
+                        onClick={() => handleRemoveFavorite(college.college_code, college.branch)}
                         className="absolute top-4 right-4 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-all z-10"
+                        title="Remove from favorites"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

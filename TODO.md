@@ -1,20 +1,20 @@
-# Navbar Logo Alignment Fix - Progress Tracker
+# Student Dashboard Implementation - Progress Tracker
 
-✅ Step 1: Plan approved and TODO created
+✅ **Step 1:** Plan approved by user
 
-✅ Step 2: Read IkigaiLogo.tsx - no internal issues (pure SVG)
+⏳ **Step 2:** Create Supabase schema (new tables: predictions_history, cap_rounds, etc.)
 
-✅ Step 3: Edit src/pages/Landing.tsx - standardize scrolled navbar
+⏳ **Step 3:** Update src/types/ (add PredictionHistory, CapRound, etc.)
 
-✅ Step 4: Edit src/components/Navbar.tsx - fix broken JSX, logo alignment, paths
+⏳ **Step 4:** Create src/lib/dashboardQueries.ts (Supabase CRUD hooks)
 
-⏳ Step 5: Verify logo alignment and functionality across devices
+⏳ **Step 5:** Create src/components/dashboard/ (5 new section components)
 
-⏳ Step 6: Test mobile menu, dropdowns, scroll effects
+⏳ **Step 6:** Refactor src/pages/Dashboard.tsx (tabs + sections)
 
-⏳ Step 7: Update TODO.md and attempt completion
+⏳ **Step 7:** Test & migrate current localStorage saves to Supabase
 
-**Next Actions:**
-- Fix Navbar.tsx syntax (incomplete logo JSX)
-- Standardize Landing.tsx to use Navbar component
-- Test compilation and alignment
+⏳ **Step 8:** Update TODO + attempt completion
+
+**Current Status:** Starting schema creation...
+

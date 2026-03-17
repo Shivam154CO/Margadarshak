@@ -29,6 +29,7 @@ import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
 import Navbar from "../components/Navbar";
 import { CollegeCardImage } from "../components/ui/CollegeCardImage";
+import { useFavorites } from "../hooks/useFavorites";
 
 export const getCollegeImage = (collegeCode: string): string => {
   if (!collegeCode) {
@@ -130,19 +131,9 @@ const CollegeImage: React.FC<CollegeImageProps> = ({
 export default function Dashboard() {
   const navigate = useNavigate();
   const { colleges, setColleges } = useColleges();
-  const [savedColleges, setSavedColleges] = useState<string[]>(() => {
-    const saved = localStorage.getItem("favoriteColleges");
-    if (saved) {
-      try {
-        const parsed: College[] = JSON.parse(saved);
-        return parsed.map((c) => `${c.college_code}_${c.branch}`);
-      } catch (e) {
-        console.error("Failed to parse saved colleges", e);
-        return [];
-      }
-    }
-    return [];
-  });
+
+  // ── Supabase-backed favorites ─────────────────────────────────────────────
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [activeFilter, setActiveFilter] = useState("all");
   const [viewMode, setViewMode] = useState<'grid-3' | 'grid-4' | 'list'>('grid-3');
   const [selectedBranch, setSelectedBranch] = useState("");
@@ -290,39 +281,7 @@ export default function Dashboard() {
   }, []);
 
   const toggleSaveCollege = (college: College) => {
-    const key = `${college.college_code}_${college.branch}`;
-    let newSavedColleges: string[];
-    let newLocalStorage: College[];
-
-    const existingStorageRaw = localStorage.getItem("favoriteColleges");
-    let existingStorage: College[] = [];
-    if (existingStorageRaw) {
-      try {
-        existingStorage = JSON.parse(existingStorageRaw);
-      } catch (e) {
-        console.error("Error parsing localStorage", e);
-      }
-    }
-
-    if (savedColleges.includes(key)) {
-      newSavedColleges = savedColleges.filter((k) => k !== key);
-      newLocalStorage = existingStorage.filter(
-        (c) => `${c.college_code}_${c.branch}` !== key
-      );
-    } else {
-      newSavedColleges = [...savedColleges, key];
-      const alreadyInStorage = existingStorage.some(
-        (c) => `${c.college_code}_${c.branch}` === key
-      );
-      if (!alreadyInStorage) {
-        newLocalStorage = [...existingStorage, college];
-      } else {
-        newLocalStorage = existingStorage;
-      }
-    }
-
-    setSavedColleges(newSavedColleges);
-    localStorage.setItem("favoriteColleges", JSON.stringify(newLocalStorage));
+    toggleFavorite(college as any);
   };
 
   const getAvailableBranches = () => {
@@ -360,7 +319,7 @@ export default function Dashboard() {
         result = result.filter((c) => c.fit === "Stretch" || c.probability_level === "Stretch");
         break;
       case "saved":
-        result = result.filter((c) => savedColleges.includes(`${c.college_code}_${c.branch}`));
+        result = result.filter((c) => isFavorite(c.college_code, c.branch));
         break;
       default:
         break;
@@ -423,7 +382,6 @@ export default function Dashboard() {
       bestFit: colleges.filter((c) => (c.fit === "Best Fit" || c.probability_level === "Best Fit") && !c.is_most_probable).length,
       goodFit: colleges.filter((c) => c.fit === "Good Fit" || c.probability_level === "Good Fit").length,
       stretch: colleges.filter((c) => c.fit === "Stretch" || c.probability_level === "Stretch").length,
-      saved: savedColleges.length,
       uniqueColleges: new Set(colleges.map((c) => c.college_code)).size,
     };
   };
@@ -650,7 +608,7 @@ export default function Dashboard() {
                 }`}
             >
               <BookmarkCheck className="w-3.5 h-3.5" />
-              <span>Saved ({stats.saved})</span>
+              <span>Saved</span>
             </button>
           </div>
         </div>
@@ -823,8 +781,7 @@ export default function Dashboard() {
               <AnimatePresence mode="popLayout">
                 {sortedColleges.map((college, index) => {
                   const admissionInfo = getAdmissionInfo(college);
-                  const saveKey = `${college.college_code}_${college.branch}`;
-                  const isSaved = savedColleges.includes(saveKey);
+                  const isSaved = isFavorite(college.college_code, college.branch);
 
                   // Render the icon dynamically based on the name
                   const IconComponent = {
