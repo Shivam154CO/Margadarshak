@@ -93,7 +93,7 @@ export const CollegeImage: React.FC<CollegeImageProps> = ({
     <img
       src={imageSrc}
       alt={alt}
-      className={`${className} ${error && type === 'logo' ? 'rounded-full object-cover' : 'object-cover'}`}
+      className={`block ${className} ${error && type === 'logo' ? 'rounded-full' : ''} ${!className.includes('object-') ? (type === 'logo' ? 'object-contain' : 'object-cover') : ''}`}
       loading="lazy"
       onError={(e) => {
         const target = e.target as HTMLImageElement;

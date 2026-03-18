@@ -29,8 +29,8 @@ export const StatCard: React.FC<StatCardProps> = ({
         <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${gradient ? 'text-gray-700' : color}`} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs sm:text-sm text-gray-600 font-medium truncate">{label}</p>
-        <p className="text-lg sm:text-2xl font-bold text-gray-900 mt-1 truncate">{value}</p>
+        <p className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider">{label}</p>
+        <p className="text-sm sm:text-lg font-extrabold text-gray-900 mt-0.5 leading-tight">{value}</p>
       </div>
     </div>
   </motion.div>

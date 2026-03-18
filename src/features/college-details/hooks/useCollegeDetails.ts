@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { normalizeCollegeData } from '../utils';
 import type { College } from '../../../types/college';
 import { useFavorites } from '../../../hooks/useFavorites';
+import seatMatrixMap from '../../../assets/seat_matrix_map.json';
 import { 
   Building, Calendar, GraduationCap, Users, 
   TrendingUp, DollarSign, Briefcase, Trophy, Home
@@ -148,10 +149,31 @@ export function useCollegeDetails() {
     { label: "Sports", value: "Available", icon: Trophy, color: "text-amber-600", bgColor: "bg-amber-50" }
   ];
 
-  const automationData = {
-    pageNumber: 1, // Logic omitted for brevity, usually derived from seatMatrixMap
-    pdfUrl: "/assets/2025-26.pdf"
-  };
+  const automationData = useMemo(() => {
+    const collegeCode = college.college_code;
+    const branchName = college.branch_name;
+    
+    let pageNumber = 1;
+    if (collegeCode && (seatMatrixMap as any)[collegeCode]) {
+      const collegeBranches = (seatMatrixMap as any)[collegeCode];
+      if (branchName && collegeBranches[branchName]) {
+        pageNumber = collegeBranches[branchName];
+      } else if (branchName) {
+        // Robust matching for branch names
+        const searchName = branchName.toLowerCase().replace(/engineering/g, '').replace(/engg/g, '').trim();
+        const match = Object.keys(collegeBranches).find(key => {
+          const keyNorm = key.toLowerCase().replace(/engineering/g, '').replace(/engg/g, '').trim();
+          return keyNorm.includes(searchName) || searchName.includes(keyNorm);
+        });
+        if (match) pageNumber = collegeBranches[match];
+      }
+    }
+    
+    return {
+      pageNumber,
+      pdfUrl: "/assets/2025-26.pdf"
+    };
+  }, [college.college_code, college.branch_name]);
 
   const handleSaveCollege = () => {
     toggleFavorite({

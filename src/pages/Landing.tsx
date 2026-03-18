@@ -22,6 +22,23 @@ export default function Landing() {
   const [isScrolled, setIsScrolled] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 80; // height of the navbar
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+      setIsMobileMenuOpen(false);
+    }
+  };
+
   // Scroll-aware navbar: detect when over dark sections
   useEffect(() => {
     const handleScroll = () => {
@@ -104,16 +121,26 @@ export default function Landing() {
       />
       {/* Navigation */}
       <nav ref={navRef} className={`fixed w-full z-[100] transition-all duration-700 ${isScrolled ? 'top-4 md:top-6 px-4 md:px-6' : 'top-0 px-4 md:px-6'}`}>
-        <div className={`flex items-center transition-all duration-700 ${isScrolled 
-          ? 'w-[56px] h-[56px] md:w-[70px] md:h-[70px] justify-center bg-transparent md:bg-white/80 md:backdrop-blur-xl md:rounded-full md:border md:border-white/20 md:shadow-2xl' 
+        <div className={`flex items-center transition-all duration-700 ${isScrolled
+          ? 'w-[56px] h-[56px] md:w-[70px] md:h-[70px] justify-center bg-transparent md:bg-white/80 md:backdrop-blur-xl md:rounded-full md:border md:border-white/20 md:shadow-2xl'
           : `mx-auto w-full max-w-7xl h-16 md:h-20 rounded-2xl px-6 md:px-10 justify-between backdrop-blur-2xl ${isNavDark ? 'bg-white/5 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)]' : 'bg-white/80 border border-slate-100/50 shadow-[0_20px_50px_rgba(0,0,0,0.05)]'}`
-          } relative z-50`}> { /* justify-center is used only when scrolled */ }
+          } relative z-50`}> { /* justify-center is used only when scrolled */}
           <IkigaiLogo size={isScrolled ? "sm" : "sm"} showText={!isScrolled} lightText={isNavDark} className={`${isScrolled ? 'scale-75 md:scale-100' : 'scale-100'} transition-all duration-500`} />
 
           {/* Desktop Menu */}
           <div className={`hidden md:flex items-center gap-12 transition-all duration-500 ${isScrolled ? 'opacity-0 scale-90 pointer-events-none w-0 overflow-hidden' : 'opacity-100 scale-100'}`}>
-            {['Predictor', 'How it Works', 'Colleges'].map(item => (
-              <button key={item} className={`font-semibold text-xs uppercase tracking-[0.2em] transition-colors ${isNavDark ? 'text-white/60 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{item}</button>
+            {[
+              { label: 'Home', id: 'predictor' },
+              { label: 'Features', id: 'features' },
+              { label: 'Journey', id: 'how-it-works' }
+            ].map(item => (
+              <button
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className={`font-semibold text-xs uppercase tracking-[0.2em] transition-colors ${isNavDark ? 'text-white/60 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
+              >
+                {item.label}
+              </button>
             ))}
           </div>
 
@@ -149,8 +176,18 @@ export default function Landing() {
               className="absolute top-20 left-4 right-4 bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 md:hidden z-40 flex flex-col gap-6"
             >
               <div className="flex flex-col gap-4">
-                {['Predictor', 'How it Works', 'Colleges'].map(item => (
-                  <button key={item} className="text-left text-slate-600 font-bold text-sm uppercase tracking-widest py-2 border-b border-slate-50">{item}</button>
+                {[
+                  { label: 'Home', id: 'predictor' },
+                  { label: 'Features', id: 'features' },
+                  { label: 'Journey', id: 'how-it-works' }
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollToSection(item.id)}
+                    className="text-left text-slate-600 font-bold text-sm uppercase tracking-widest py-2 border-b border-slate-50"
+                  >
+                    {item.label}
+                  </button>
                 ))}
               </div>
               <div className="flex flex-col gap-4">
@@ -165,7 +202,7 @@ export default function Landing() {
 
 
       {/* Hero Section - Premium Split-3D Impact (High Overlap) */}
-      <section className="relative min-h-screen flex flex-col items-center pt-24 pb-12 md:pt-28 md:pb-20 overflow-hidden bg-[#fafafa]">
+      <section id="predictor" className="relative min-h-screen flex flex-col items-center pt-24 pb-12 md:pt-28 md:pb-20 overflow-hidden bg-[#fafafa]">
         <div className="w-full flex-1 flex flex-col lg:flex-row items-center justify-between">
           {/* Dynamic Background Elements */}
           <div className="absolute top-20 left-1 w-96 h-96 bg-slate-200/50 blur-[150px] rounded-full animate-pulse" />
@@ -230,7 +267,7 @@ export default function Landing() {
       </section>
 
       {/* Stats Ribbon - Anchoring the Hero */}
-      <section className="relative z-50 -mt-10 mb-12 md:mb-20 px-4 md:px-6">
+      <section id="colleges" className="relative z-50 -mt-10 mb-12 md:mb-20 px-4 md:px-6">
         <div className="max-w-7xl mx-auto bg-gray-900 rounded-[40px] md:rounded-[60px] p-6 md:p-10 shadow-3xl border border-white/5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
             <div className="space-y-1">
@@ -403,7 +440,7 @@ export default function Landing() {
       </section>
 
       {/* Simplified Features Section */}
-      <section className="py-20 md:py-40 px-4 bg-white">
+      <section id="features" className="py-20 md:py-40 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <ScrollAnimationWrapper animation="slideUp">
             <div className="text-center mb-16 md:mb-24">
@@ -449,7 +486,7 @@ export default function Landing() {
       </section>
 
       {/* Cinematic 3D Depth Journey */}
-      <section ref={sectionRef} className="relative h-[400vh] bg-[#050505]" data-theme="dark">
+      <section id="how-it-works" ref={sectionRef} className="relative h-[400vh] bg-[#050505]" data-theme="dark">
         <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
 
           {/* Tunnel Atmosphere */}

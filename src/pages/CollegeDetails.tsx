@@ -64,14 +64,15 @@ export default function CollegeDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 text-center py-20">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
         <Navbar activeTab="search" />
-        <div className="flex-grow flex items-center justify-center">
-            <div className="animate-pulse">
-                <div className="w-24 h-24 bg-blue-500 rounded-3xl mx-auto mb-6 flex items-center justify-center">
-                    <Bot className="w-12 h-12 text-white animate-bounce" />
+        <div className="flex-grow flex items-center justify-center p-4">
+            <div className="text-center">
+                <div className="relative mb-6">
+                  <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800">Loading College Details...</h2>
+                <h2 className="text-xl font-bold text-gray-800 animate-pulse">Loading College Details...</h2>
+                <p className="text-gray-500 mt-2 text-sm">Please wait while we fetch the latest information</p>
             </div>
         </div>
         <Footer />
@@ -213,8 +214,8 @@ export default function CollegeDetails() {
         {/* Hero Card */}
         <div className="bg-white rounded-[32px] p-6 sm:p-10 shadow-sm border border-gray-200 mb-8">
            <div className="flex flex-col md:flex-row gap-8 items-center md:items-start text-center md:text-left">
-              <div className="w-32 h-32 bg-indigo-600 rounded-3xl flex-shrink-0 flex items-center justify-center shadow-xl overflow-hidden">
-                <CollegeImage collegeCode={college.college_code || ""} type="logo" className="w-full h-full object-cover" alt="Logo" />
+              <div className="w-32 h-32 bg-gray-50 rounded-3xl flex-shrink-0 shadow-xl overflow-hidden border border-gray-100 relative">
+                <CollegeImage collegeCode={college.college_code || ""} type="logo" className="absolute inset-0 w-full h-full object-fill" alt="Logo" />
               </div>
               <div className="w-full md:flex-1 md:min-w-0 overflow-hidden">
                  <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2 break-words whitespace-normal leading-tight">{college.college_name}</h1>
