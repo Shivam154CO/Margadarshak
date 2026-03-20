@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Bookmark, BookmarkCheck, ExternalLink, Trophy, Layers, Award, Zap, CheckCircle, Target, TrendingUp, AlertCircle } from 'lucide-react';
+import { MapPin, Bookmark, BookmarkCheck, ExternalLink, Trophy, Layers, Award, Zap, CheckCircle, Target, TrendingUp, AlertCircle, AlertTriangle } from 'lucide-react';
 import type { College } from '../../../types/college';
 import { ROUTES } from '../../../constants/routes';
 
@@ -41,7 +41,7 @@ const CollegeCardComponent: React.FC<CollegeCardProps> = ({
 
   // Render the icon dynamically based on the name
   const icons: Record<string, any> = {
-    Zap, CheckCircle, Target, TrendingUp, AlertCircle
+    Zap, CheckCircle, Target, TrendingUp, AlertCircle, AlertTriangle
   };
   const IconComponent = icons[admissionInfo.iconName] || AlertCircle;
 

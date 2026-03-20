@@ -10,6 +10,7 @@ import { useFavorites } from "../hooks/useFavorites";
 import { useDashboardFilters } from "../features/dashboard/hooks/useDashboardFilters";
 import { fetchUserProfile } from "../services/supabase/users";
 import { predictAdmission } from "../services/ml-api/predictions";
+import { exportToPDF, exportToCSV, exportDreamList, exportDreamCSV, exportStrategicForm } from "../utils/exportUtils";
 
 // Components
 import Footer from "../components/Footer";
@@ -23,6 +24,7 @@ import { CollegeCard } from "../features/dashboard/components/CollegeCard";
 // Types & Constants
 import type { College } from "../types/college";
 import { ROUTES } from "../constants/routes";
+import { FileDown, FileText, ClipboardList } from "lucide-react";
 
 
 
@@ -37,6 +39,9 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { colleges, setColleges } = useColleges();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const [aiInsights, setAiInsights] = useState<string>("");
+  const [dreamList, setDreamList] = useState<College[]>([]);
+  const [dreamLimit, setDreamLimit] = useState<number>(20);
 
   // ── Profile Query ──────────────────────────────────────────────────────────
   const { data: profile } = useQuery({
@@ -74,6 +79,14 @@ export default function Dashboard() {
 
         const data = await predictAdmission(requestData);
 
+        if (data.ai_insights) {
+          setAiInsights(data.ai_insights);
+        }
+
+        if (data.dream_list) {
+          setDreamList(data.dream_list);
+        }
+
         if (data.colleges && data.colleges.length > 0) {
           return data.colleges.map((college: College) => ({
             ...college,
@@ -83,6 +96,7 @@ export default function Dashboard() {
         }
         throw new Error("API empty");
       } catch (err) {
+        setAiInsights("AI Analysis failing, using base data matches.");
         console.warn("Prediction API failed, using base data from Supabase", err);
         const { data } = await supabase.from('colleges_2025').select('*');
         if (!data) return [];
@@ -129,6 +143,7 @@ export default function Dashboard() {
       bestFit: colleges.filter((c: College) => (c.fit === "Best Fit" || c.probability_level === "Best Fit") && !c.is_most_probable).length,
       goodFit: colleges.filter((c: College) => c.fit === "Good Fit" || c.probability_level === "Good Fit").length,
       stretch: colleges.filter((c: College) => c.fit === "Stretch" || c.probability_level === "Stretch").length,
+      reach: colleges.filter((c: College) => c.fit === "Reach" || c.probability_level === "Reach").length,
       uniqueColleges: new Set(colleges.map((c: College) => c.college_code)).size,
     };
   }, [colleges]);
@@ -179,6 +194,16 @@ export default function Dashboard() {
           iconName: "TrendingUp",
           order: 4,
         };
+      case "Reach":
+        return {
+          percentage: college.admission_chance ? `${college.admission_chance.toFixed(1)}%` : (college.admission_chance_percentage || "25.0%"),
+          color: "text-red-700",
+          bgColor: "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200",
+          label: "Reach",
+          gradient: "from-red-500 via-rose-500 to-pink-600",
+          iconName: "AlertTriangle",
+          order: 5,
+        };
       default:
         return {
           percentage: college.admission_chance ? `${college.admission_chance.toFixed(1)}%` : (college.admission_chance_percentage || "25.0%"),
@@ -207,10 +232,10 @@ export default function Dashboard() {
       // This will flow from Stretch -> Best Fit -> Good Fit -> Most Probable sequentially.
       const rankA = a.cutoff_rank || 0;
       const rankB = b.cutoff_rank || 0;
-      
+
       // Secondary: if cutoff_rank is identical, fall back to match score
       if (rankA !== rankB) {
-        return rankA - rankB; 
+        return rankA - rankB;
       }
       return (b.match_score || 0) - (a.match_score || 0);
     });
@@ -247,6 +272,52 @@ export default function Dashboard() {
     );
   }
 
+  const handleExportPDF = () => {
+    if (sortedColleges.length) {
+      exportToPDF(sortedColleges, profile as any, aiInsights);
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (sortedColleges.length) {
+      exportToCSV(sortedColleges);
+    }
+  };
+
+  const handleExportDream = () => {
+    if (dreamList.length) {
+      exportDreamList(dreamList.slice(0, dreamLimit), profile);
+    }
+  };
+
+  const handleExportDreamCSV = () => {
+    if (dreamList.length) {
+      exportDreamCSV(dreamList.slice(0, dreamLimit), profile);
+    }
+  };
+
+  const handleExportStrategic = () => {
+    if (!colleges.length) return;
+
+    // Strategic Partition (5% / 55% / 40%)
+    const ambition = colleges.filter(c => c.fit === "Reach" || c.fit === "Stretch");
+    const target = colleges.filter(c => c.fit === "Best Fit" || c.fit === "Good Fit");
+    const backup = colleges.filter(c => c.fit === "Most Probable");
+
+    const totalLimit = dreamLimit;
+    const ambitionCount = Math.max(1, Math.ceil(totalLimit * 0.05));
+    const targetCount = Math.max(1, Math.ceil(totalLimit * 0.55));
+    const backupCount = Math.max(1, Math.floor(totalLimit * 0.40));
+
+    const strategicList = [
+      ...ambition.slice(0, ambitionCount),
+      ...target.slice(0, targetCount),
+      ...backup.slice(0, backupCount)
+    ];
+
+    exportStrategicForm(strategicList, profile);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar activeTab="dashboard" userProfile={profile} />
@@ -256,6 +327,28 @@ export default function Dashboard() {
 
         <DashboardHeader profile={profile} />
         <StatsBar stats={stats} />
+
+        {/* AI Insights Card */}
+        {aiInsights && (
+          <div className="mb-8 p-0.5 bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500 rounded-2xl shadow-lg animate-in fade-in slide-in-from-top-4 duration-1000">
+            <div className="bg-white rounded-[15px] p-6 lg:p-8 flex items-start space-x-6">
+              <div className="hidden sm:flex w-16 h-16 bg-indigo-50 rounded-2xl items-center justify-center flex-shrink-0 animate-pulse">
+                <FileText className="w-8 h-8 text-indigo-600" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="bg-indigo-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
+                    AI Strategic Analysis
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Smart Admission Strategy</h3>
+                <p className="text-slate-600 leading-relaxed font-medium">
+                  {aiInsights}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <FilterBar
           activeFilter={activeFilter}
@@ -281,6 +374,54 @@ export default function Dashboard() {
             <h3 className="text-lg font-semibold text-gray-900">
               Showing {sortedColleges.length} matches
             </h3>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleExportPDF}
+              className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all flex items-center space-x-2"
+            >
+              <FileText className="w-4 h-4 text-indigo-600" />
+              <span>Download PDF</span>
+            </button>
+            <button
+              onClick={handleExportCSV}
+              className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all flex items-center space-x-2"
+            >
+              <FileDown className="w-4 h-4 text-emerald-600" />
+              <span>Download CSV</span>
+            </button>
+            <button
+              onClick={handleExportDream}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-sm transition-all flex items-center space-x-2"
+            >
+              <FileText className="w-4 h-4 text-amber-200" />
+              <span>Dream PDF</span>
+            </button>
+            <button
+              onClick={handleExportDreamCSV}
+              className="px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-bold hover:bg-slate-900 shadow-sm transition-all flex items-center space-x-2"
+            >
+              <FileDown className="w-4 h-4 text-amber-200" />
+              <span>Dream CSV</span>
+            </button>
+            <div className="flex items-center bg-white border border-slate-200 rounded-xl px-3 py-1">
+              <span className="text-xs font-bold text-slate-500 mr-2">Limit:</span>
+              <input
+                type="number"
+                min="1"
+                max="300"
+                value={dreamLimit}
+                onChange={(e) => setDreamLimit(Math.min(300, Math.max(1, parseInt(e.target.value) || 1)))}
+                className="w-12 bg-transparent border-none text-sm font-bold text-slate-800 focus:ring-0 p-0"
+              />
+            </div>
+            <button
+              onClick={handleExportStrategic}
+              className="px-4 py-2 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700 shadow-sm transition-all flex items-center space-x-2"
+            >
+              <ClipboardList className="w-4 h-4 text-purple-200" />
+              <span>Option Form</span>
+            </button>
           </div>
         </div>
 
@@ -328,11 +469,10 @@ export default function Dashboard() {
                       <button
                         key={idx}
                         onClick={() => setCurrentPage(pageNumber)}
-                        className={`w-10 h-10 rounded-xl font-medium transition-colors ${
-                          currentPage === pageNumber
+                        className={`w-10 h-10 rounded-xl font-medium transition-colors ${currentPage === pageNumber
                             ? 'bg-indigo-600 text-white shadow-md'
                             : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                        }`}
+                          }`}
                       >
                         {pageNumber}
                       </button>
@@ -345,16 +485,15 @@ export default function Dashboard() {
                   }
                   return null;
                 }
-                
+
                 return (
                   <button
                     key={idx}
                     onClick={() => setCurrentPage(pageNumber)}
-                    className={`w-10 h-10 rounded-xl font-medium transition-colors ${
-                      currentPage === pageNumber
+                    className={`w-10 h-10 rounded-xl font-medium transition-colors ${currentPage === pageNumber
                         ? 'bg-indigo-600 text-white shadow-md'
                         : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     {pageNumber}
                   </button>

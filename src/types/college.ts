@@ -120,6 +120,7 @@ export interface College {
     fit_reason?: string;
     match_score?: number;
     match_percentage?: string;
+    available_branches?: string[];
 
     display_fees?: string;
     display_seats?: string;

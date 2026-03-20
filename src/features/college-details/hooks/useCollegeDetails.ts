@@ -31,6 +31,41 @@ export function useCollegeDetails() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [collegeReviews, setCollegeReviews] = useState<any[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const { data: profile } = useQuery<any>({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      const { data } = await supabase.from('users').select('*').eq('id', session.user.id).single();
+      return data;
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const [collegeInsights, setCollegeInsights] = useState<string>("");
+  const [isInsightsLoading, setIsInsightsLoading] = useState(false);
+
+  const fetchCollegeInsights = useCallback(async () => {
+    if (!college.college_code || !profile) return;
+    setIsInsightsLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_ML_API_URL || 'http://127.0.0.1:5001'}/college_insights`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          college_code: college.college_code,
+          user_rank: profile.exam_type === 'CET' ? profile.cet_rank : profile.diploma_rank,
+          branch_name: college.branch_name
+        })
+      });
+      const data = await response.json();
+      setCollegeInsights(data.insights || "");
+    } catch (err) {
+      console.error("Failed to fetch college insights:", err);
+    } finally {
+      setIsInsightsLoading(false);
+    }
+  }, [college.college_code, profile, college.branch_name]);
 
   // Fetch full college data if missing
   useEffect(() => {
@@ -62,22 +97,17 @@ export function useCollegeDetails() {
     fetchFullData();
   }, [college.college_code]);
 
+  useEffect(() => {
+    if (profile && college?.college_code) {
+      fetchCollegeInsights();
+    }
+  }, [profile?.id, college?.college_code, fetchCollegeInsights]);
+
   const { isFavorite, toggleFavorite } = useFavorites();
   const saved = useMemo(() => 
     college.college_code && college.branch_name ? isFavorite(college.college_code, college.branch_name) : false,
     [college.college_code, college.branch_name, isFavorite]
   );
-
-  const { data: profile } = useQuery<any>({
-    queryKey: ['userProfile'],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return null;
-      const { data } = await supabase.from('users').select('*').eq('id', session.user.id).single();
-      return data;
-    },
-    staleTime: 1000 * 60 * 10,
-  });
 
   // Fetch reviews logic
   const fetchReviews = useCallback(async () => {
@@ -234,6 +264,8 @@ export function useCollegeDetails() {
     feeData,
     infrastructure,
     placementData,
-    automationData
+    automationData,
+    collegeInsights,
+    isInsightsLoading
   };
 }

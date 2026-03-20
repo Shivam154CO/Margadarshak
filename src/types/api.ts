@@ -21,6 +21,8 @@ export interface PredictionRequest {
 
 export interface PredictionResponse {
   colleges: College[];
+  ai_insights?: string;
+  dream_list?: College[];
   metadata?: {
     total_count: number;
     prediction_time: string;

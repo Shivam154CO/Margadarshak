@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, RefreshCcw } from 'lucide-react';
+import { RefreshCcw } from 'lucide-react';
 import ConnectionLostImg from '../assets/Connection-lost.svg';
 
 export default function NetworkStatus() {
@@ -43,7 +43,7 @@ export default function NetworkStatus() {
                         </h2>
 
                         <p className="text-slate-500 font-medium mb-8">
-                            It looks like you've been scavenged from the internet. Please check your connection to continue browsing.
+                            It looks like you've been disconnected from the internet. Please check your connection to continue browsing.
                         </p>
 
                         <button
@@ -53,11 +53,6 @@ export default function NetworkStatus() {
                             <RefreshCcw className="w-5 h-5" />
                             Try Reconnecting
                         </button>
-
-                        <div className="mt-6 flex items-center justify-center gap-2 text-red-500">
-                            <ShieldAlert className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Connection Shield Active</span>
-                        </div>
                     </motion.div>
                 </motion.div>
             )}

@@ -21,7 +21,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { ROUTES } from "./constants/routes";
 
 // Lazy Pages
-const Landing = lazy(() => import("./pages/Landing"));
+// Pages
+import Landing from "./pages/Landing";
 const Signup = lazy(() => import("./pages/Signup"));
 const Login = lazy(() => import("./pages/Login"));
 const Profile = lazy(() => import("./pages/Profile"));

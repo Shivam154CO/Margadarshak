@@ -6,6 +6,7 @@ interface StatsBarProps {
     bestFit: number;
     goodFit: number;
     stretch: number;
+    reach: number;
     uniqueColleges: number;
   };
 }
@@ -31,7 +32,12 @@ export const StatsBar: React.FC<StatsBarProps> = ({ stats }) => {
       <div className="bg-white border border-slate-200 border-l-4 border-l-orange-400 rounded-xl p-4 shadow-sm hover:-translate-y-0.5 transition-transform">
         <div className="text-2xl font-bold text-slate-800">{stats.stretch}</div>
         <p className="text-sm font-medium text-slate-700 mt-1">Stretch</p>
-        <p className="text-xs text-slate-400 mt-0.5">Backup options</p>
+        <p className="text-xs text-slate-400 mt-0.5">Aggressive choices</p>
+      </div>
+      <div className="bg-white border border-slate-200 border-l-4 border-l-red-500 rounded-xl p-4 shadow-sm hover:-translate-y-0.5 transition-transform">
+        <div className="text-2xl font-bold text-slate-800">{stats.reach}</div>
+        <p className="text-sm font-medium text-slate-700 mt-1">Reach</p>
+        <p className="text-xs text-slate-400 mt-0.5">High-risk goals</p>
       </div>
       <div className="bg-white border border-slate-200 border-l-4 border-l-slate-400 rounded-xl p-4 shadow-sm hover:-translate-y-0.5 transition-transform">
         <div className="text-2xl font-bold text-slate-800">{stats.uniqueColleges}</div>

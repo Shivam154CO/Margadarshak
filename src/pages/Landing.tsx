@@ -1,10 +1,9 @@
-import { useEffect, useRef, useMemo, useState } from "react";
+import { useEffect, useRef, useMemo, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform, motionValue, useSpring, AnimatePresence } from "framer-motion";
 import ScrollAnimationWrapper from "../components/ScrollAnimationWrapper";
 import LiveFeatureIcon from "../components/LiveFeatureIcon";
 import IkigaiLogo from "../components/IkigaiLogo";
-import Footer from "../components/Footer";
 import SEO from "../components/SEO";
 import { LiveCastePreview, LiveMatchSimulator, LiveTrendPulse, LiveAIAssistant, LiveDistanceTracker, LiveScholarshipGuide } from "../components/LiveFeatureShowcase";
 import Magnetic from "../components/Magnetic";
@@ -12,8 +11,17 @@ import Magnetic from "../components/Magnetic";
 // Import custom illustrations
 import clgImg from "../assets/illustrations/clg.png";
 
-// Import rich problem showcase
-import ProblemShowcase from "../features/landing/components/spatial-product-showcase";
+// Lazy load heavy components
+const ProblemShowcase = lazy(() => import("../features/landing/components/spatial-product-showcase"));
+const DomeGallery = lazy(() => import("../components/DomeGallery"));
+const Footer = lazy(() => import("../components/Footer"));
+
+// Loading fallback component
+const SectionLoader = () => (
+  <div className="w-full h-96 flex items-center justify-center bg-slate-50/50 rounded-[40px] animate-pulse">
+    <div className="w-12 h-12 rounded-full border-4 border-rose-500 border-t-transparent animate-spin" />
+  </div>
+);
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -42,29 +50,46 @@ export default function Landing() {
   // Scroll-aware navbar: detect when over dark sections
   useEffect(() => {
     const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    // Optimized approach: track which sections are "active" relative to the navbar
+    const handleThemeChange = () => {
       const nav = navRef.current;
       if (!nav) return;
-
-      setIsScrolled(window.scrollY > 20);
-
+      
       const navRect = nav.getBoundingClientRect();
       const navCenter = navRect.top + navRect.height / 2;
-
-      // Find all dark sections
+      
       const darkSections = document.querySelectorAll('[data-theme="dark"]');
       let overDark = false;
-      darkSections.forEach((section) => {
+      for (const section of Array.from(darkSections)) {
         const rect = section.getBoundingClientRect();
         if (navCenter >= rect.top && navCenter <= rect.bottom) {
           overDark = true;
+          break;
         }
-      });
+      }
       setIsNavDark(overDark);
     };
 
+    // Debounce the heavy theme check
+    let timeoutId: number;
+    const debouncedThemeCheck = () => {
+      if (timeoutId) window.cancelAnimationFrame(timeoutId);
+      timeoutId = window.requestAnimationFrame(handleThemeChange);
+    };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', debouncedThemeCheck, { passive: true });
+    
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    handleThemeChange();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', debouncedThemeCheck);
+    };
   }, []);
   const sectionRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -110,7 +135,7 @@ export default function Landing() {
     { title: "Scholarship Guide", desc: "Unlock fee benefits like Post-Matric and TFWS with our automated checklist.", showcase: "scholarship", badge: "Official Data" },
     { title: "Trend Pulse", desc: "Analyze placement statistics and median packages for every college branch.", showcase: "trend", badge: "Live Feed" },
     { title: "Precision Match", desc: "Our neural engine predicts your best college match with 95.7% accuracy.", showcase: "match", badge: "95.7% Accurate" },
-  ], []);
+  ] as const, []);
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 font-sans selection:bg-slate-100 selection:text-slate-900 dark:selection:bg-indigo-800 dark:selection:text-white">
@@ -259,6 +284,9 @@ export default function Landing() {
               <img
                 src={clgImg}
                 alt="Engineering Success"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 className="w-full h-auto drop-shadow-[-100px_40px_160px_rgba(0,0,0,0.1)] animate-float scale-100 md:scale-110"
               />
             </div>
@@ -297,7 +325,9 @@ export default function Landing() {
       </section>
 
       {/* Problem Section - Spatial Showcase */}
-      <ProblemShowcase />
+      <Suspense fallback={<SectionLoader />}>
+        <ProblemShowcase />
+      </Suspense>
 
       {/* Visual USP - The "Proof" Section (Showing Project Power) */}
       <section className="py-20 md:py-40 px-6 bg-[#080808] relative overflow-hidden" data-theme="dark">
@@ -449,7 +479,7 @@ export default function Landing() {
           </ScrollAnimationWrapper>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, idx) => (
+            {features.map((feature: any, idx: number) => (
               <ScrollAnimationWrapper key={idx} animation="scale" delay={idx * 0.05}>
                 <div className="group bg-gradient-to-br from-white to-slate-50/50 rounded-[50px] p-8 border border-slate-100 hover:border-rose-100 shadow-sm hover:shadow-[0_20px_50px_rgba(225,29,72,0.06)] transition-all duration-700 h-full flex flex-col items-center text-center space-y-6">
 
@@ -483,121 +513,99 @@ export default function Landing() {
             ))}
           </div>
         </div>
-      </section>
+      </section>      {/* Redesigned Journey Section - Sleek Vertical Pathway */}
+      <section id="how-it-works" className="relative bg-slate-950 py-32 md:py-48 overflow-hidden" data-theme="dark">
+        {/* Ambient background effects */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-rose-600/10 blur-[150px] rounded-full animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/10 blur-[150px] rounded-full" />
+        </div>
 
-      {/* Cinematic 3D Depth Journey */}
-      <section id="how-it-works" ref={sectionRef} className="relative h-[400vh] bg-[#050505]" data-theme="dark">
-        <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <ScrollAnimationWrapper animation="slideUp" className="text-center mb-32">
+            <div className="inline-flex items-center px-4 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-full text-rose-500 font-extrabold text-[10px] uppercase tracking-[0.5em] mb-6">
+              The Protocol
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none">
+              Your Journey <span className="text-rose-600 italic">Redefined.</span>
+            </h2>
+          </ScrollAnimationWrapper>
 
-          {/* Tunnel Atmosphere */}
-          <div className="absolute inset-0 z-0">
-            {/* Dynamic Light Streaks */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-rose-500/50 to-transparent blur-xl" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1px] h-full bg-gradient-to-b from-transparent via-rose-500/20 to-transparent blur-xl" />
+          <div className="relative">
+            {/* The Central Connective Rail */}
+            <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-rose-600/0 via-rose-600/40 to-rose-600/0 hidden md:block" />
 
-            {/* Deep Field Glows */}
-            <motion.div
-              animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
-              transition={{ duration: 8, repeat: Infinity }}
-              className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-rose-900/10 blur-[150px] rounded-full"
-            />
-            <motion.div
-              animate={{ scale: [1.2, 1, 1.2], opacity: [0.1, 0.2, 0.1] }}
-              transition={{ duration: 10, repeat: Infinity }}
-              className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-indigo-900/10 blur-[150px] rounded-full"
-            />
-          </div>
+            <div className="space-y-24 md:space-y-40">
+              {journeySteps.map((step: any, index: number) => {
+                const isEven = index % 2 === 0;
+                return (
+                  <ScrollAnimationWrapper 
+                    key={index} 
+                    animation={isEven ? "slideRight" : "slideLeft"}
+                    className={`relative flex flex-col md:flex-row items-center gap-12 ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'}`}
+                  >
+                    {/* The Path Node */}
+                    <div className="absolute left-8 md:left-1/2 top-0 -translate-x-1/2 z-20 hidden md:flex items-center justify-center">
+                      <div className="w-4 h-4 rounded-full bg-slate-950 border-2 border-rose-600 shadow-[0_0_15px_rgba(225,29,72,0.5)]" />
+                      <div className="absolute w-8 h-8 rounded-full bg-rose-600/20 animate-ping" />
+                    </div>
 
-          {/* Heading - Floating in Deep Space */}
-          <motion.div
-            style={{
-              opacity: useTransform(scrollYProgress, [0, 0.1], [1, 0]),
-              scale: useTransform(scrollYProgress, [0, 0.1], [1, 0.8]),
-              y: useTransform(scrollYProgress, [0, 0.1], [0, -100])
-            }}
-            className="absolute top-24 text-center z-50 w-full px-4"
-          >
-            <h2 className="text-4xl md:text-7xl font-black text-white tracking-widest uppercase italic">Your Journey <br /> <span className="text-rose-600 not-italic">Starts Now.</span></h2>
-            <p className="text-[10px] text-white/30 font-black tracking-[1em] mt-4 uppercase">Scroll to enter the dimension</p>
-          </motion.div>
+                    {/* Content Card */}
+                    <div className="w-full md:w-[45%] group">
+                      <div className="relative p-8 md:p-10 rounded-[30px] bg-white/[0.03] border border-white/10 backdrop-blur-xl transition-all duration-500 hover:border-rose-500/30 hover:bg-white/[0.05] group">
+                        {/* Phase Badge */}
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full text-[9px] font-black text-rose-500 uppercase tracking-widest mb-6">
+                          <span className="w-1 h-1 rounded-full bg-rose-500" />
+                          Phase 0{index + 1}
+                        </div>
 
-          {/* 3D Steps Stack */}
-          <div className="relative w-full max-w-4xl h-[600px] flex items-center justify-center perspective-[2000px]">
-            {journeySteps.map((step, index) => {
-              const start = index * 0.22;
-              const end = start + 0.35;
+                        <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight group-hover:text-rose-500 transition-colors">
+                          {step.title}
+                        </h3>
+                        <p className="text-sm md:text-base text-white/40 font-medium leading-relaxed mb-8">
+                          {step.description}
+                        </p>
 
-              const scale = useTransform(scrollYProgress, [start, start + 0.15, end], [0, 1, 3]);
-              const opacity = useTransform(scrollYProgress, [start, start + 0.05, start + 0.25, end], [0, 1, 1, 0]);
-              const z = useTransform(scrollYProgress, [start, end], [-1000, 1000]);
-              const blur = useTransform(scrollYProgress, [start, start + 0.05, start + 0.25, end], ["12px", "0px", "0px", "20px"]);
-              const rotateX = useTransform(scrollYProgress, [start, end], [20, -20]);
-
-              return (
-                <motion.div
-                  key={index}
-                  style={{ scale, opacity, z, filter: `blur(${blur})`, rotateX }}
-                  className="absolute w-full max-w-[90vw] md:max-w-lg px-4"
-                >
-                  <div className="relative group p-8 md:p-12 rounded-[50px] md:rounded-[80px] bg-white/5 border border-white/10 backdrop-blur-3xl shadow-[0_40px_100px_rgba(0,0,0,0.5)] overflow-hidden">
-                    {/* Animated Border Glow */}
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-500/50 to-transparent" />
-
-                    <div className="flex flex-col items-center text-center space-y-10">
-                      <motion.div
-                        initial={{ rotate: -10 }}
-                        animate={{ rotate: 10 }}
-                        transition={{ duration: 4, repeat: Infinity, repeatType: "reverse" }}
-                        className="w-32 h-32 rounded-[45px] bg-white flex items-center justify-center shadow-[0_20px_60px_rgba(225,29,72,0.2)]"
-                      >
-                        <LiveFeatureIcon type={step.icon} size={64} />
-                      </motion.div>
-
-                      <div className="space-y-4">
-                        <div className="inline-block px-4 py-1 bg-rose-600 text-white text-[10px] font-black uppercase tracking-[0.4em] rounded-full mb-2 shadow-lg">Step 0{index + 1}</div>
-                        <h3 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none">{step.title}</h3>
-                        <p className="text-lg text-white/50 font-medium leading-relaxed max-w-sm mx-auto">{step.description}</p>
-                      </div>
-
-                      {/* Progress Indicator */}
-                      <div className="flex gap-2 justify-center">
-                        {[0, 1, 2, 3].map(i => (
-                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === index ? 'bg-rose-500 w-6' : 'bg-white/10'} transition-all duration-300`} />
-                        ))}
+                        <div className="flex items-center gap-4 text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">
+                          <div className="h-px flex-1 bg-white/5" />
+                          <span>Initialized</span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Background Index Number */}
-                    <span className="absolute -bottom-6 -right-6 md:-bottom-10 md:-right-10 text-[100px] md:text-[180px] font-black text-white/[0.03] select-none pointer-events-none">0{index + 1}</span>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {/* Depth UI - Side Trackers */}
-          <div className="absolute left-10 md:left-20 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-8 opacity-40">
-            <div className="h-64 w-[1px] bg-gradient-to-b from-transparent via-rose-500 to-transparent" />
-            <div className="text-[10px] font-black text-rose-500 uppercase vertical-text tracking-[1em]">Scanning Dimension</div>
-          </div>
-          <div className="absolute right-10 md:right-20 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-8 opacity-40">
-            <div className="text-[10px] font-black text-white uppercase vertical-text tracking-[1em]">Trajectory Ready</div>
-            <div className="h-64 w-[1px] bg-gradient-to-b from-transparent via-white to-transparent" />
-          </div>
-
-          {/* Goal Glimmer at the end */}
-          <motion.div
-            style={{
-              opacity: useTransform(scrollYProgress, [0.85, 0.95], [0, 1]),
-              scale: useTransform(scrollYProgress, [0.85, 0.95], [0.5, 1])
-            }}
-            className="absolute z-10 text-center"
-          >
-            <div className="relative">
-              <div className="absolute inset-0 bg-rose-500 blur-[100px] rounded-full opacity-50" />
-              <h4 className="relative text-3xl font-black text-white uppercase tracking-[0.5em]">Goal Reached</h4>
+                    {/* Icon Visual */}
+                    <div className="w-full md:w-[40%] flex justify-center">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-rose-500/10 blur-3xl rounded-full scale-150 group-hover:bg-rose-500/20 transition-all duration-700" />
+                        <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white rounded-[24px] md:rounded-[32px] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-700">
+                          <LiveFeatureIcon type={step.icon} size={64} />
+                        </div>
+                      </div>
+                    </div>
+                  </ScrollAnimationWrapper>
+                );
+              })}
             </div>
-          </motion.div>
+          </div>
+
+          {/* Final Call to Action */}
+          <ScrollAnimationWrapper animation="scale" className="mt-40 text-center">
+            <div className="p-10 md:p-20 rounded-[40px] md:rounded-[60px] bg-gradient-to-br from-rose-600 to-rose-700 text-white relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
+              
+              <div className="relative z-10 space-y-8">
+                <h3 className="text-4xl md:text-5xl font-black tracking-tight leading-none italic uppercase">
+                  Ready to <br /> Own Your Future?
+                </h3>
+                <button 
+                  onClick={() => navigate("/signup")}
+                  className="px-8 py-4 bg-white text-rose-600 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-slate-900 hover:text-white transition-all transform hover:scale-105 active:scale-95"
+                >
+                  Start Prediction Protocol →
+                </button>
+              </div>
+            </div>
+          </ScrollAnimationWrapper>
         </div>
       </section>
 
@@ -645,6 +653,29 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* College Campus Showcase - The Dome Gallery */}
+      <section className="h-[80vh] w-full relative overflow-hidden bg-slate-950">
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 text-center pointer-events-none">
+          <div className="inline-flex items-center px-4 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white font-extrabold text-[10px] uppercase tracking-[0.4em] mb-4">
+            Campus Experience
+          </div>
+          <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter">
+            Explore Your <span className="text-rose-600">Future Campus</span>
+          </h2>
+        </div>
+        <Suspense fallback={<SectionLoader />}>
+          <DomeGallery 
+            fit={0.8}
+            minRadius={600}
+            maxVerticalRotationDeg={5}
+            segments={34}
+            dragDampening={2}
+            grayscale={false}
+            overlayBlurColor="#020617"
+          />
+        </Suspense>
+      </section>
+
       {/* Final Simple CTA */}
       <section className="py-20 md:py-40 px-6 text-center bg-[#050505]" data-theme="dark">
         <div className="max-w-4xl mx-auto space-y-10 md:space-y-16">
@@ -668,7 +699,9 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <Footer />
+      <Suspense fallback={<div className="h-64 bg-slate-950" />}>
+        <Footer />
+      </Suspense>
     </div>
   );
 }

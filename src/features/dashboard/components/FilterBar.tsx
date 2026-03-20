@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, BookmarkCheck, Zap, CheckCircle, Target as TargetIcon, TrendingUp } from 'lucide-react';
+import { Search, Filter, BookmarkCheck, Zap, CheckCircle, Target as TargetIcon, TrendingUp, AlertTriangle } from 'lucide-react';
 
 interface FilterBarProps {
   activeFilter: string;
@@ -89,6 +89,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           >
             <TrendingUp className="w-3.5 h-3.5" />
             <span>Stretch ({stats.stretch})</span>
+          </button>
+          <button
+            onClick={() => setActiveFilter("reach")}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 ${activeFilter === "reach"
+              ? "bg-red-600 text-white shadow-sm"
+              : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
+              }`}
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>Reach ({stats.reach})</span>
           </button>
           <button
             onClick={() => setActiveFilter("saved")}
