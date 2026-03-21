@@ -160,7 +160,7 @@ export const LiveTrendPulse = memo(function LiveTrendPulse() {
     }, []);
 
     return (
-        <div className="w-full max-w-sm bg-slate-900 rounded-3xl p-8 shadow-2xl overflow-hidden relative font-sans will-change-transform border border-white/20">
+        <div className="w-full max-w-sm bg-slate-900 rounded-3xl p-8 overflow-hidden relative font-sans will-change-transform border-[4px] border-black">
             <div className="absolute top-0 right-0 p-4">
                 <div className="flex gap-1">
                     {[1, 2, 3].map(i => (

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useCallback } from 'react';
 import { useGesture } from '@use-gesture/react';
+import { useColleges } from '../context/CollegesContext';
 
 type ImageItem = string | { src: string; alt?: string };
 
@@ -34,10 +35,15 @@ type DomeGalleryProps = {
 
 // Import all campus images dynamically
 const CAMPUS_IMAGES_GLOB = import.meta.glob('../assets/*/campus.png', { eager: true, query: '?url', import: 'default' });
-const ALL_CAMPUS_IMAGES: ImageItem[] = Object.values(CAMPUS_IMAGES_GLOB).map((url) => ({
-  src: url as string,
-  alt: 'College Campus'
-}));
+const ALL_CAMPUS_IMAGES: ImageItem[] = Object.keys(CAMPUS_IMAGES_GLOB).map((path) => {
+  const parts = path.split('/');
+  const name = parts[parts.length - 2] || 'Campus';
+  const formattedName = name.replace(/-/g, ' ').toUpperCase();
+  return {
+    src: CAMPUS_IMAGES_GLOB[path] as string,
+    alt: formattedName
+  };
+});
 
 const DEFAULT_IMAGES: ImageItem[] = ALL_CAMPUS_IMAGES;
 
@@ -45,8 +51,24 @@ const DEFAULTS = {
   maxVerticalRotationDeg: 5,
   dragSensitivity: 20,
   enlargeTransitionMs: 300,
-  segments: 35
+  segments: 60 // Increased to show all colleges (approx 300 slots)
 };
+
+// High-fidelity fallback mapping for common colleges
+const COLLEGE_NAME_FALLBACKS: Record<string, string> = {
+  "6768": "D.Y. Patil College of Engineering, Akurdi",
+  "6769": "D.Y. Patil Institute of Technology, Pimpri",
+  "6270": "Pimpri Chinchwad College of Engineering (PCCOE)",
+  "6006": "College of Engineering, Pune (COEP)",
+  "3215": "Bhivrabai Sawant Institute of Technology & Research",
+  "6272": "Dr. D. Y. Patil Institute of Engineering & Tech",
+  "6007": "Walchand College of Engineering, Sangli",
+  "3199": "Shri Vile Parle Kelavani Mandal's Dwarkadas J. Sanghvi",
+  "3012": "Veermata Jijabai Technological Institute (VJTI)",
+  "3014": "Sardar Patel Institute of Technology (SPIT)",
+  "6271": "Pune Institute of Computer Technology (PICT)",
+};
+
 
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 const normalizeAngle = (d: number) => ((d % 360) + 360) % 360;
@@ -62,8 +84,8 @@ const getDataNumber = (el: HTMLElement, name: string, fallback: number) => {
 
 function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
   const xCols = Array.from({ length: seg }, (_, i) => -37 + i * 2);
-  const evenYs = [-4, -2, 0, 2, 4];
-  const oddYs = [-3, -1, 1, 3, 5];
+  const evenYs = [-6, -4, -2, 0, 2, 4, 6];
+  const oddYs = [-5, -3, -1, 1, 3, 5, 7];
 
   const coords = xCols.flatMap((x, c) => {
     const ys = c % 2 === 0 ? evenYs : oddYs;
@@ -85,9 +107,11 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
   // Shuffle images to make it looks diverse
   const shuffled = [...normalizedImages].sort(() => Math.random() - 0.5);
   
-  // Use each image only once. If we have more slots than images, some slots will stay empty.
-  // If we have more images than slots, we take only enough to fill the slots.
-  const finalImages = shuffled.slice(0, totalSlots);
+  // Fill all slots by cycling through available images if necessary
+  const finalImages: {src: string, alt: string}[] = [];
+  for (let i = 0; i < totalSlots; i++) {
+    finalImages.push(shuffled[i % shuffled.length]);
+  }
 
   return finalImages.map((img, i) => ({
     ...coords[i],
@@ -136,6 +160,8 @@ export default function DomeGallery({
     height: number;
   } | null>(null);
 
+  const { colleges } = useColleges();
+
   const rotationRef = useRef({ x: 0, y: 0 });
   const startRotRef = useRef({ x: 0, y: 0 });
   const startPosRef = useRef<{ x: number; y: number } | null>(null);
@@ -171,8 +197,6 @@ export default function DomeGallery({
     }
   }, []);
 
-  const lockedRadiusRef = useRef<number | null>(null);
-
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -204,10 +228,9 @@ export default function DomeGallery({
       const heightGuard = h * 1.35;
       radius = Math.min(radius, heightGuard);
       radius = clamp(radius, minRadius, maxRadius);
-      lockedRadiusRef.current = Math.round(radius);
-
+      
       const viewerPad = Math.max(8, Math.round(minDim * padFactor));
-      root.style.setProperty('--radius', `${lockedRadiusRef.current}px`);
+      root.style.setProperty('--radius', `${Math.round(radius)}px`);
       root.style.setProperty('--viewer-pad', `${viewerPad}px`);
       root.style.setProperty('--overlay-blur-color', overlayBlurColor);
       root.style.setProperty('--tile-radius', imageBorderRadius);
@@ -269,6 +292,116 @@ export default function DomeGallery({
     }
   }, []);
 
+  const close = useCallback(() => {
+    if (performance.now() - openStartedAtRef.current < 250) return;
+    const el = focusedElRef.current;
+    if (!el) return;
+    const parent = el.parentElement as HTMLElement;
+    const overlay = viewerRef.current?.querySelector('.enlarge') as HTMLElement | null;
+    if (!overlay) return;
+
+    const refDiv = parent.querySelector('.item__image--reference') as HTMLElement | null;
+
+    const originalPos = originalTilePositionRef.current;
+    if (!originalPos) {
+      overlay.remove();
+      if (refDiv) refDiv.remove();
+      parent.style.setProperty('--rot-y-delta', `0deg`);
+      parent.style.setProperty('--rot-x-delta', `0deg`);
+      el.style.visibility = '';
+      (el.style as any).zIndex = 0;
+      focusedElRef.current = null;
+      rootRef.current?.removeAttribute('data-enlarging');
+      openingRef.current = false;
+      return;
+    }
+
+    const currentRect = overlay.getBoundingClientRect();
+    const rootRect = rootRef.current!.getBoundingClientRect();
+
+    const originalPosRelativeToRoot = {
+      left: originalPos.left - rootRect.left,
+      top: originalPos.top - rootRect.top,
+      width: originalPos.width,
+      height: originalPos.height
+    };
+
+    const overlayRelativeToRoot = {
+      left: currentRect.left - rootRect.left,
+      top: currentRect.top - rootRect.top,
+      width: currentRect.width,
+      height: currentRect.height
+    };
+
+    const animatingOverlay = document.createElement('div');
+    animatingOverlay.className = 'enlarge-closing';
+    animatingOverlay.style.cssText = `
+      position: absolute;
+      left: ${overlayRelativeToRoot.left}px;
+      top: ${overlayRelativeToRoot.top}px;
+      width: ${overlayRelativeToRoot.width}px;
+      height: ${overlayRelativeToRoot.height}px;
+      z-index: 9999;
+      border-radius: ${openedImageBorderRadius};
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      transition: all ${enlargeTransitionMs}ms ease-out;
+      pointer-events: none;
+      margin: 0;
+      transform: none;
+      filter: ${grayscale ? 'grayscale(1)' : 'none'};
+      will-change: left, top, width, height, opacity;
+    `;
+
+    const originalImg = overlay.querySelector('img');
+    if (originalImg) {
+      const img = originalImg.cloneNode() as HTMLImageElement;
+      img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+      animatingOverlay.appendChild(img);
+    }
+
+    overlay.remove();
+    rootRef.current!.appendChild(animatingOverlay);
+
+    void animatingOverlay.getBoundingClientRect();
+
+    requestAnimationFrame(() => {
+      animatingOverlay.style.left = originalPosRelativeToRoot.left + 'px';
+      animatingOverlay.style.top = originalPosRelativeToRoot.top + 'px';
+      animatingOverlay.style.width = originalPosRelativeToRoot.width + 'px';
+      animatingOverlay.style.height = originalPosRelativeToRoot.height + 'px';
+      animatingOverlay.style.opacity = '0';
+    });
+
+    const cleanup = () => {
+      animatingOverlay.remove();
+      originalTilePositionRef.current = null;
+
+      if (refDiv) refDiv.remove();
+      parent.style.transition = 'none';
+      el.style.transition = 'none';
+
+      parent.style.setProperty('--rot-y-delta', `0deg`);
+      parent.style.setProperty('--rot-x-delta', `0deg`);
+
+      el.style.visibility = '';
+      (el.style as any).zIndex = 0;
+      focusedElRef.current = null;
+
+      rootRef.current?.removeAttribute('data-enlarging');
+      openingRef.current = false;
+      unlockScroll();
+    };
+
+    animatingOverlay.addEventListener('transitionend', (ev) => {
+      if (ev.propertyName === 'opacity') {
+        cleanup();
+      }
+    });
+
+    setTimeout(cleanup, enlargeTransitionMs + 50);
+  }, [enlargeTransitionMs, openedImageBorderRadius, grayscale, unlockScroll]);
+
   const openItemFromElement = useCallback((el: HTMLElement) => {
     if (openingRef.current) return;
     openingRef.current = true;
@@ -318,14 +451,49 @@ export default function DomeGallery({
     (el.style as any).zIndex = 0;
     const overlay = document.createElement('div');
     overlay.className = 'enlarge';
-    overlay.style.cssText = `position:absolute; left:${frameR.left - mainR.left}px; top:${frameR.top - mainR.top}px; width:${frameR.width}px; height:${frameR.height}px; opacity:0; z-index:30; will-change:transform,opacity; transform-origin:top left; transition:transform ${enlargeTransitionMs}ms ease, opacity ${enlargeTransitionMs}ms ease; border-radius:${openedImageBorderRadius}; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.35);`;
+    overlay.style.cssText = `position:fixed; left:50%; top:50%; width:${frameR.width}px; height:${frameR.height}px; opacity:0; z-index:99999; pointer-events: auto; will-change:transform,opacity,left,top,width,height; transform: translate(-50%, -50%); transition: transform ${enlargeTransitionMs}ms cubic-bezier(0.2, 0, 0.2, 1), opacity ${enlargeTransitionMs}ms ease, width ${enlargeTransitionMs}ms ease, height ${enlargeTransitionMs}ms ease; border-radius:${openedImageBorderRadius}; overflow:hidden; box-shadow:0 10px 100px rgba(0,0,0,.8);`;
     const rawSrc = parent.dataset.src || (el.querySelector('img') as HTMLImageElement)?.src || '';
     const rawAlt = parent.dataset.alt || (el.querySelector('img') as HTMLImageElement)?.alt || '';
+    
+    // Look up real college name via parsed alt text, context, or fallback mapping
+    let collegeName = '';
+    let collegeCode = '';
+
+    if (rawAlt.includes('|')) {
+      const parts = rawAlt.split('|');
+      collegeName = parts[0].trim();
+      collegeCode = parts[1].trim();
+    } else {
+      collegeCode = rawAlt.trim();
+      const foundCollege = colleges.find(c => String(c.college_code).trim() === collegeCode);
+      collegeName = foundCollege ? foundCollege.college_name : (COLLEGE_NAME_FALLBACKS[collegeCode] || `Institute ${collegeCode}`);
+    }
+    
     const img = document.createElement('img');
     img.src = rawSrc;
-    img.alt = rawAlt;
+    img.alt = collegeName;
     img.style.cssText = `width:100%; height:100%; object-fit:cover; filter:${grayscale ? 'grayscale(1)' : 'none'};`;
     overlay.appendChild(img);
+
+    const nameLabel = document.createElement('div');
+    nameLabel.className = 'absolute bottom-0 left-0 w-full p-6 md:p-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent';
+    nameLabel.innerHTML = `
+      <div class="translate-y-8 opacity-0 transition-all duration-1000 delay-300 ease-out" id="anim-label-${collegeCode.replace(/\s+/g, '-')}">
+        <div class="text-white font-black text-sm md:text-base tracking-[0.5em] uppercase mb-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">College Code <span class="text-rose-500 font-black underline decoration-2 underline-offset-4">${collegeCode}</span></div>
+        <h3 class="text-white text-3xl md:text-7xl font-black tracking-tighter leading-[0.9] drop-shadow-[0_10px_30px_rgba(0,0,0,1)] capitalize">${collegeName.toLowerCase()}</h3>
+        <div class="h-1 w-24 bg-rose-600 mt-6 rounded-full shadow-[0_0_15px_rgba(225,29,72,0.6)]"></div>
+      </div>
+    `;
+    overlay.appendChild(nameLabel);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'absolute top-6 right-6 z-[1001] w-12 h-12 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white border border-white/20 hover:bg-rose-600 transition-colors shadow-2xl';
+    closeBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+    closeBtn.onclick = (e) => {
+      e.stopPropagation();
+      close();
+    };
+    overlay.appendChild(closeBtn);
     viewerRef.current!.appendChild(overlay);
     const tx0 = tileR.left - frameR.left;
     const ty0 = tileR.top - frameR.top;
@@ -341,6 +509,11 @@ export default function DomeGallery({
       overlay.style.opacity = '1';
       overlay.style.transform = 'translate(0px, 0px) scale(1, 1)';
       rootRef.current?.setAttribute('data-enlarging', 'true');
+      const label = overlay.querySelector(`#anim-label-${collegeCode.replace(/\s+/g, '-')}`) as HTMLElement;
+      if (label) {
+        label.style.transform = 'translateY(0)';
+        label.style.opacity = '1';
+      }
     }, 16);
     const wantsResize = openedImageWidth || openedImageHeight;
     if (wantsResize) {
@@ -353,16 +526,14 @@ export default function DomeGallery({
         const tempHeight = openedImageHeight || `${frameR.height}px`;
         overlay.style.width = tempWidth;
         overlay.style.height = tempHeight;
-        const newRect = overlay.getBoundingClientRect();
         overlay.style.width = frameR.width + 'px';
         overlay.style.height = frameR.height + 'px';
+        overlay.style.left = '50%';
+        overlay.style.top = '50%';
+        overlay.style.transform = 'translate(-50%, -50%)';
         void overlay.offsetWidth;
-        overlay.style.transition = `left ${enlargeTransitionMs}ms ease, top ${enlargeTransitionMs}ms ease, width ${enlargeTransitionMs}ms ease, height ${enlargeTransitionMs}ms ease`;
-        const centeredLeft = frameR.left - mainR.left + (frameR.width - newRect.width) / 2;
-        const centeredTop = frameR.top - mainR.top + (frameR.height - newRect.height) / 2;
+        overlay.style.transition = `left ${enlargeTransitionMs}ms ease, top ${enlargeTransitionMs}ms ease, width ${enlargeTransitionMs}ms ease, height ${enlargeTransitionMs}ms ease, transform ${enlargeTransitionMs}ms ease`;
         requestAnimationFrame(() => {
-          overlay.style.left = `${centeredLeft}px`;
-          overlay.style.top = `${centeredTop}px`;
           overlay.style.width = tempWidth;
           overlay.style.height = tempHeight;
         });
@@ -376,7 +547,7 @@ export default function DomeGallery({
       };
       overlay.addEventListener('transitionend', onFirstEnd);
     }
-  }, [enlargeTransitionMs, openedImageBorderRadius, grayscale, segments, openedImageWidth, openedImageHeight, lockScroll, unlockScroll]);
+  }, [enlargeTransitionMs, openedImageBorderRadius, grayscale, segments, openedImageWidth, openedImageHeight, lockScroll, unlockScroll, colleges, close]);
 
   const startInertia = useCallback(
     (vx: number, vy: number) => {
@@ -506,139 +677,18 @@ export default function DomeGallery({
     const scrim = scrimRef.current;
     if (!scrim) return;
 
-    const close = () => {
-      if (performance.now() - openStartedAtRef.current < 250) return;
-      const el = focusedElRef.current;
-      if (!el) return;
-      const parent = el.parentElement as HTMLElement;
-      const overlay = viewerRef.current?.querySelector('.enlarge') as HTMLElement | null;
-      if (!overlay) return;
-
-      const refDiv = parent.querySelector('.item__image--reference') as HTMLElement | null;
-
-      const originalPos = originalTilePositionRef.current;
-      if (!originalPos) {
-        overlay.remove();
-        if (refDiv) refDiv.remove();
-        parent.style.setProperty('--rot-y-delta', `0deg`);
-        parent.style.setProperty('--rot-x-delta', `0deg`);
-        el.style.visibility = '';
-        (el.style as any).zIndex = 0;
-        focusedElRef.current = null;
-        rootRef.current?.removeAttribute('data-enlarging');
-        openingRef.current = false;
-        return;
-      }
-
-      const currentRect = overlay.getBoundingClientRect();
-      const rootRect = rootRef.current!.getBoundingClientRect();
-
-      const originalPosRelativeToRoot = {
-        left: originalPos.left - rootRect.left,
-        top: originalPos.top - rootRect.top,
-        width: originalPos.width,
-        height: originalPos.height
-      };
-
-      const overlayRelativeToRoot = {
-        left: currentRect.left - rootRect.left,
-        top: currentRect.top - rootRect.top,
-        width: currentRect.width,
-        height: currentRect.height
-      };
-
-      const animatingOverlay = document.createElement('div');
-      animatingOverlay.className = 'enlarge-closing';
-      animatingOverlay.style.cssText = `
-        position: absolute;
-        left: ${overlayRelativeToRoot.left}px;
-        top: ${overlayRelativeToRoot.top}px;
-        width: ${overlayRelativeToRoot.width}px;
-        height: ${overlayRelativeToRoot.height}px;
-        z-index: 9999;
-        border-radius: ${openedImageBorderRadius};
-        overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0,0,0,.35);
-        transition: all ${enlargeTransitionMs}ms ease-out;
-        pointer-events: none;
-        margin: 0;
-        transform: none;
-        filter: ${grayscale ? 'grayscale(1)' : 'none'};
-      `;
-
-      const originalImg = overlay.querySelector('img');
-      if (originalImg) {
-        const img = originalImg.cloneNode() as HTMLImageElement;
-        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
-        animatingOverlay.appendChild(img);
-      }
-
-      overlay.remove();
-      rootRef.current!.appendChild(animatingOverlay);
-
-      void animatingOverlay.getBoundingClientRect();
-
-      requestAnimationFrame(() => {
-        animatingOverlay.style.left = originalPosRelativeToRoot.left + 'px';
-        animatingOverlay.style.top = originalPosRelativeToRoot.top + 'px';
-        animatingOverlay.style.width = originalPosRelativeToRoot.width + 'px';
-        animatingOverlay.style.height = originalPosRelativeToRoot.height + 'px';
-        animatingOverlay.style.opacity = '0';
-      });
-
-      const cleanup = () => {
-        animatingOverlay.remove();
-        originalTilePositionRef.current = null;
-
-        if (refDiv) refDiv.remove();
-        parent.style.transition = 'none';
-        el.style.transition = 'none';
-
-        parent.style.setProperty('--rot-y-delta', `0deg`);
-        parent.style.setProperty('--rot-x-delta', `0deg`);
-
-        requestAnimationFrame(() => {
-          el.style.visibility = '';
-          el.style.opacity = '0';
-          (el.style as any).zIndex = 0;
-          focusedElRef.current = null;
-          rootRef.current?.removeAttribute('data-enlarging');
-
-          requestAnimationFrame(() => {
-            parent.style.transition = '';
-            el.style.transition = 'opacity 300ms ease-out';
-
-            requestAnimationFrame(() => {
-              el.style.opacity = '1';
-              setTimeout(() => {
-                el.style.transition = '';
-                el.style.opacity = '';
-                openingRef.current = false;
-                if (!draggingRef.current && rootRef.current?.getAttribute('data-enlarging') !== 'true') {
-                  document.body.classList.remove('dg-scroll-lock');
-                }
-              }, 300);
-            });
-          });
-        });
-      };
-
-      animatingOverlay.addEventListener('transitionend', cleanup, {
-        once: true
-      });
-    };
-
-    scrim.addEventListener('click', close);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close();
     };
+
+    scrim.onclick = close;
     window.addEventListener('keydown', onKey);
 
     return () => {
-      scrim.removeEventListener('click', close);
+      scrim.onclick = null;
       window.removeEventListener('keydown', onKey);
     };
-  }, [enlargeTransitionMs, openedImageBorderRadius, grayscale]);
+  }, [close]);
 
   useEffect(() => {
     return () => {
@@ -658,7 +708,10 @@ export default function DomeGallery({
     }
     
     .sphere-root * { box-sizing: border-box; }
-    .sphere, .sphere-item, .item__image { transform-style: preserve-3d; }
+    .sphere, .sphere-item, .item__image { 
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
+    }
     
     .stage {
       width: 100%;
@@ -689,10 +742,14 @@ export default function DomeGallery({
       margin: auto;
       transform-origin: 50% 50%;
       backface-visibility: hidden;
-      transition: transform 300ms;
+      will-change: transform;
+      transition: transform 600ms cubic-bezier(0.2, 0, 0.2, 1);
       transform: rotateY(calc(var(--rot-y) * (var(--offset-x) + ((var(--item-size-x) - 1) / 2)) + var(--rot-y-delta, 0deg))) 
                  rotateX(calc(var(--rot-x) * (var(--offset-y) - ((var(--item-size-y) - 1) / 2)) + var(--rot-x-delta, 0deg))) 
                  translateZ(var(--radius));
+    }
+    .sphere-root:not([data-enlarging="true"]) .sphere-item {
+      transition: none; /* No transition while rotating sphere */
     }
     
     .sphere-root[data-enlarging="true"] .scrim {
@@ -715,15 +772,20 @@ export default function DomeGallery({
       cursor: pointer;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
-      transition: transform 300ms;
+      transition: transform 300ms, opacity 300ms;
       pointer-events: auto;
       -webkit-transform: translateZ(0);
       transform: translateZ(0);
+      will-change: transform, opacity;
     }
     .item__image--reference {
       position: absolute;
       inset: 10px;
       pointer-events: none;
+    }
+
+    .enlarge, .enlarge-closing {
+        will-change: transform, width, height, opacity, left, top;
     }
   `;
 

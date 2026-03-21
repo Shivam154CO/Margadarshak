@@ -4,6 +4,8 @@ import { motion, useScroll, useTransform, motionValue, useSpring, AnimatePresenc
 import ScrollAnimationWrapper from "../components/ScrollAnimationWrapper";
 import LiveFeatureIcon from "../components/LiveFeatureIcon";
 import IkigaiLogo from "../components/IkigaiLogo";
+import { useCollegeData } from "../hooks/useCollegeData";
+import { useColleges } from "../context/CollegesContext";
 import SEO from "../components/SEO";
 import { LiveCastePreview, LiveMatchSimulator, LiveTrendPulse, LiveAIAssistant, LiveDistanceTracker, LiveScholarshipGuide } from "../components/LiveFeatureShowcase";
 import Magnetic from "../components/Magnetic";
@@ -30,6 +32,57 @@ export default function Landing() {
   const [isScrolled, setIsScrolled] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
+  // Prefetch college data for DomeGallery and other components
+  const { allColleges } = useCollegeData();
+  const { setColleges } = useColleges();
+
+  useEffect(() => {
+    if (allColleges.length > 0) {
+      setColleges(allColleges);
+    }
+  }, [allColleges, setColleges]);
+
+  const domeImages = useMemo(() => {
+    // Vite Glob for all campus.png images in the local assets
+    const campusImages = import.meta.glob('../assets/*/campus.png', { eager: true, query: '?url', import: 'default' });
+    
+    // Create a lookup map [college_code]: url
+    const campusMap: Record<string, string> = {};
+    Object.keys(campusImages).forEach(path => {
+      const parts = path.split('/');
+      const code = parts[parts.length - 2];
+      campusMap[code] = campusImages[path] as string;
+    });
+
+    // Normalize the map keys - ensure no trailing spaces or weird slashes
+    const normalizedCampusMap: Record<string, string> = {};
+    Object.entries(campusMap).forEach(([k, v]) => {
+      normalizedCampusMap[k.trim()] = v;
+    });
+
+    const colleges = allColleges || [];
+    
+    // If we have no backend colleges yet, just show all local images with fallback names
+    if (colleges.length === 0) {
+      return Object.entries(normalizedCampusMap).map(([code, src]) => ({
+        src,
+        alt: `Institute ${code} | ${code}`
+      }));
+    }
+
+    // Map all colleges to their images
+    return colleges.map(college => {
+      const code = String(college.college_code).trim();
+      const name = college.college_name || `Institute ${code}`;
+      const src = normalizedCampusMap[code] || normalizedCampusMap[Object.keys(normalizedCampusMap)[0]] || '';
+      
+      return {
+        src,
+        alt: `${name} | ${code}`
+      };
+    });
+  }, [allColleges]);
+
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -49,18 +102,14 @@ export default function Landing() {
 
   // Scroll-aware navbar: detect when over dark sections
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-
     // Optimized approach: track which sections are "active" relative to the navbar
     const handleThemeChange = () => {
       const nav = navRef.current;
       if (!nav) return;
-      
+
       const navRect = nav.getBoundingClientRect();
       const navCenter = navRect.top + navRect.height / 2;
-      
+
       const darkSections = document.querySelectorAll('[data-theme="dark"]');
       let overDark = false;
       for (const section of Array.from(darkSections)) {
@@ -73,22 +122,24 @@ export default function Landing() {
       setIsNavDark(overDark);
     };
 
-    // Debounce the heavy theme check
-    let timeoutId: number;
-    const debouncedThemeCheck = () => {
-      if (timeoutId) window.cancelAnimationFrame(timeoutId);
-      timeoutId = window.requestAnimationFrame(handleThemeChange);
+    let ticking = false;
+    const scrollListener = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 20);
+          handleThemeChange();
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('scroll', debouncedThemeCheck, { passive: true });
-    
-    handleScroll();
-    handleThemeChange();
+    window.addEventListener('scroll', scrollListener, { passive: true });
+
+    scrollListener();
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('scroll', debouncedThemeCheck);
+      window.removeEventListener('scroll', scrollListener);
     };
   }, []);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -229,19 +280,25 @@ export default function Landing() {
       {/* Hero Section - Premium Split-3D Impact (High Overlap) */}
       <section id="predictor" className="relative min-h-screen flex flex-col items-center pt-24 pb-12 md:pt-28 md:pb-20 overflow-hidden bg-[#fafafa]">
         <div className="w-full flex-1 flex flex-col lg:flex-row items-center justify-between">
-          {/* Dynamic Background Elements */}
-          <div className="absolute top-20 left-1 w-96 h-96 bg-slate-200/50 blur-[150px] rounded-full animate-pulse" />
-          <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-slate-100/50 blur-[200px] rounded-full" />
+          {/* Dynamic Background Elements (Optimized: Removed heavy blurs causing repaints) */}
+          <div className="absolute top-20 left-1 w-96 h-96 bg-slate-200/40 blur-3xl rounded-full pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-slate-100/40 blur-3xl rounded-full pointer-events-none" />
 
           <div className="relative z-30 w-full lg:w-3/5 px-6 lg:pl-6">
             <ScrollAnimationWrapper animation="slideRight">
               {/* The Glass Content Card */}
-              <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/50 p-6 md:p-14 rounded-[40px] md:rounded-[60px] shadow-[0_40px_100px_rgba(0,0,0,0.03)] relative overflow-hidden group">
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-slate-100/50 blur-3xl rounded-full" />
+              <div className="bg-white/40 backdrop-blur-md border border-slate-200/50 p-6 md:p-14 rounded-[40px] md:rounded-[60px] shadow-sm relative overflow-hidden group">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-slate-100/50 blur-2xl rounded-full pointer-events-none" />
 
                 <div className="relative z-10 space-y-8 group-hover:translate-x-2 transition-transform duration-700">
-                  <div className="inline-flex items-center px-4 py-2 bg-slate-900/5 rounded-full border border-slate-900/10 text-slate-900 font-extrabold text-[9px] md:text-[10px] uppercase tracking-widest md:tracking-[0.5em] backdrop-blur-md whitespace-nowrap">
-                    Maharashtra's #1 Diploma Portal
+                  <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-white/60 backdrop-blur-2xl border border-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="font-black text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500">
+                      Maharashtra's #1 Diploma Portal
+                    </span>
                   </div>
 
                   <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-slate-900 leading-[0.9] tracking-tighter">
@@ -280,14 +337,14 @@ export default function Landing() {
             className="relative lg:absolute lg:right-[-28%] lg:top-[15%] lg:-translate-y-1/2 w-full lg:w-[82%] z-40 pointer-events-none mt-10 md:mt-20 lg:mt-0"
           >
             <div className="relative group">
-              <div className="absolute inset-0 bg-rose-500/5 blur-[160px] rounded-full scale-90 group-hover:scale-100 transition-transform duration-1000" />
+              <div className="absolute inset-0 bg-rose-500/5 blur-3xl rounded-full group-hover:scale-105 transition-transform duration-500 pointer-events-none" />
               <img
                 src={clgImg}
                 alt="Engineering Success"
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
-                className="w-full h-auto drop-shadow-[-100px_40px_160px_rgba(0,0,0,0.1)] animate-float scale-100 md:scale-110"
+                className="w-full h-auto animate-float scale-100 md:scale-110 object-contain will-change-transform"
               />
             </div>
           </motion.div>
@@ -330,16 +387,13 @@ export default function Landing() {
       </Suspense>
 
       {/* Visual USP - The "Proof" Section (Showing Project Power) */}
-      <section className="py-20 md:py-40 px-6 bg-[#080808] relative overflow-hidden" data-theme="dark">
+      <section className="py-20 md:py-40 px-6 bg-[#080808] relative overflow-hidden contain-content" data-theme="dark">
         {/* Ambient Glows */}
-        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-rose-500/10 blur-[150px] rounded-full" />
-        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-orange-500/10 blur-[150px] rounded-full" />
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-rose-500/5 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-orange-500/5 blur-3xl rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto">
           <ScrollAnimationWrapper animation="slideUp" className="text-center mb-32">
-            <div className="inline-flex items-center px-4 py-1.5 bg-rose-900/5 border border-rose-900/10 rounded-full text-rose-600 font-extrabold text-[10px] uppercase tracking-[0.4em] mb-8">
-              Why SmartCF Dominates
-            </div>
             <h2 className="text-4xl md:text-8xl font-black text-white/95 tracking-tighter leading-none mb-8">
               Precision Powered by <br />
               <span className="bg-gradient-to-r from-rose-400 to-rose-600 bg-clip-text text-transparent italic">Real Data.</span>
@@ -442,7 +496,7 @@ export default function Landing() {
             </ScrollAnimationWrapper>
 
             {/* Row 2: Advanced Feature Blocks */}
-            <ScrollAnimationWrapper animation="slideUp" delay={0.3} className="lg:col-span-6">
+            <ScrollAnimationWrapper animation="slideUp" delay={0.3} className="lg:col-span-4">
               <div className="bg-gradient-to-br from-white/5 to-transparent backdrop-blur-3xl border border-white/10 rounded-[40px] md:rounded-[60px] p-8 md:p-12 h-full relative group">
                 <div className="space-y-6">
                   <div className="w-12 h-12 bg-rose-500/20 rounded-2xl flex items-center justify-center border border-rose-500/30">
@@ -454,7 +508,7 @@ export default function Landing() {
               </div>
             </ScrollAnimationWrapper>
 
-            <ScrollAnimationWrapper animation="slideUp" delay={0.5} className="lg:col-span-6">
+            <ScrollAnimationWrapper animation="slideUp" delay={0.5} className="lg:col-span-4">
               <div className="bg-gradient-to-br from-white/5 to-transparent backdrop-blur-3xl border border-white/10 rounded-[40px] md:rounded-[60px] p-8 md:p-12 h-full relative group">
                 <div className="space-y-6">
                   <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
@@ -514,18 +568,15 @@ export default function Landing() {
           </div>
         </div>
       </section>      {/* Redesigned Journey Section - Sleek Vertical Pathway */}
-      <section id="how-it-works" className="relative bg-slate-950 py-32 md:py-48 overflow-hidden" data-theme="dark">
+      <section id="how-it-works" className="relative bg-slate-950 py-32 md:py-48 overflow-hidden contain-content" data-theme="dark">
         {/* Ambient background effects */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-rose-600/10 blur-[150px] rounded-full animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/10 blur-[150px] rounded-full" />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-rose-600/5 blur-3xl rounded-full" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/5 blur-3xl rounded-full" />
         </div>
 
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <ScrollAnimationWrapper animation="slideUp" className="text-center mb-32">
-            <div className="inline-flex items-center px-4 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-full text-rose-500 font-extrabold text-[10px] uppercase tracking-[0.5em] mb-6">
-              The Protocol
-            </div>
             <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none">
               Your Journey <span className="text-rose-600 italic">Redefined.</span>
             </h2>
@@ -539,8 +590,8 @@ export default function Landing() {
               {journeySteps.map((step: any, index: number) => {
                 const isEven = index % 2 === 0;
                 return (
-                  <ScrollAnimationWrapper 
-                    key={index} 
+                  <ScrollAnimationWrapper
+                    key={index}
                     animation={isEven ? "slideRight" : "slideLeft"}
                     className={`relative flex flex-col md:flex-row items-center gap-12 ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'}`}
                   >
@@ -553,11 +604,6 @@ export default function Landing() {
                     {/* Content Card */}
                     <div className="w-full md:w-[45%] group">
                       <div className="relative p-8 md:p-10 rounded-[30px] bg-white/[0.03] border border-white/10 backdrop-blur-xl transition-all duration-500 hover:border-rose-500/30 hover:bg-white/[0.05] group">
-                        {/* Phase Badge */}
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full text-[9px] font-black text-rose-500 uppercase tracking-widest mb-6">
-                          <span className="w-1 h-1 rounded-full bg-rose-500" />
-                          Phase 0{index + 1}
-                        </div>
 
                         <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight group-hover:text-rose-500 transition-colors">
                           {step.title}
@@ -565,19 +611,14 @@ export default function Landing() {
                         <p className="text-sm md:text-base text-white/40 font-medium leading-relaxed mb-8">
                           {step.description}
                         </p>
-
-                        <div className="flex items-center gap-4 text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">
-                          <div className="h-px flex-1 bg-white/5" />
-                          <span>Initialized</span>
-                        </div>
                       </div>
                     </div>
 
                     {/* Icon Visual */}
                     <div className="w-full md:w-[40%] flex justify-center">
                       <div className="relative">
-                        <div className="absolute inset-0 bg-rose-500/10 blur-3xl rounded-full scale-150 group-hover:bg-rose-500/20 transition-all duration-700" />
-                        <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white rounded-[24px] md:rounded-[32px] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-700">
+                        <div className="absolute inset-0 bg-rose-500/10 blur-xl rounded-full scale-125 group-hover:bg-rose-500/20 transition-all duration-300 pointer-events-none" />
+                        <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white rounded-[24px] md:rounded-[32px] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
                           <LiveFeatureIcon type={step.icon} size={64} />
                         </div>
                       </div>
@@ -592,16 +633,16 @@ export default function Landing() {
           <ScrollAnimationWrapper animation="scale" className="mt-40 text-center">
             <div className="p-10 md:p-20 rounded-[40px] md:rounded-[60px] bg-gradient-to-br from-rose-600 to-rose-700 text-white relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
-              
+
               <div className="relative z-10 space-y-8">
                 <h3 className="text-4xl md:text-5xl font-black tracking-tight leading-none italic uppercase">
                   Ready to <br /> Own Your Future?
                 </h3>
-                <button 
+                <button
                   onClick={() => navigate("/signup")}
                   className="px-8 py-4 bg-white text-rose-600 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-slate-900 hover:text-white transition-all transform hover:scale-105 active:scale-95"
                 >
-                  Start Prediction Protocol →
+                  Start Prediction →
                 </button>
               </div>
             </div>
@@ -610,39 +651,36 @@ export default function Landing() {
       </section>
 
       {/* Dedicated CET 2026 Launch Section - The "Wow" Experience */}
-      <section className="py-20 md:py-40 px-4 md:px-6 relative overflow-hidden bg-white" data-theme="light">
+      <section className="py-16 md:py-24 px-4 md:px-6 relative bg-white contain-content" data-theme="light">
         {/* Massive Ambient Background Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-rose-500/5 blur-[200px] rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-rose-500/5 blur-3xl rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[60px] md:rounded-[100px] p-8 md:p-32 text-center relative overflow-hidden group">
+          <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[40px] md:rounded-[60px] p-8 md:p-16 text-center relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
 
             <ScrollAnimationWrapper animation="scale">
-              <div className="space-y-16">
-                <div className="inline-flex items-center px-8 py-3 bg-rose-600 rounded-full text-white font-extrabold text-xs uppercase tracking-[0.6em] shadow-[0_0_40px_rgba(225,29,72,0.2)]">
-                  The Next Generation
-                </div>
+              <div className="space-y-8 md:space-y-12">
 
-                <h2 className="text-5xl md:text-[140px] font-black text-slate-900 tracking-tighter leading-[0.9] md:leading-[0.75]">
+                <h2 className="text-4xl md:text-7xl lg:text-[100px] font-black text-slate-900 tracking-tighter leading-none">
                   CET 2026 <br />
                   <span className="italic text-rose-600">Live Soon.</span>
                 </h2>
 
-                <p className="text-xl md:text-3xl text-slate-500 font-semibold max-w-4xl mx-auto leading-relaxed">
+                <p className="text-base md:text-xl text-slate-500 font-semibold max-w-3xl mx-auto leading-relaxed">
                   We're re-engineering our precision models for the 2026 Maharashtra diploma engineering prediction cycle.
                   Get ready for the most accurate prediction engine ever built.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pt-10">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
                   {[
                     { label: "Predictor", value: "95.7%", sub: "Precision Ready" },
                     { label: "Institutions", value: "340+", sub: "Official Data" },
                     { label: "Status", value: "Optimizing", sub: "Final Testing" }
                   ].map((stat, i) => (
-                    <div key={i} className="bg-slate-50 border border-slate-200 rounded-[40px] p-10 group-hover:border-slate-300 transition-colors">
-                      <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-4">{stat.label}</div>
-                      <div className="text-4xl font-extrabold text-slate-900 mb-2">{stat.value}</div>
+                    <div key={i} className="bg-slate-50 border border-slate-200 rounded-[24px] md:rounded-[32px] p-6 lg:p-8 group-hover:border-slate-300 transition-colors">
+                      <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">{stat.label}</div>
+                      <div className="text-3xl font-extrabold text-slate-900 mb-1">{stat.value}</div>
                       <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{stat.sub}</div>
                     </div>
                   ))}
@@ -654,26 +692,28 @@ export default function Landing() {
       </section>
 
       {/* College Campus Showcase - The Dome Gallery */}
-      <section className="h-[80vh] w-full relative overflow-hidden bg-slate-950">
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 text-center pointer-events-none">
-          <div className="inline-flex items-center px-4 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white font-extrabold text-[10px] uppercase tracking-[0.4em] mb-4">
-            Campus Experience
-          </div>
-          <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter">
-            Explore Your <span className="text-rose-600">Future Campus</span>
+      <section className="pt-24 pb-0 w-full relative bg-slate-950 flex flex-col">
+        <div className="text-center relative z-20 mb-12 px-4">
+          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
+            Explore Your <span className="text-rose-600 italic">Future Campus</span>
           </h2>
         </div>
-        <Suspense fallback={<SectionLoader />}>
-          <DomeGallery 
-            fit={0.8}
-            minRadius={600}
-            maxVerticalRotationDeg={5}
-            segments={34}
-            dragDampening={2}
-            grayscale={false}
-            overlayBlurColor="#020617"
-          />
-        </Suspense>
+        <div className="h-[70vh] w-full relative overflow-hidden">
+          <Suspense fallback={<SectionLoader />}>
+            <DomeGallery
+              fit={0.8}
+              images={domeImages}
+              minRadius={600}
+              maxVerticalRotationDeg={5}
+              segments={60}
+              dragDampening={2}
+              grayscale={false}
+              openedImageWidth="min(98vw, 1200px)"
+              openedImageHeight="min(90vh, 850px)"
+              overlayBlurColor="#020617"
+            />
+          </Suspense>
+        </div>
       </section>
 
       {/* Final Simple CTA */}
@@ -698,11 +738,9 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
-      <Suspense fallback={<div className="h-64 bg-slate-950" />}>
+      <Suspense fallback={<div className="h-64 bg-slate-900" />}>
         <Footer />
       </Suspense>
     </div>
   );
 }
-

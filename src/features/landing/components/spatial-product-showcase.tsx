@@ -222,7 +222,7 @@ const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) =>
             />
 
             {/* Visual Container */}
-            <div className="relative h-72 w-72 md:h-[400px] md:w-[400px] rounded-full border border-slate-100 shadow-2xl flex items-center justify-center bg-white/10">
+            <div className="relative h-48 w-48 md:h-[210px] md:w-[210px] rounded-full border border-slate-100 shadow-xl flex items-center justify-center bg-white/10 shrink-0">
                 <motion.div
                     animate={{ y: [-8, 8, -8] }}
                     transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
@@ -241,7 +241,7 @@ const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) =>
                             <motion.div
                                 animate={{ rotate: [0, 5, -5, 0] }}
                                 transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                                className="w-56 h-56 md:w-80 md:h-80 rounded-full bg-white flex items-center justify-center shadow-[0_30px_100px_rgba(0,0,0,0.08)] border border-slate-100/50"
+                                className="w-36 h-36 md:w-44 md:h-44 rounded-full bg-white flex items-center justify-center shadow-[0_15px_30px_rgba(0,0,0,0.06)] border border-slate-100/50"
                             >
                                 <img
                                     src={data.illustration}
@@ -259,7 +259,7 @@ const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) =>
                                     className="absolute w-full h-full"
                                     style={{ transformOrigin: 'center center' }}
                                 >
-                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-20 h-20 md:w-28 md:h-28 rounded-3xl bg-white border border-slate-100 flex items-center justify-center shadow-xl overflow-hidden p-3">
+                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-lg overflow-hidden p-2">
                                         <img
                                             src={data.orbitImages[0]}
                                             alt="detail"
@@ -274,10 +274,10 @@ const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) =>
                                 <motion.div
                                     animate={{ rotate: -360 }}
                                     transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
-                                    className="absolute w-[140%] h-[140%]"
+                                    className="absolute w-[120%] h-[120%]"
                                     style={{ transformOrigin: 'center center' }}
                                 >
-                                    <div className="absolute bottom-0 right-0 w-16 h-16 md:w-24 md:h-24 rounded-full bg-white border border-slate-50 flex items-center justify-center shadow-2xl overflow-hidden p-2">
+                                    <div className="absolute bottom-0 right-0 w-12 h-12 md:w-12 md:h-12 rounded-full bg-white border border-slate-50 flex items-center justify-center shadow-xl overflow-hidden p-1.5">
                                         <img
                                             src={data.orbitImages[1]}
                                             alt="secondary detail"
@@ -316,9 +316,9 @@ const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) =>
             {/* Status Label */}
             <motion.div
                 layout="position"
-                className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap"
+                className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap"
             >
-                <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-slate-500 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm backdrop-blur">
+                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm backdrop-blur">
                     <span className={`h-1.5 w-1.5 rounded-full ${data.colors.glow} animate-pulse`} />
                     {data.stats.statusLabel}
                 </div>
@@ -350,13 +350,13 @@ const ProblemDetails = ({
         >
             <motion.h2
                 variants={ANIMATIONS.item}
-                className="text-3xl md:text-6xl font-black tracking-tighter mb-4 text-slate-900 leading-none"
+                className="text-xl md:text-2xl font-black tracking-tighter mb-1.5 text-slate-900 leading-none"
             >
                 {data.title}
             </motion.h2>
             <motion.p
                 variants={ANIMATIONS.item}
-                className={`text-slate-500 text-lg font-medium mb-10 max-w-sm leading-relaxed ${isEven ? 'ml-auto' : 'mr-auto'}`}
+                className={`text-slate-500 text-xs md:text-sm font-medium mb-3 max-w-sm leading-relaxed ${isEven ? 'ml-auto' : 'mr-auto'}`}
             >
                 {data.description}
             </motion.p>
@@ -364,7 +364,7 @@ const ProblemDetails = ({
             {/* Metrics Grid */}
             <motion.div
                 variants={ANIMATIONS.item}
-                className="w-full space-y-8 bg-white p-8 rounded-3xl border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)]"
+                className="w-full space-y-3 bg-white p-4 rounded-3xl border border-slate-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)]"
             >
                 {data.metrics.map((metric, idx) => (
                     <div key={metric.label} className="group">
@@ -408,12 +408,12 @@ const ProblemDetails = ({
             {/* Stat */}
             <motion.div
                 variants={ANIMATIONS.item}
-                className={`mt-10 flex items-center gap-4 text-slate-400 ${flexDirClass}`}
+                className={`mt-4 flex items-center gap-3 text-slate-400 ${flexDirClass}`}
             >
-                <span className="text-4xl font-black text-slate-950 tracking-tighter">
+                <span className="text-3xl font-black text-slate-950 tracking-tighter">
                     {data.stats.statValue}
                 </span>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
                     {data.stats.statLabel}
                 </span>
             </motion.div>
@@ -434,7 +434,7 @@ const Switcher = ({
     }));
 
     return (
-        <div className="flex justify-center mt-16 md:mt-20">
+        <div className="flex justify-center mt-6 md:mt-8">
             <motion.div
                 layout
                 className="flex items-center gap-1 p-1.5 rounded-full bg-slate-100/50 border border-slate-200 shadow-lg backdrop-blur-sm"
@@ -477,11 +477,11 @@ export default function ProblemShowcase() {
     const isEven = activeIndex % 2 === 1;
 
     return (
-        <div className="relative w-full bg-white text-slate-900 overflow-hidden py-20 md:py-32" data-theme="light">
+        <div className="relative w-full bg-white text-slate-900 overflow-hidden py-8 md:py-12" data-theme="light">
             <BackgroundGradient activeId={activeProblem} />
 
             {/* Section Header */}
-            <div className="relative z-10 text-center mb-16 md:mb-24 px-6">
+            <div className="relative z-10 text-center mb-8 md:mb-10 px-6">
 
                 <h2 className="text-4xl md:text-8xl font-black text-slate-900 tracking-tighter leading-none">
                     Why Students{' '}
@@ -492,11 +492,11 @@ export default function ProblemShowcase() {
             </div>
 
             {/* Main Content */}
-            <div className="relative z-10 w-full px-6 max-w-7xl mx-auto">
+            <div className="relative z-10 w-full px-6 max-w-6xl mx-auto">
                 <motion.div
                     layout
                     transition={{ type: 'spring', bounce: 0, duration: 0.9 }}
-                    className={`flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24 lg:gap-36 w-full ${isEven ? 'md:flex-row-reverse' : 'md:flex-row'
+                    className={`flex flex-col md:flex-row items-center justify-center gap-10 md:gap-20 lg:gap-32 w-full ${isEven ? 'md:flex-row-reverse' : 'md:flex-row'
                         }`}
                 >
                     {/* Visual */}
