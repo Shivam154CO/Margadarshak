@@ -170,8 +170,6 @@ export default function Landing() {
 
   const heroScrollY = useTransform(scrollYProgress, [0, 0.2], [0, 100]);
 
-
-
   const journeySteps = useMemo(() => [
     { title: "Enter Your Diploma Rank", description: "Share your rank and category details.", icon: "student" as const },
     { title: "Pick Preferred Branches", description: "Select branches you're interested in.", icon: "brain" as const },
@@ -200,7 +198,7 @@ export default function Landing() {
         <div className={`flex items-center transition-all duration-700 ${isScrolled
           ? 'w-[56px] h-[56px] md:w-[70px] md:h-[70px] justify-center bg-transparent md:bg-white/80 md:backdrop-blur-xl md:rounded-full md:border md:border-white/20 md:shadow-2xl'
           : `mx-auto w-full max-w-7xl h-16 md:h-20 rounded-2xl px-6 md:px-10 justify-between backdrop-blur-2xl ${isNavDark ? 'bg-white/5 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)]' : 'bg-white/80 border border-slate-100/50 shadow-[0_20px_50px_rgba(0,0,0,0.05)]'}`
-          } relative z-50`}> { /* justify-center is used only when scrolled */}
+          } relative z-50`}>
           <IkigaiLogo size={isScrolled ? "sm" : "sm"} showText={!isScrolled} lightText={isNavDark} className={`${isScrolled ? 'scale-75 md:scale-100' : 'scale-100'} transition-all duration-500`} />
 
           {/* Desktop Menu */}
@@ -275,12 +273,10 @@ export default function Landing() {
         </AnimatePresence>
       </nav>
 
-
-
       {/* Hero Section - Premium Split-3D Impact (High Overlap) */}
       <section id="predictor" className="relative min-h-screen flex flex-col items-center pt-24 pb-12 md:pt-28 md:pb-20 overflow-hidden bg-[#fafafa]">
         <div className="w-full flex-1 flex flex-col lg:flex-row items-center justify-between">
-          {/* Dynamic Background Elements (Optimized: Removed heavy blurs causing repaints) */}
+          {/* Dynamic Background Elements */}
           <div className="absolute top-20 left-1 w-96 h-96 bg-slate-200/40 blur-3xl rounded-full pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-slate-100/40 blur-3xl rounded-full pointer-events-none" />
 
@@ -328,7 +324,7 @@ export default function Landing() {
             </ScrollAnimationWrapper>
           </div>
 
-          {/* The Overlying Asset - Dramatic Side-by-Side Massive Impact */}
+          {/* The Overlying Asset */}
           <motion.div
             style={{ y: heroScrollY }}
             initial={{ opacity: 0, x: 200 }}
@@ -351,7 +347,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Stats Ribbon - Anchoring the Hero */}
+      {/* Stats Ribbon */}
       <section id="colleges" className="relative z-50 -mt-10 mb-12 md:mb-20 px-4 md:px-6">
         <div className="max-w-7xl mx-auto bg-gray-900 rounded-[40px] md:rounded-[60px] p-6 md:p-10 shadow-3xl border border-white/5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
@@ -381,14 +377,13 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Problem Section - Spatial Showcase */}
+      {/* Problem Section */}
       <Suspense fallback={<SectionLoader />}>
         <ProblemShowcase />
       </Suspense>
 
-      {/* Visual USP - The "Proof" Section (Showing Project Power) */}
+      {/* Visual USP Section */}
       <section className="py-20 md:py-40 px-6 bg-[#080808] relative overflow-hidden contain-content" data-theme="dark">
-        {/* Ambient Glows */}
         <div className="absolute top-1/4 -left-20 w-96 h-96 bg-rose-500/5 blur-3xl rounded-full pointer-events-none" />
         <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-orange-500/5 blur-3xl rounded-full pointer-events-none" />
 
@@ -401,7 +396,6 @@ export default function Landing() {
           </ScrollAnimationWrapper>
 
           <div className="grid lg:grid-cols-12 gap-10">
-            {/* Visual 1: Branch-Wise Precision Mockup */}
             <ScrollAnimationWrapper animation="scale" className="lg:col-span-6">
               <div className="bg-gradient-to-br from-white/5 to-transparent backdrop-blur-3xl border border-white/10 rounded-[40px] md:rounded-[60px] p-6 md:p-14 h-full relative group overflow-hidden">
                 <div className="relative z-10 space-y-10">
@@ -412,8 +406,7 @@ export default function Landing() {
                     </p>
                   </div>
 
-                  {/* Mockup UI Component - Branch List */}
-                  <div className="bg-white/5 rounded-[30px] md:rounded-[40px] border border-white/10 p-5 md:p-8 space-y-6 shadow-2xl group-hover:translate-y-[-10px] transition-transform duration-700">
+                  <div className="bg-white/5 rounded-[30px] md:rounded-[40px] border border-white/10 p-5 md:p-8 space-y-6 shadow-2xl transition-transform duration-700">
                     <div className="flex justify-between items-center border-b border-white/5 pb-4">
                       <div className="text-xs font-black text-white px-3 py-1 bg-white/10 rounded-md uppercase tracking-widest">COEP, Pune</div>
                       <div className="text-[10px] font-black text-rose-500 tracking-[0.2em] uppercase">Smart Match</div>
@@ -443,19 +436,17 @@ export default function Landing() {
               </div>
             </ScrollAnimationWrapper>
 
-            {/* Visual 2: Detailed Seat Matrix - Caste-Wise */}
             <ScrollAnimationWrapper animation="scale" delay={0.2} className="lg:col-span-6">
               <div className="bg-gradient-to-br from-white/5 to-transparent backdrop-blur-3xl border border-white/10 rounded-[40px] md:rounded-[60px] p-6 md:p-14 h-full relative group overflow-hidden">
                 <div className="relative z-10 space-y-10">
                   <div className="space-y-6">
                     <h3 className="text-4xl font-extrabold text-white tracking-tight">Category-Wise <br /> Seat Matrix.</h3>
                     <p className="text-lg text-white/60 font-medium leading-relaxed">
-                      Deep-dive into specific seat distribution for <span className="text-white">GOPEN, GSC, GOBC, and EWS</span> categories for every branch.
+                      Deep-dive into specific seat distribution for <span className="text-white">GOPEN, GSC, GOBC, and EWS</span> categories.
                     </p>
                   </div>
 
-                  {/* Mockup UI Component - High-Fidelity Seat Matrix */}
-                  <div className="bg-[#0a0a0a] rounded-[30px] md:rounded-[40px] border border-white/10 p-5 md:p-8 space-y-6 shadow-2xl group-hover:translate-y-[-10px] transition-transform duration-700">
+                  <div className="bg-[#0a0a0a] rounded-[30px] md:rounded-[40px] border border-white/10 p-5 md:p-8 space-y-6 shadow-2xl transition-transform duration-700">
                     <div className="grid grid-cols-2 gap-3 pb-2">
                       {[
                         { label: 'GOPEN', count: 2, color: 'bg-rose-500', p: '22%' },
@@ -483,7 +474,6 @@ export default function Landing() {
               </div>
             </ScrollAnimationWrapper>
 
-            {/* Visual 3: Exact Accuracy Proof (The 2026 Standard) */}
             <ScrollAnimationWrapper animation="scale" delay={0.2} className="lg:col-span-4">
               <div className="bg-rose-900 rounded-[40px] md:rounded-[60px] p-8 md:p-16 h-full flex flex-col justify-between text-white relative overflow-hidden group">
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 blur-3xl rounded-full" />
@@ -495,7 +485,6 @@ export default function Landing() {
               </div>
             </ScrollAnimationWrapper>
 
-            {/* Row 2: Advanced Feature Blocks */}
             <ScrollAnimationWrapper animation="slideUp" delay={0.3} className="lg:col-span-4">
               <div className="bg-gradient-to-br from-white/5 to-transparent backdrop-blur-3xl border border-white/10 rounded-[40px] md:rounded-[60px] p-8 md:p-12 h-full relative group">
                 <div className="space-y-6">
@@ -503,7 +492,7 @@ export default function Landing() {
                     <LiveFeatureIcon type="brain" size={44} />
                   </div>
                   <h3 className="text-2xl font-bold text-white">AI Virtual Assistance.</h3>
-                  <p className="text-white/60 text-sm leading-relaxed">24/7 dedicated AI support to answer every legal, process, or technical doubt about your admission.</p>
+                  <p className="text-white/60 text-sm leading-relaxed">24/7 dedicated AI support to answer every doubt about your admission.</p>
                 </div>
               </div>
             </ScrollAnimationWrapper>
@@ -515,7 +504,7 @@ export default function Landing() {
                     <LiveFeatureIcon type="chart" size={24} />
                   </div>
                   <h3 className="text-2xl font-bold text-white">Placement Stats.</h3>
-                  <p className="text-white/60 text-sm leading-relaxed">Access real-time placement data, average packages, and top recruiter lists for every college branch.</p>
+                  <p className="text-white/60 text-sm leading-relaxed">Access real-time placement data, average packages, and top recruiter lists.</p>
                 </div>
               </div>
             </ScrollAnimationWrapper>
@@ -523,7 +512,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Simplified Features Section */}
+      {/* Features Grid */}
       <section id="features" className="py-20 md:py-40 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <ScrollAnimationWrapper animation="slideUp">
@@ -535,9 +524,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature: any, idx: number) => (
               <ScrollAnimationWrapper key={idx} animation="scale" delay={idx * 0.05}>
-                <div className="group bg-gradient-to-br from-white to-slate-50/50 rounded-[50px] p-8 border border-slate-100 hover:border-rose-100 shadow-sm hover:shadow-[0_20px_50px_rgba(225,29,72,0.06)] transition-all duration-700 h-full flex flex-col items-center text-center space-y-6">
-
-                  {/* Feature Showcase Simulation - Visual on Top */}
+                <div className="group bg-gradient-to-br from-white to-slate-50/50 rounded-[50px] p-8 border border-slate-100 hover:border-rose-100 shadow-sm transition-all duration-700 h-full flex flex-col items-center text-center space-y-6">
                   <div className="w-full">
                     <div className="bg-white/40 rounded-[35px] p-2 border border-white/60 overflow-hidden shadow-inner flex justify-center items-center h-[220px]">
                       <div className="scale-[0.7] origin-center w-full flex justify-center">
@@ -567,14 +554,10 @@ export default function Landing() {
             ))}
           </div>
         </div>
-      </section>      {/* Redesigned Journey Section - Sleek Vertical Pathway */}
-      <section id="how-it-works" className="relative bg-slate-950 py-32 md:py-48 overflow-hidden contain-content" data-theme="dark">
-        {/* Ambient background effects */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-rose-600/5 blur-3xl rounded-full" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/5 blur-3xl rounded-full" />
-        </div>
+      </section>
 
+      {/* Journey Section */}
+      <section id="how-it-works" className="relative bg-slate-950 py-32 md:py-48 overflow-hidden contain-content" data-theme="dark">
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <ScrollAnimationWrapper animation="slideUp" className="text-center mb-32">
             <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none">
@@ -583,9 +566,7 @@ export default function Landing() {
           </ScrollAnimationWrapper>
 
           <div className="relative">
-            {/* The Central Connective Rail */}
             <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-rose-600/0 via-rose-600/40 to-rose-600/0 hidden md:block" />
-
             <div className="space-y-24 md:space-y-40">
               {journeySteps.map((step: any, index: number) => {
                 const isEven = index % 2 === 0;
@@ -595,17 +576,13 @@ export default function Landing() {
                     animation={isEven ? "slideRight" : "slideLeft"}
                     className={`relative flex flex-col md:flex-row items-center gap-12 ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'}`}
                   >
-                    {/* The Path Node */}
                     <div className="absolute left-8 md:left-1/2 top-0 -translate-x-1/2 z-20 hidden md:flex items-center justify-center">
                       <div className="w-4 h-4 rounded-full bg-slate-950 border-2 border-rose-600 shadow-[0_0_15px_rgba(225,29,72,0.5)]" />
-                      <div className="absolute w-8 h-8 rounded-full bg-rose-600/20 animate-ping" />
                     </div>
 
-                    {/* Content Card */}
                     <div className="w-full md:w-[45%] group">
-                      <div className="relative p-8 md:p-10 rounded-[30px] bg-white/[0.03] border border-white/10 backdrop-blur-xl transition-all duration-500 hover:border-rose-500/30 hover:bg-white/[0.05] group">
-
-                        <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight group-hover:text-rose-500 transition-colors">
+                      <div className="relative p-8 md:p-10 rounded-[30px] bg-white/[0.03] border border-white/10 backdrop-blur-xl transition-all duration-500 hover:border-rose-500/30 hover:bg-white/[0.05]">
+                        <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight group-hover:text-rose-500">
                           {step.title}
                         </h3>
                         <p className="text-sm md:text-base text-white/40 font-medium leading-relaxed mb-8">
@@ -614,13 +591,9 @@ export default function Landing() {
                       </div>
                     </div>
 
-                    {/* Icon Visual */}
                     <div className="w-full md:w-[40%] flex justify-center">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-rose-500/10 blur-xl rounded-full scale-125 group-hover:bg-rose-500/20 transition-all duration-300 pointer-events-none" />
-                        <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white rounded-[24px] md:rounded-[32px] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
-                          <LiveFeatureIcon type={step.icon} size={64} />
-                        </div>
+                      <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white rounded-[24px] md:rounded-[32px] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                        <LiveFeatureIcon type={step.icon} size={64} />
                       </div>
                     </div>
                   </ScrollAnimationWrapper>
@@ -629,18 +602,13 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Final Call to Action */}
           <ScrollAnimationWrapper animation="scale" className="mt-40 text-center">
-            <div className="p-10 md:p-20 rounded-[40px] md:rounded-[60px] bg-gradient-to-br from-rose-600 to-rose-700 text-white relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
-
+            <div className="p-10 md:p-20 rounded-[40px] md:rounded-[60px] bg-gradient-to-br from-rose-600 to-rose-700 text-white relative overflow-hidden">
               <div className="relative z-10 space-y-8">
-                <h3 className="text-4xl md:text-5xl font-black tracking-tight leading-none italic uppercase">
-                  Ready to <br /> Own Your Future?
-                </h3>
+                <h3 className="text-4xl md:text-5xl font-black tracking-tight leading-none italic uppercase">Ready to <br /> Own Your Future?</h3>
                 <button
                   onClick={() => navigate("/signup")}
-                  className="px-8 py-4 bg-white text-rose-600 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-slate-900 hover:text-white transition-all transform hover:scale-105 active:scale-95"
+                  className="px-8 py-4 bg-white text-rose-600 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all transform hover:scale-105"
                 >
                   Start Prediction →
                 </button>
@@ -650,48 +618,31 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Dedicated CET 2026 Launch Section - The "Wow" Experience */}
-      <section className="py-16 md:py-24 px-4 md:px-6 relative bg-white contain-content" data-theme="light">
-        {/* Massive Ambient Background Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-rose-500/5 blur-3xl rounded-full pointer-events-none" />
-
+      {/* CET 2026 Section */}
+      <section className="py-16 md:py-24 px-4 md:px-6 relative bg-white" data-theme="light">
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[40px] md:rounded-[60px] p-8 md:p-16 text-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-
-            <ScrollAnimationWrapper animation="scale">
-              <div className="space-y-8 md:space-y-12">
-
-                <h2 className="text-4xl md:text-7xl lg:text-[100px] font-black text-slate-900 tracking-tighter leading-none">
-                  CET 2026 <br />
-                  <span className="italic text-rose-600">Live Soon.</span>
-                </h2>
-
-                <p className="text-base md:text-xl text-slate-500 font-semibold max-w-3xl mx-auto leading-relaxed">
-                  We're re-engineering our precision models for the 2026 Maharashtra diploma engineering prediction cycle.
-                  Get ready for the most accurate prediction engine ever built.
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
-                  {[
-                    { label: "Predictor", value: "95.7%", sub: "Precision Ready" },
-                    { label: "Institutions", value: "340+", sub: "Official Data" },
-                    { label: "Status", value: "Optimizing", sub: "Final Testing" }
-                  ].map((stat, i) => (
-                    <div key={i} className="bg-slate-50 border border-slate-200 rounded-[24px] md:rounded-[32px] p-6 lg:p-8 group-hover:border-slate-300 transition-colors">
-                      <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">{stat.label}</div>
-                      <div className="text-3xl font-extrabold text-slate-900 mb-1">{stat.value}</div>
-                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{stat.sub}</div>
-                    </div>
-                  ))}
+          <div className="text-center space-y-8 md:space-y-12">
+            <h2 className="text-4xl md:text-7xl lg:text-[100px] font-black text-slate-900 tracking-tighter leading-none">
+              CET 2026 <br /> <span className="italic text-rose-600">Live Soon.</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+              {[
+                { label: "Predictor", value: "95.7%", sub: "Precision Ready" },
+                { label: "Institutions", value: "340+", sub: "Official Data" },
+                { label: "Status", value: "Optimizing", sub: "Final Testing" }
+              ].map((stat, i) => (
+                <div key={i} className="bg-slate-50 border border-slate-200 rounded-[24px] p-6 lg:p-8">
+                  <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">{stat.label}</div>
+                  <div className="text-3xl font-extrabold text-slate-900 mb-1">{stat.value}</div>
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{stat.sub}</div>
                 </div>
-              </div>
-            </ScrollAnimationWrapper>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* College Campus Showcase - The Dome Gallery */}
+      {/* Dome Gallery Section */}
       <section className="pt-24 pb-0 w-full relative bg-slate-950 flex flex-col">
         <div className="text-center relative z-20 mb-12 px-4">
           <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
@@ -716,7 +667,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Final Simple CTA */}
+      {/* Final CTA */}
       <section className="py-20 md:py-40 px-6 text-center bg-[#050505]" data-theme="dark">
         <div className="max-w-4xl mx-auto space-y-10 md:space-y-16">
           <ScrollAnimationWrapper animation="slideUp">
