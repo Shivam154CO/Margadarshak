@@ -99,20 +99,20 @@ export default function Dashboard() {
         setAiInsights("AI Analysis failing, using base data matches.");
         const { data: dbData } = await supabase.from('colleges_2025').select('*');
         if (!dbData) return [];
-        
+
         const preferredBranches = profile?.preferred_branches || [];
         const uniqueMap = new Map<string, College>();
-        
+
         dbData.forEach((c: any) => {
           const collegeCode = c.college_code;
           const branchName = c.branch_name || c.Branch_name || '';
-          
+
           // Check if this row matches one of the user's preferred branches
-          const isPreferred = preferredBranches.length === 0 || preferredBranches.some(pref => 
-            branchName.toLowerCase().includes(pref.toLowerCase()) || 
+          const isPreferred = preferredBranches.length === 0 || preferredBranches.some(pref =>
+            branchName.toLowerCase().includes(pref.toLowerCase()) ||
             pref.toLowerCase().includes(branchName.toLowerCase())
           );
-          
+
           if (!isPreferred) return;
 
           if (!uniqueMap.has(collegeCode)) {
@@ -125,14 +125,14 @@ export default function Dashboard() {
             });
           }
         });
-        
+
         // If we filtered out EVERYTHING, return at least one branch per college as last resort
         if (uniqueMap.size === 0 && dbData.length > 0) {
-           dbData.forEach((c) => {
-              if (!uniqueMap.has(c.college_code)) {
-                uniqueMap.set(c.college_code, { ...c, branch: c.branch_name, image: getCollegeImage(c.college_code) });
-              }
-           });
+          dbData.forEach((c) => {
+            if (!uniqueMap.has(c.college_code)) {
+              uniqueMap.set(c.college_code, { ...c, branch: c.branch_name, image: getCollegeImage(c.college_code) });
+            }
+          });
         }
 
         return Array.from(uniqueMap.values());
@@ -495,8 +495,8 @@ export default function Dashboard() {
                         key={idx}
                         onClick={() => setCurrentPage(pageNumber)}
                         className={`w-10 h-10 rounded-xl font-medium transition-colors ${currentPage === pageNumber
-                            ? 'bg-indigo-600 text-white shadow-md'
-                            : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                          ? 'bg-indigo-600 text-white shadow-md'
+                          : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                           }`}
                       >
                         {pageNumber}
@@ -516,8 +516,8 @@ export default function Dashboard() {
                     key={idx}
                     onClick={() => setCurrentPage(pageNumber)}
                     className={`w-10 h-10 rounded-xl font-medium transition-colors ${currentPage === pageNumber
-                        ? 'bg-indigo-600 text-white shadow-md'
-                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                      ? 'bg-indigo-600 text-white shadow-md'
+                      : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                       }`}
                   >
                     {pageNumber}

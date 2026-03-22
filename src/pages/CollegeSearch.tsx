@@ -582,14 +582,14 @@ export default function CollegeSearch() {
             activeTab === "grid" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredColleges.map((college, i) => (
-                  <CollegeCard 
-                    key={college.college_code} 
-                    college={college} 
-                    index={i} 
-                    saved={saved.includes(college.college_code)} 
-                    onToggleSaved={() => toggleSaved(college.college_code)} 
-                    onOpenBranches={() => setBranchModal(college)} 
-                    isPredicted={viewMode === "predicted"} 
+                  <CollegeCard
+                    key={college.college_code}
+                    college={college}
+                    index={i}
+                    saved={saved.includes(college.college_code)}
+                    onToggleSaved={() => toggleSaved(college.college_code)}
+                    onOpenBranches={() => setBranchModal(college)}
+                    isPredicted={viewMode === "predicted"}
                     userProfile={userProfile}
                   />
                 ))}
@@ -597,14 +597,14 @@ export default function CollegeSearch() {
             ) : (
               <div className="space-y-6">
                 {filteredColleges.map((college, i) => (
-                  <CollegeListCard 
-                    key={college.college_code} 
-                    college={college} 
-                    index={i} 
-                    saved={saved.includes(college.college_code)} 
-                    onToggleSaved={() => toggleSaved(college.college_code)} 
-                    onOpenBranches={() => setBranchModal(college)} 
-                    isPredicted={viewMode === "predicted"} 
+                  <CollegeListCard
+                    key={college.college_code}
+                    college={college}
+                    index={i}
+                    saved={saved.includes(college.college_code)}
+                    onToggleSaved={() => toggleSaved(college.college_code)}
+                    onOpenBranches={() => setBranchModal(college)}
+                    isPredicted={viewMode === "predicted"}
                     userProfile={userProfile}
                   />
                 ))}
