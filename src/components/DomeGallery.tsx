@@ -140,9 +140,9 @@ export default function DomeGallery({
   enlargeTransitionMs = DEFAULTS.enlargeTransitionMs,
   segments = DEFAULTS.segments,
   dragDampening = 2,
-  openedImageWidth = '400px',
-  openedImageHeight = '400px',
-  imageBorderRadius = '30px',
+  openedImageWidth = 'min(640px, 90vw)',
+  openedImageHeight = 'min(360px, 55vw)',
+  imageBorderRadius = '20px',
   openedImageBorderRadius = '30px',
   grayscale = true
 }: DomeGalleryProps) {
@@ -224,7 +224,7 @@ export default function DomeGallery({
         default:
           basis = aspect >= 1.3 ? w : minDim;
       }
-      let radius = basis * fit;
+      let radius = basis * (aspect < 1 ? 0.75 : fit);
       const heightGuard = h * 1.35;
       radius = Math.min(radius, heightGuard);
       radius = clamp(radius, minRadius, maxRadius);
@@ -476,12 +476,12 @@ export default function DomeGallery({
     overlay.appendChild(img);
 
     const nameLabel = document.createElement('div');
-    nameLabel.className = 'absolute bottom-0 left-0 w-full p-6 md:p-10 bg-gradient-to-t from-black/95 via-black/80 to-transparent';
+    nameLabel.className = 'absolute bottom-0 left-0 w-full p-4 md:p-8 bg-gradient-to-t from-black/95 via-black/80 to-transparent';
     nameLabel.innerHTML = `
       <div class="translate-y-8 opacity-0 transition-all duration-1000 delay-300 ease-out" id="anim-label-${collegeCode.replace(/\s+/g, '-')}">
-        <div class="text-white font-black text-sm md:text-base tracking-[0.5em] uppercase mb-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">College Code <span class="text-rose-500 font-black underline decoration-2 underline-offset-4">${collegeCode}</span></div>
-        <h3 class="text-white text-3xl md:text-7xl font-black tracking-tighter leading-[0.9] drop-shadow-[0_10px_30px_rgba(0,0,0,1)] capitalize">${collegeName.toLowerCase()}</h3>
-        <div class="h-1 w-24 bg-rose-600 mt-6 rounded-full shadow-[0_0_15px_rgba(225,29,72,0.6)]"></div>
+        <div class="text-white font-black text-[9px] md:text-base tracking-[0.2em] md:tracking-[0.5em] uppercase mb-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Code <span class="text-rose-500 font-black">${collegeCode}</span></div>
+        <h3 class="text-white text-xl md:text-7xl font-black tracking-tighter leading-[1] drop-shadow-[0_4px_10px_rgba(0,0,0,1)] capitalize line-clamp-2 md:line-clamp-none">${collegeName.toLowerCase()}</h3>
+        <div class="h-1 w-8 md:w-24 bg-rose-600 mt-2 md:mt-6 rounded-full shadow-[0_0_15px_rgba(225,29,72,0.6)]"></div>
       </div>
     `;
     overlay.appendChild(nameLabel);

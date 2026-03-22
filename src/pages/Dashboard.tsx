@@ -97,19 +97,44 @@ export default function Dashboard() {
         throw new Error("API empty");
       } catch (err) {
         setAiInsights("AI Analysis failing, using base data matches.");
-        console.warn("Prediction API failed, using base data from Supabase", err);
-        const { data } = await supabase.from('colleges_2025').select('*');
-        if (!data) return [];
+        const { data: dbData } = await supabase.from('colleges_2025').select('*');
+        if (!dbData) return [];
+        
+        const preferredBranches = profile?.preferred_branches || [];
         const uniqueMap = new Map<string, College>();
-        data.forEach((c) => {
-          if (!uniqueMap.has(c.college_code)) {
-            uniqueMap.set(c.college_code, {
+        
+        dbData.forEach((c: any) => {
+          const collegeCode = c.college_code;
+          const branchName = c.branch_name || c.Branch_name || '';
+          
+          // Check if this row matches one of the user's preferred branches
+          const isPreferred = preferredBranches.length === 0 || preferredBranches.some(pref => 
+            branchName.toLowerCase().includes(pref.toLowerCase()) || 
+            pref.toLowerCase().includes(branchName.toLowerCase())
+          );
+          
+          if (!isPreferred) return;
+
+          if (!uniqueMap.has(collegeCode)) {
+            uniqueMap.set(collegeCode, {
               ...c,
-              image: getCollegeImage(c.college_code),
+              branch: branchName, // Normalize to 'branch' for the UI
+              branch_name: branchName,
+              image: getCollegeImage(collegeCode),
               display_fees: `₹${(c.fees || 0).toLocaleString()}`,
             });
           }
         });
+        
+        // If we filtered out EVERYTHING, return at least one branch per college as last resort
+        if (uniqueMap.size === 0 && dbData.length > 0) {
+           dbData.forEach((c) => {
+              if (!uniqueMap.has(c.college_code)) {
+                uniqueMap.set(c.college_code, { ...c, branch: c.branch_name, image: getCollegeImage(c.college_code) });
+              }
+           });
+        }
+
         return Array.from(uniqueMap.values());
       }
     },

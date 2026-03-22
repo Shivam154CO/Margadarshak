@@ -10,21 +10,54 @@ import {
   Building, Calendar, GraduationCap, Users, 
   TrendingUp, DollarSign, Briefcase, Trophy, Home
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+
+const getCategoryColor = (category: string) => {
+  const cat = category.toUpperCase();
+  if (cat.includes('OPEN') || cat.includes('GOPN') || cat.includes('LOPN')) return '#2563eb'; // blue
+  if (cat.includes('OBC') || cat.includes('GOBC') || cat.includes('LOBC')) return '#7c3aed'; // purple
+  if (cat.includes('SC') || cat.includes('GSC') || cat.includes('LSC')) return '#dc2626'; // red
+  if (cat.includes('ST') || cat.includes('GST') || cat.includes('LST')) return '#ea580c'; // orange
+  if (cat.includes('EWS')) return '#059669'; // emerald
+  if (cat.includes('TFWS')) return '#0891b2'; // cyan
+  if (cat.includes('VJ') || cat.includes('DT')) return '#be185d'; // pink
+  if (cat.includes('NT')) return '#4338ca'; // indigo
+  return '#64748b'; // slate
+};
 
 export function useCollegeDetails() {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  
+  const urlCollegeCode = searchParams.get('code');
+  const urlBranchName = searchParams.get('branch');
   
   const getInitialCollege = useCallback((): any => {
-    if (location.state?.college) return location.state.college;
+    // 1. Priority: Location state (passed from Search/Dashboard)
+    if (location.state?.college) {
+      const stateCollege = location.state.college;
+      localStorage.setItem('selectedCollege', JSON.stringify(stateCollege));
+      return stateCollege;
+    }
+    
+    // 2. Secondary: URL Parameters (for refresh/bookmarks)
+    if (urlCollegeCode) {
+        return {
+            college_code: urlCollegeCode,
+            branch_name: urlBranchName || 'N/A'
+        };
+    }
+
+    // 3. Last Resort: LocalStorage
     try {
       const savedCollege = localStorage.getItem('selectedCollege');
       if (savedCollege) return JSON.parse(savedCollege);
     } catch (e) { console.error(e); }
     return null;
-  }, [location.state]);
+  }, [location.state, urlCollegeCode, urlBranchName]);
 
   const [college, setCollege] = useState<College>(() => normalizeCollegeData(getInitialCollege()));
-  const [loading, setLoading] = useState(!getInitialCollege() || !getInitialCollege()?.branches?.length);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -67,24 +100,128 @@ export function useCollegeDetails() {
     }
   }, [college.college_code, profile, college.branch_name]);
 
-  // Fetch full college data if missing
+  // Fetch full college data if missing or incomplete
   useEffect(() => {
     const fetchFullData = async () => {
-      if (!college.college_code) return;
-      if (college.branches && college.branches.length > 0) return; // Already have full data
+      const code = college.college_code || urlCollegeCode;
+      if (!code) {
+        setLoading(false);
+        return;
+      }
+
+      // Check if we need to fetch (if branches or seat matrix missing)
+      const hasFullData = college.branches && college.branches.length > 0 && 
+                         college.branches[0].categories && college.branches[0].categories.length > 0;
+      
+      if (hasFullData && college.college_code === code) {
+        setLoading(false);
+        return;
+      }
 
       setLoading(true);
       try {
-        const { data, error: fetchError } = await supabase
+        // Fetch ALL rows for this college to aggregate branches and categories
+        const { data: rows, error: fetchError } = await supabase
           .from('colleges_2025')
           .select('*')
-          .eq('college_code', college.college_code)
-          .limit(1)
-          .single();
+          .eq('college_code', code);
 
         if (fetchError) throw fetchError;
-        if (data) {
-          setCollege((prev: College) => normalizeCollegeData({ ...prev, ...data }));
+        
+        if (rows && rows.length > 0) {
+          // 1. Identify primary branch (prioritize URL/State)
+          const searchBranch = (urlBranchName || college.branch_name || college.branch || rows[0].branch_name || '').toLowerCase().replace(/engineering/g, '').replace(/engg/g, '').trim();
+          
+          // Case-insensitive match find
+          const primaryRow = rows.find(r => {
+            const rowBranch = (r.branch_name || '').toLowerCase().replace(/engineering/g, '').replace(/engg/g, '').trim();
+            return rowBranch.includes(searchBranch) || searchBranch.includes(rowBranch);
+          }) || rows[0];
+          
+          const targetBranch = primaryRow.branch_name;
+
+          // 2. Aggregate available branches and their specific seat matrices
+          const branchMap = new Map<string, any>();
+          
+          rows.forEach(row => {
+            const bName = row.branch_name || 'N/A';
+            const bKey = bName.toLowerCase().trim();
+            if (!branchMap.has(bKey)) {
+              branchMap.set(bKey, {
+                branch_name: bName,
+                branch_code: row.branch_code,
+                total_intake: 0, // We'll sum it up
+                categories: []
+              });
+            }
+            
+            const b = branchMap.get(bKey);
+            const rowSeats = typeof row.seats === 'number' ? row.seats : (parseInt(row.seats) || 0);
+            const rowCategory = (row.category || '').toUpperCase().trim();
+            
+            // Prioritize the minimum non-zero total_intake if available in any row for this branch
+            // This avoids inflated numbers from supernumerary seats (like EWS/TFWS)
+            const rowIntake = row.total_intake || row.Total_Intake || 0;
+            if (rowIntake > 0) {
+              if (b.total_intake === 0 || rowIntake < b.total_intake) {
+                 b.total_intake = rowIntake;
+              }
+            } else if (b.total_intake === 0 || !row.total_intake) {
+              // Only sum seats if total_intake is missing
+              // CRITICAL: Excluding supernumerary seats (EWS/TFWS) from official intake sum
+              if (rowCategory !== 'EWS' && rowCategory !== 'TFWS' && !rowCategory.includes('ORPHAN')) {
+                b.total_intake += rowSeats;
+              }
+            }
+            
+            // Add category to this branch's seat matrix
+            if (row.category && rowSeats > 0) {
+              b.categories.push({
+                category: row.category,
+                seats: rowSeats,
+                color: getCategoryColor(row.category)
+              });
+            }
+          });
+
+          // Sort and compute percentages
+          const branches = Array.from(branchMap.values()).map(b => {
+             const intake = b.total_intake || 1;
+             return {
+                ...b,
+                categories: b.categories.map((c: any) => ({
+                   ...c,
+                   percentage: (c.seats / intake) * 100
+                }))
+             };
+          }).sort((a, b) => b.total_intake - a.total_intake);
+          
+          const currentBranchData = branches.find(b => b.branch_name === targetBranch) || branches[0];
+          const totalIntake = currentBranchData?.total_intake || 0;
+
+          const fullCollege = normalizeCollegeData({
+            ...primaryRow,
+            total_intake: totalIntake,
+            seats: totalIntake,
+            branches,
+            seat_matrix: currentBranchData?.categories?.map((c: any) => ({
+                ...c,
+                percentage: (c.seats / (totalIntake || 1)) * 100
+            })) || []
+          });
+
+          setCollege(fullCollege);
+          localStorage.setItem('selectedCollege', JSON.stringify(fullCollege));
+          
+          // Update URL silently if possible to reflect the state
+          if (!urlCollegeCode) {
+             const newUrl = new URL(window.location.href);
+             newUrl.searchParams.set('code', code);
+             newUrl.searchParams.set('branch', targetBranch);
+             window.history.replaceState({}, '', newUrl.toString());
+          }
+        } else {
+            setError("College data not found in our 2025-26 database.");
         }
       } catch (err: any) {
         console.error("[useCollegeDetails] Fetch error:", err);
@@ -95,7 +232,7 @@ export function useCollegeDetails() {
     };
 
     fetchFullData();
-  }, [college.college_code]);
+  }, [college.college_code, urlCollegeCode]);
 
   useEffect(() => {
     if (profile && college?.college_code) {
@@ -244,6 +381,24 @@ export function useCollegeDetails() {
     );
   };
 
+  const updateBranch = useCallback((newBranchName: string) => {
+    setCollege(prev => {
+      const branchData = prev.branches?.find(b => b.branch_name === newBranchName);
+      return {
+        ...prev,
+        branch_name: newBranchName,
+        branch_code: branchData?.branch_code || prev.branch_code,
+        seat_matrix: branchData?.categories || [],
+        total_intake: branchData?.total_intake || prev.total_intake,
+        seats: branchData?.total_intake || prev.seats
+      };
+    });
+    // Update URL
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('branch', newBranchName);
+    window.history.replaceState({}, '', newUrl.toString());
+  }, []);
+
   return {
     college,
     loading,
@@ -266,6 +421,7 @@ export function useCollegeDetails() {
     placementData,
     automationData,
     collegeInsights,
-    isInsightsLoading
+    isInsightsLoading,
+    updateBranch
   };
 }

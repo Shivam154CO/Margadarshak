@@ -12,6 +12,8 @@ import {
   Award, Info, Layers
 } from "lucide-react";
 import SEO from "../components/SEO";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../constants/routes";
 import { CollegeCardImage } from "../components/ui/CollegeCardImage";
 import NoResultsFoundImg from "../assets/No-results-found.svg";
 
@@ -580,13 +582,31 @@ export default function CollegeSearch() {
             activeTab === "grid" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredColleges.map((college, i) => (
-                  <CollegeCard key={college.college_code} college={college} index={i} saved={saved.includes(college.college_code)} onToggleSaved={() => toggleSaved(college.college_code)} onOpenBranches={() => setBranchModal(college)} onViewDetails={() => setDetailsModal(college)} isPredicted={viewMode === "predicted"} />
+                  <CollegeCard 
+                    key={college.college_code} 
+                    college={college} 
+                    index={i} 
+                    saved={saved.includes(college.college_code)} 
+                    onToggleSaved={() => toggleSaved(college.college_code)} 
+                    onOpenBranches={() => setBranchModal(college)} 
+                    isPredicted={viewMode === "predicted"} 
+                    userProfile={userProfile}
+                  />
                 ))}
               </div>
             ) : (
               <div className="space-y-6">
                 {filteredColleges.map((college, i) => (
-                  <CollegeListCard key={college.college_code} college={college} index={i} saved={saved.includes(college.college_code)} onToggleSaved={() => toggleSaved(college.college_code)} onOpenBranches={() => setBranchModal(college)} onViewDetails={() => setDetailsModal(college)} isPredicted={viewMode === "predicted"} />
+                  <CollegeListCard 
+                    key={college.college_code} 
+                    college={college} 
+                    index={i} 
+                    saved={saved.includes(college.college_code)} 
+                    onToggleSaved={() => toggleSaved(college.college_code)} 
+                    onOpenBranches={() => setBranchModal(college)} 
+                    isPredicted={viewMode === "predicted"} 
+                    userProfile={userProfile}
+                  />
                 ))}
               </div>
             )
@@ -625,8 +645,21 @@ function FilterSelect({ label, value, onChange, options, icon }: any) {
   );
 }
 
-function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, onViewDetails, isPredicted }: any) {
-  const bestBranch = college.branches.reduce((a: any, b: any) => a.admission_chance > b.admission_chance ? a : b);
+function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, isPredicted, userProfile }: any) {
+  const navigate = useNavigate();
+  // Prioritize preferred branches when selecting the 'best' branch to display
+  const preferredBranches = userProfile?.preferred_branches || [];
+  const filteredBranches = college.branches.filter((b: any) =>
+    preferredBranches.length === 0 ||
+    preferredBranches.some((pref: string) =>
+      b.branch.toLowerCase().includes(pref.toLowerCase()) ||
+      pref.toLowerCase().includes(b.branch.toLowerCase())
+    )
+  );
+
+  // Use filtered branches if any match, otherwise fall back to all branches
+  const branchesToConsider = filteredBranches.length > 0 ? filteredBranches : college.branches;
+  const bestBranch = branchesToConsider.reduce((a: any, b: any) => a.admission_chance > b.admission_chance ? a : b);
   const color = bestBranch.admission_chance >= 70 ? "text-emerald-600" : bestBranch.admission_chance >= 40 ? "text-indigo-600" : "text-amber-600";
 
   return (
@@ -638,9 +671,14 @@ function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, onV
           <div className="absolute top-4 left-6 bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg border border-white/20 uppercase tracking-widest z-10">AI Match</div>
         )}
         <button onClick={onToggleSaved} className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur rounded-2xl shadow-xl">{saved ? <BookmarkCheck className="text-indigo-600 fill-indigo-600" /> : <Bookmark className="text-slate-400" />}</button>
-        <div className="absolute bottom-4 left-6 text-white">
-          <h3 className="text-xl font-bold line-clamp-1">{college.college_name}</h3>
-          <p className="text-sm opacity-90 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{college.city}</p>
+        <div className="absolute bottom-4 left-6 text-white w-full pr-12">
+          <h3 className="text-xl font-bold line-clamp-1 mb-0.5">{college.college_name}</h3>
+          <div className="flex flex-col gap-1">
+            <p className="text-xs opacity-90 flex items-center gap-1.5"><MapPin className="w-3 h-3" />{college.city}</p>
+            <p className="text-[10px] font-black bg-indigo-500/80 backdrop-blur-sm self-start px-2 py-0.5 rounded uppercase tracking-wider line-clamp-1 max-w-[90%]">
+              {bestBranch.branch}
+            </p>
+          </div>
         </div>
       </div>
       <div className="p-8">
@@ -656,15 +694,28 @@ function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, onV
         </div>
         <div className="flex gap-3">
           <button onClick={onOpenBranches} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-colors">Branches</button>
-          <button onClick={onViewDetails} className="flex-1 py-4 bg-slate-50 text-slate-700 rounded-2xl font-bold text-sm border border-slate-200 hover:bg-slate-100 transition-colors">Details</button>
+          <button onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch)}`, { state: { college } })} className="flex-1 py-4 bg-slate-50 text-slate-700 rounded-2xl font-bold text-sm border border-slate-200 hover:bg-slate-100 transition-colors">Details</button>
         </div>
       </div>
     </motion.div>
   );
 }
 
-function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches, onViewDetails }: any) {
-  const bestBranch = college.branches.reduce((a: any, b: any) => a.admission_chance > b.admission_chance ? a : b);
+function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches, isPredicted, userProfile }: any) {
+  const navigate = useNavigate();
+  // Prioritize preferred branches
+  const preferredBranches = userProfile?.preferred_branches || [];
+  const filteredBranches = college.branches.filter((b: any) =>
+    preferredBranches.length === 0 ||
+    preferredBranches.some((pref: string) =>
+      b.branch.toLowerCase().includes(pref.toLowerCase()) ||
+      pref.toLowerCase().includes(b.branch.toLowerCase())
+    )
+  );
+
+  const branchesToConsider = filteredBranches.length > 0 ? filteredBranches : college.branches;
+  const bestBranch = branchesToConsider.reduce((a: any, b: any) => a.admission_chance > b.admission_chance ? a : b);
+
   return (
     <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} className="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col md:flex-row gap-8 hover:shadow-xl transition-all">
       <div className="w-full md:w-64 h-48 rounded-2xl overflow-hidden flex-shrink-0">
@@ -674,7 +725,10 @@ function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches,
         <div className="flex justify-between items-start mb-4">
           <div>
             <h3 className="text-2xl font-bold text-slate-900 mb-1">{college.college_name}</h3>
-            <p className="text-slate-500 font-medium flex items-center gap-1.5 text-sm uppercase tracking-wide"><MapPin className="w-4 h-4 text-indigo-500" />{college.city} • {college.autonomy_status}</p>
+            <p className="text-slate-500 font-medium flex items-center gap-1.5 text-sm uppercase tracking-wide">
+              <MapPin className="w-4 h-4 text-indigo-500" />
+              {college.city} • {college.autonomy_status} • <span className="text-indigo-600 font-bold">{bestBranch.branch}</span>
+            </p>
           </div>
           <button onClick={onToggleSaved} className="p-3 bg-slate-50 rounded-2xl">{saved ? <BookmarkCheck className="text-indigo-600 fill-indigo-600" /> : <Bookmark className="text-slate-400" />}</button>
         </div>
@@ -686,7 +740,7 @@ function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches,
         </div>
         <div className="flex gap-4">
           <button onClick={onOpenBranches} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold">Branches</button>
-          <button onClick={onViewDetails} className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold">Full Profile</button>
+          <button onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch)}`, { state: { college } })} className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold">Full Profile</button>
         </div>
       </div>
     </motion.div>
@@ -756,20 +810,9 @@ function CollegeDetailsModal({ college, onClose, getProbabilityColor }: any) {
               <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">{college.college_name}</h2>
               <div className="flex flex-wrap items-center gap-6 text-slate-400">
                 <span className="flex items-center gap-2"><MapPin className="w-5 h-5 text-indigo-400" />{college.city}, {college.state || 'Maharashtra'}</span>
-                <span className="h-2 w-2 bg-slate-700 rounded-full" />
-                <span className="flex items-center gap-2"><Award className="w-5 h-5 text-indigo-400" />{college.naac_grade || 'A+'} Grade • {college.autonomy_status}</span>
               </div>
             </div>
-            <button onClick={onClose} className="p-4 bg-slate-800 text-slate-300 rounded-2xl hover:bg-slate-700 transition-colors border border-slate-700"><X className="w-6 h-6" /></button>
-          </div>
-          <div className="flex gap-12 mt-12 bg-slate-800/40 p-8 rounded-3xl border border-slate-700/50 backdrop-blur-lg">
-            <div className="space-y-1"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Average Pkg</p><p className="text-3xl font-bold text-white">₹{college.average_package_lpa} LPA</p></div>
-            <div className="w-px bg-slate-700" />
-            <div className="space-y-1"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Highest Pkg</p><p className="text-3xl font-bold text-emerald-400">₹{college.highest_package_lpa} LPA</p></div>
-            <div className="w-px bg-slate-700" />
-            <div className="space-y-1"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Placement</p><p className="text-3xl font-bold text-white">{college.placement_rate}%</p></div>
-            <div className="w-px bg-slate-700" />
-            <div className="space-y-1"><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Match Chance</p><p className="text-3xl font-bold text-indigo-400">{(bestBranch.admission_chance).toFixed(1)}%</p></div>
+            <button onClick={onClose} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-colors border border-slate-700"><X className="w-6 h-6 text-slate-300" /></button>
           </div>
         </div>
 

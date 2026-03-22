@@ -61,7 +61,8 @@ export default function CollegeDetails() {
     placementData,
     automationData,
     collegeInsights,
-    isInsightsLoading
+    isInsightsLoading,
+    updateBranch
   } = useCollegeDetails();
 
   const chat = useCollegeAIChat(college);
@@ -118,19 +119,16 @@ export default function CollegeDetails() {
             seatMatrix={college.seat_matrix || []}
             userCategory={college.category || "GOPEN"}
             branchName={college.branch_name || ""}
+            totalIntake={college.total_intake}
           />
 
           <AvailableBranches
             branches={college.branches || []}
             collegeCode={college.college_code || ""}
-            onBranchSelect={(branch) => console.log("Selected:", branch)}
+            selectedBranch={college.branch_name}
+            onBranchSelect={updateBranch}
           />
 
-          <AdmissionTimeline
-            admissionSteps={college.admission_process || []}
-            contactEmail={college.contact_email}
-            contactPhone={college.contact_phone}
-          />
 
           <ScholarshipsSection
             collegeScholarships={college.scholarships || []}
@@ -146,19 +144,6 @@ export default function CollegeDetails() {
         </div>
 
         <div className="space-y-8">
-          {/* AI Brief Preview Card */}
-          <div className="bg-indigo-50 border-2 border-indigo-100 rounded-3xl p-6 relative overflow-hidden">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-sm font-black text-indigo-700 uppercase tracking-widest flex items-center gap-2">
-                <Sparkles className="w-4 h-4" /> AI Analysis Preview
-              </h4>
-              {isInsightsLoading && <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />}
-            </div>
-            <p className="text-slate-800 text-sm font-bold italic leading-relaxed">
-              {collegeInsights ? collegeInsights.split('\n')[2]?.replace(/\*\*/g, '') || "Reviewing college metadata..." : "Analysis in progress..."}
-            </p>
-          </div>
-
           <InfoCard title="Quick Stats" icon={Trophy} gradient="from-blue-600 to-indigo-700">
             <div className="space-y-4">
               <div className="flex justify-between text-white/90">
@@ -190,12 +175,30 @@ export default function CollegeDetails() {
             </ul>
           </div>
 
+          <AdmissionTimeline
+            admissionSteps={college.admission_process || []}
+            admissionDates={college.admission_dates}
+            contacts={college.admission_contacts}
+          />
+
           <DistanceCalculator
             distance={distance}
             isGettingLocation={isGettingLocation}
             onGetLocation={handleGetLocation}
             error={locationError}
           />
+
+          <div className="bg-indigo-50 border-2 border-indigo-100 rounded-3xl p-6 relative overflow-hidden">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-sm font-black text-indigo-700 uppercase tracking-widest flex items-center gap-2">
+                <Sparkles className="w-4 h-4" /> AI Analysis Preview
+              </h4>
+              {isInsightsLoading && <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />}
+            </div>
+            <p className="text-slate-800 text-sm font-bold italic leading-relaxed">
+              {collegeInsights ? collegeInsights.split('\n')[2]?.replace(/\*\*/g, '') || "Reviewing college metadata..." : "Analysis in progress..."}
+            </p>
+          </div>
 
           <ContactInfo
             email={college.contact_email}
@@ -295,7 +298,12 @@ export default function CollegeDetails() {
                 <StatCard label="Other Seats" value={seatData.otherSeats} icon={Building} gradient="from-purple-500 to-pink-600" />
                 <StatCard label="Percentage" value={`${((seatData.currentSeats / seatData.totalIntake) * 100).toFixed(1)}%`} icon={Trophy} gradient="from-amber-500 to-orange-600" />
                 <div className="lg:col-span-4 mt-8">
-                  <SeatMatrixSection seatMatrix={college.seat_matrix || []} userCategory={college.category || "GOPEN"} branchName={college.branch_name || ""} />
+                  <SeatMatrixSection 
+                    seatMatrix={college.seat_matrix || []} 
+                    userCategory={college.category || "GOPEN"} 
+                    branchName={college.branch_name || ""} 
+                    totalIntake={college.total_intake}
+                  />
                 </div>
               </div>
             )}

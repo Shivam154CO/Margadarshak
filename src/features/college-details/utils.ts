@@ -121,6 +121,8 @@ export const normalizeCollegeData = (collegeData: any): College => {
     admission_process: safeParseJson(collegeData.admission_process || collegeData.admissionSteps, []),
     scholarships: safeParseJson(collegeData.scholarships, []),
     feedback: safeParseJson(collegeData.feedback, []),
+    admission_dates: safeParseJson(collegeData.admission_dates || collegeData.admissionDates, null),
+    admission_contacts: safeParseJson(collegeData.admission_contacts || collegeData.admissionContacts, []),
   };
 
   return normalized;

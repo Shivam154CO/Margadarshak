@@ -679,80 +679,55 @@ def get_college_details():
         
         # Add admission process and timeline data (Maharashtra DTE Admission Process)
         college_details['admission_dates'] = {
-            'application_start': 'June 2025',
-            'application_end': 'July 2025',
-            'merit_list_date': 'August 2025',
-            'admission_start': 'August 2025',
-            'admission_end': 'September 2025'
+            'application_start': 'June 15, 2026',
+            'application_end': 'July 10, 2026',
+            'merit_list_date': 'July 25, 2026',
+            'admission_start': 'August 01, 2026',
+            'admission_end': 'August 31, 2026'
         }
         
         college_details['admission_process'] = [
             {
                 'step': 1,
                 'title': 'Online Registration',
-                'description': 'Register on the DTE Maharashtra website (dte2025.maharashtra.gov.in) with your details and create a login password.',
-                'deadline': 'July 2025',
-                'required_docs': []
+                'description': 'Register on the DTE Maharashtra website with your details.',
+                'deadline': 'June 15, 2026',
+                'required_docs': ['Aadhar Card', 'SSC/HSC Marksheet']
             },
             {
                 'step': 2,
-                'title': 'Fill Application Form',
-                'description': 'Fill in personal details, academic details, category information, and select preferred courses and colleges.',
-                'deadline': 'July 2025',
-                'required_docs': []
+                'title': 'Document Verification',
+                'description': 'Visit the Facilitation Center (FC) for original document verification and confirmation.',
+                'deadline': 'June 25, 2026',
+                'required_docs': ['Original Certificates', 'FC Form']
             },
             {
                 'step': 3,
-                'title': 'Upload Documents',
-                'description': 'Upload scanned copies of required documents including photograph, signature, and academic certificates.',
-                'deadline': 'July 2025',
-                'required_docs': ['Passport Size Photo', 'Signature', 'Aadhar Card']
+                'title': 'Merit List Publication',
+                'description': 'Check provisional and final merit list positions on the official portal.',
+                'deadline': 'July 10, 2026',
+                'required_docs': []
             },
             {
                 'step': 4,
-                'title': 'Pay Application Fee',
-                'description': 'Pay the application fee online through credit/debit card or net banking. Fee: ₹800 for General/OBC, ₹600 for SC/ST.',
-                'deadline': 'July 2025',
-                'required_docs': []
+                'title': 'Option Form Filling',
+                'description': 'Submit your preferences for colleges and branches (Choice Codes).',
+                'deadline': 'July 25, 2026',
+                'required_docs': ['Option Form List']
             },
             {
                 'step': 5,
-                'title': 'Submit & Lock Choices',
-                'description': 'Select preferred colleges and courses, then lock your choices. You can modify choices before locking.',
-                'deadline': 'August 2025',
-                'required_docs': []
-            },
-            {
-                'step': 6,
-                'title': 'View Merit List / Seat Allotment',
-                'description': 'Check the merit list/seaat allotment result on the DTE website. Download the allotment letter if seat is allotted.',
-                'deadline': 'August 2025',
-                'required_docs': []
-            },
-            {
-                'step': 7,
-                'title': 'Pay Seat Acceptance Fee',
-                'description': 'Pay the seat acceptance fee (₹1,000 for General/OBC, ₹500 for SC/ST) to confirm your seat.',
-                'deadline': 'August 2025',
+                'title': 'CAP Round 1 Allotment',
+                'description': 'View seat allotment and accept/refuse the seat on the portal.',
+                'deadline': 'August 01, 2026',
                 'required_docs': ['Allotment Letter']
             },
             {
-                'step': 8,
-                'title': 'Report to College',
-                'description': 'Report to the allotted college with all original documents for verification and complete the admission process.',
-                'deadline': 'September 2025',
-                'required_docs': [
-                    'SSC Marksheet',
-                    'HSC/Diploma Marksheet',
-                    'Category Certificate',
-                    'Domicile Certificate',
-                    'Aadhar Card',
-                    'Passport Size Photos',
-                    'Caste Validity (if applicable)',
-                    'Non-Creamy Layer Certificate (if applicable)',
-                    'Income Certificate (if applicable)',
-                    'Gap Certificate (if applicable)'
-                ]
+                'step': 6,
+                'title': 'Reporting to Institute',
+                'description': 'Report to the allotted college for final admission and fee payment.',
+                'deadline': 'August 15, 2026',
+                'required_docs': ['Fee Receipt', 'Leaving Certificate']
             }
         ]
         

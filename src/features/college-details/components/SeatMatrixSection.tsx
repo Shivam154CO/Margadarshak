@@ -13,12 +13,14 @@ interface SeatMatrixSectionProps {
   seatMatrix: SeatMatrixItem[];
   branchName: string;
   userCategory?: string;
+  totalIntake?: number;
 }
 
 export const SeatMatrixSection: React.FC<SeatMatrixSectionProps> = ({
   seatMatrix,
   branchName,
   userCategory,
+  totalIntake,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -34,8 +36,8 @@ export const SeatMatrixSection: React.FC<SeatMatrixSectionProps> = ({
     );
   }
 
-  const totalSeats = seatMatrix.reduce((sum, cat) => sum + cat.seats, 0);
-
+  const totalSeats = totalIntake || seatMatrix.reduce((sum, cat) => sum + cat.seats, 0);
+ 
   return (
     <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg transition-shadow duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">

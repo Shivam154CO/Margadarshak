@@ -14,7 +14,6 @@ export const AvailableBranches: React.FC<AvailableBranchesProps> = ({
   branches,
   selectedBranch,
   onBranchSelect,
-  collegeCode,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -48,16 +47,16 @@ export const AvailableBranches: React.FC<AvailableBranchesProps> = ({
                   )}
                 </div>
               </div>
-              <div className="sm:text-right flex-shrink-0">
-                <div className="text-xs text-gray-500 mb-1">Seat Distribution</div>
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 sm:justify-end">
+              <div className="flex-1 w-full sm:w-auto">
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 sm:text-right">Seat Distribution (Category-wise)</div>
+                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:justify-end">
                   {branch.categories && branch.categories.map((category: any, catIndex: number) => (
-                    <div key={catIndex} className="flex items-center space-x-1">
+                    <div key={catIndex} className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg">
                       <div
-                        className="w-2 h-2 rounded-full"
+                        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                         style={{ backgroundColor: category.color }}
                       />
-                      <span className="text-xs font-medium text-gray-700">
+                      <span className="text-[11px] font-bold text-slate-700 whitespace-nowrap">
                         {category.category}: {category.seats}
                       </span>
                     </div>
@@ -99,19 +98,23 @@ export const AvailableBranches: React.FC<AvailableBranchesProps> = ({
                       transition={{ duration: 0.3 }}
                       className="overflow-hidden"
                     >
-                      <div className="flex flex-wrap gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-slate-100 mt-4">
                         {branch.categories.map((category, catIndex) => (
-                          <div key={catIndex} className="flex items-center space-x-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: category.color }}
-                            />
-                            <span className="text-sm font-medium text-gray-900">
-                              {category.category}: {category.seats} seats
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              ({category.percentage.toFixed(1)}%)
-                            </span>
+                          <div key={catIndex} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="w-2.5 h-2.5 rounded-full shadow-sm"
+                                style={{ backgroundColor: category.color }}
+                              />
+                              <div>
+                                <p className="text-xs font-black text-slate-900 leading-none">{category.category}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Category</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-black text-slate-900 leading-none">{category.seats} Seats</p>
+                              <p className="text-[10px] font-bold text-indigo-600 mt-1">({category.percentage.toFixed(1)}%)</p>
+                            </div>
                           </div>
                         ))}
                       </div>

@@ -236,6 +236,13 @@ export interface College {
         email: string;
         role: string;
     }[];
+    admission_dates?: {
+        application_start: string;
+        application_end: string;
+        merit_list_date: string;
+        admission_start: string;
+        admission_end: string;
+    };
 }
 
 export interface RawCollege extends College {
