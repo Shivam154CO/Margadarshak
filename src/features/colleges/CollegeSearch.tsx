@@ -15,7 +15,7 @@ import {
 import SEO from "@/components/SEO";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
-import { CollegeCardImage } from "@/components/ui/CollegeCardImage";
+import { CollegeCardImage } from "@/features/colleges/components/CollegeCardImage";
 import NoResultsFoundImg from "@/assets/No-results-found.svg";
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';

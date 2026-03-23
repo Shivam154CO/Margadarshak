@@ -14,6 +14,7 @@ import {
   Target,
   ChevronDown,
 } from "lucide-react";
+import { StepIndicator } from "./components/StepIndicator";
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 
@@ -521,22 +522,7 @@ export default function Profile() {
                 </div>
 
                 {/* Progress Indicatior */}
-                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">Progress</span>
-                    <span className="text-xs font-bold text-rose-400">{Math.round(((currentStep) / steps.length) * 100)}%</span>
-                  </div>
-                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-rose-500 transition-all duration-500 ease-out"
-                      style={{ width: `${((currentStep) / steps.length) * 100}%` }}
-                    />
-                  </div>
-                  <div className="mt-4 flex justify-between items-center text-[10px] font-medium text-white/40 uppercase tracking-wider">
-                    <span>Step {currentStep + 1} of {steps.length}</span>
-                    <span>{steps[currentStep]}</span>
-                  </div>
-                </div>
+                <StepIndicator currentStep={currentStep + 1} steps={steps} />
               </div>
             </motion.div>
 
