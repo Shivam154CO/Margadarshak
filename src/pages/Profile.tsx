@@ -43,6 +43,17 @@ export default function Profile() {
     universityPreference: "All Universities",
     address: "",
     receiveUpdates: true,
+    
+    // Formal Option Form fields
+    applicationId: "",
+    candidatureType: "Maharashtra State Candidate - Type A",
+    ewsStatus: "No",
+    gender: "Male",
+    pwdType: "N.A.",
+    defenceType: "N.A.",
+    religiousMinority: "N.A.",
+    linguisticMinority: "N.A.",
+    diplomaCourseGroup: "",
   });
 
   const maharashtraUniversities = [
@@ -60,7 +71,7 @@ export default function Profile() {
     "Other"
   ];
 
-  const steps = ["Basic Info", "Academic Details", "Preferences"];
+  const steps = ["Basic Info", "Academic Details", "Formal Info", "Preferences"];
 
   const categories = [
     "OPEN",
@@ -152,6 +163,16 @@ export default function Profile() {
             universityPreference: profile.university_preference || "All Universities",
             address: profile.address || "",
             receiveUpdates: profile.receive_updates ?? true,
+            
+            applicationId: profile.application_id || "",
+            candidatureType: profile.candidature_type || "Maharashtra State Candidate - Type A",
+            ewsStatus: profile.ews_status || "No",
+            gender: profile.gender || "Male",
+            pwdType: profile.pwd_type || "N.A.",
+            defenceType: profile.defence_type || "N.A.",
+            religiousMinority: profile.religious_minority || "N.A.",
+            linguisticMinority: profile.linguistic_minority || "N.A.",
+            diplomaCourseGroup: profile.diploma_course_group || "",
           });
         } else {
           // New user - start with minimal info from auth
@@ -206,6 +227,10 @@ export default function Profile() {
     } else if (step === 2) {
       if (!form.homeUniversity) {
         newErrors.homeUniversity = "Please select your Home University";
+      }
+    } else if (step === 3) {
+      if (form.preferredBranches.length === 0) {
+        newErrors.preferredBranches = "Please select at least one branch";
       }
     }
 
@@ -283,6 +308,17 @@ export default function Profile() {
         home_university: form.homeUniversity,
         university_preference: form.universityPreference,
         receive_updates: form.receiveUpdates,
+        
+        application_id: form.applicationId,
+        candidature_type: form.candidatureType,
+        ews_status: form.ewsStatus,
+        gender: form.gender,
+        pwd_type: form.pwdType,
+        defence_type: form.defenceType,
+        religious_minority: form.religiousMinority,
+        linguistic_minority: form.linguisticMinority,
+        diploma_course_group: form.diplomaCourseGroup,
+        
         profile_complete: true,
         updated_at: new Date().toISOString()
       };
@@ -728,38 +764,6 @@ export default function Profile() {
                               {errors.diplomaScore && <p className="text-rose-500 text-xs mt-1 font-medium">{errors.diplomaScore}</p>}
                             </div>
                           </div>
-
-                          <div className="space-y-3">
-                            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Preferred Branches <span className="text-rose-500">*</span>
-                            </label>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-                              {branches.map((b) => (
-                                <button
-                                  key={b}
-                                  type="button"
-                                  onClick={() => handleBranchToggle(b)}
-                                  className={`p-3 rounded-xl border text-left transition-all group ${form.preferredBranches.includes(b)
-                                    ? "border-rose-500 bg-rose-50 text-rose-700 shadow-sm"
-                                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-                                    }`}
-                                >
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-xs font-bold leading-tight">{b}</span>
-                                    {form.preferredBranches.includes(b) && (
-                                      <Check className="w-4 h-4 text-rose-500" />
-                                    )}
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                            {errors.preferredBranches && (
-                              <p className="text-rose-500 text-xs mt-1 font-medium">{errors.preferredBranches}</p>
-                            )}
-                            <p className="text-xs text-slate-400 font-medium">
-                              {form.preferredBranches.length} branches selected
-                            </p>
-                          </div>
                         </>
                       )}
                     </motion.div>
@@ -774,6 +778,179 @@ export default function Profile() {
                       exit="exit"
                       className="space-y-6"
                     >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Application ID
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. DSE20131841"
+                            value={form.applicationId}
+                            onChange={(e) => setForm({ ...form, applicationId: e.target.value })}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Diploma Course Group
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Mechanical Engineering"
+                            value={form.diplomaCourseGroup}
+                            onChange={(e) => setForm({ ...form, diplomaCourseGroup: e.target.value })}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Gender
+                          </label>
+                          <select
+                            value={form.gender}
+                            onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                          >
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Transgender">Transgender</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            EWS Status
+                          </label>
+                          <select
+                            value={form.ewsStatus}
+                            onChange={(e) => setForm({ ...form, ewsStatus: e.target.value })}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                          >
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Type of Candidature
+                        </label>
+                        <select
+                          value={form.candidatureType}
+                          onChange={(e) => setForm({ ...form, candidatureType: e.target.value })}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                        >
+                          <option value="Maharashtra State Candidate - Type A">Maharashtra State Candidate - Type A</option>
+                          <option value="Maharashtra State Candidate - Type B">Maharashtra State Candidate - Type B</option>
+                          <option value="Maharashtra State Candidate - Type C">Maharashtra State Candidate - Type C</option>
+                          <option value="Maharashtra State Candidate - Type D">Maharashtra State Candidate - Type D</option>
+                          <option value="Maharashtra State Candidate - Type E">Maharashtra State Candidate - Type E</option>
+                          <option value="OMS - Outside Maharashtra State">OMS - Outside Maharashtra State</option>
+                          <option value="J&K Migrant">J&K Migrant</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            PWD Type
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. N.A."
+                            value={form.pwdType}
+                            onChange={(e) => setForm({ ...form, pwdType: e.target.value })}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Defence Type
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. N.A."
+                            value={form.defenceType}
+                            onChange={(e) => setForm({ ...form, defenceType: e.target.value })}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Religious Minority
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. N.A."
+                            value={form.religiousMinority}
+                            onChange={(e) => setForm({ ...form, religiousMinority: e.target.value })}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Linguistic Minority
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. N.A."
+                            value={form.linguisticMinority}
+                            onChange={(e) => setForm({ ...form, linguisticMinority: e.target.value })}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {currentStep === 3 && (
+                    <motion.div
+                      key="step4"
+                      variants={stepVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="space-y-6"
+                    >
+                      <div className="space-y-3">
+                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Preferred Branches <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                          {branches.map((b) => (
+                            <button
+                              key={b}
+                              type="button"
+                              onClick={() => handleBranchToggle(b)}
+                              className={`p-3 rounded-xl border text-left transition-all group ${form.preferredBranches.includes(b)
+                                ? "border-rose-500 bg-rose-50 text-rose-700 shadow-sm"
+                                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                                }`}
+                            >
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-bold leading-tight">{b}</span>
+                                {form.preferredBranches.includes(b) && (
+                                  <Check className="w-4 h-4 text-rose-500" />
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                        {errors.preferredBranches && (
+                          <p className="text-rose-500 text-xs mt-1 font-medium">{errors.preferredBranches}</p>
+                        )}
+                        <p className="text-xs text-slate-400 font-medium">
+                          {form.preferredBranches.length} branches selected
+                        </p>
+                      </div>
+
                       <div className="space-y-3">
                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                           Home University <span className="text-rose-500">*</span>
@@ -800,9 +977,6 @@ export default function Profile() {
                           </div>
                         </div>
                         {errors.homeUniversity && <p className="text-rose-500 text-xs mt-1 font-medium">{errors.homeUniversity}</p>}
-                        <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                          Your Home University is typically the university associated with your Diploma college district.
-                        </p>
                       </div>
 
                       <div className="space-y-3">

@@ -79,6 +79,7 @@ const NAV_ITEMS = [
     path: "",
     dropdownItems: [
       { id: "cap-generator", label: "Smart CAP Form", icon: FileText, path: ROUTES.CAP_ROUND_GENERATOR },
+      { id: "dse-option-form", label: "Manual Option Form", icon: CheckSquare, path: ROUTES.DSE_OPTION_FORM },
       { id: "scorecard-ocr", label: "OCR Auto-fill", icon: Scan, path: ROUTES.SCORECARD_OCR },
       { id: "analytics", label: "Advanced Analytics", icon: TrendingUp, path: ROUTES.ANALYTICS },
       { id: "data-pipeline", label: "Data Pipeline", icon: BarChart3, path: ROUTES.DATA_PIPELINE },

@@ -46,6 +46,7 @@ const SeatVacancy = lazy(() => import("./pages/SeatVacancy"));
 const ScholarshipFinder = lazy(() => import("./pages/ScholarshipFinder"));
 const CutoffTrends = lazy(() => import("./pages/CutoffTrends"));
 const PostAdmission = lazy(() => import("./pages/PostAdmission"));
+const DseOptionForm = lazy(() => import("./pages/DseOptionForm"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Scroll restorer
@@ -93,6 +94,7 @@ const AnimatedRoutes = () => {
         <Route path={ROUTES.COMMUNITY} element={<PageTransition><Community /></PageTransition>} />
 
         {/* Protected Routes */}
+        <Route path={ROUTES.DSE_OPTION_FORM} element={<Protected><DseOptionForm /></Protected>} />
         <Route path={ROUTES.PROFILE} element={<Protected><Profile /></Protected>} />
         <Route path={ROUTES.PROFILE_VIEW} element={<Protected><ProfileView /></Protected>} />
         <Route path={ROUTES.FAVORITES} element={<Protected><Favorites /></Protected>} />

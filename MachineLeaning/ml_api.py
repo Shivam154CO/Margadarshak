@@ -1135,6 +1135,74 @@ def get_college_insights():
         print(f"Error generating individual insights: {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/generate_cap_form", methods=["POST", "OPTIONS"])
+def generate_cap_form():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
+    
+    try:
+        data = request.get_json()
+        user_score = float(data.get("score") or 0)
+        user_rank = int(data.get("rank") or 0)
+        user_category = str(data.get("category") or "OPEN").upper().strip()
+        preferred_branches = [b.lower().strip() for b in data.get("branches", [])]
+        
+        if not preferred_branches:
+            return jsonify({"error": "No branches selected"}), 400
+
+        # Filter by branches first
+        df_filtered = df.copy()
+        df_filtered['branch_name_lower'] = df_filtered['branch_name'].str.lower().str.strip()
+        df_filtered = df_filtered[df_filtered['branch_name_lower'].isin(preferred_branches)]
+        
+        # Filter by category
+        category_variations = get_category_variations(user_category)
+        df_filtered['cat_norm'] = df_filtered['category'].str.strip().str.upper()
+        category_mask = df_filtered['cat_norm'].isin([c.upper() for c in category_variations])
+        df_filtered = df_filtered[category_mask]
+        
+        results = []
+        for _, row in df_filtered.iterrows():
+            cutoff_rank = int(row.get('cutoff_rank') or 0)
+            cutoff_percentile = float(row.get('cutoff_percentile') or 0)
+            
+            fit, match_score, chance, reason, _ = advanced_prediction_model(
+                user_score, user_rank, cutoff_rank, cutoff_percentile
+            )
+            
+            results.append({
+                "college_code": str(row.get('college_code') or ''),
+                "college_name": str(row.get('college_name') or 'Unknown'),
+                "city": str(row.get('city') or 'N/A'),
+                "branch": str(row.get('branch_name') or 'N/A'),
+                "branch_code": str(row.get('branch_code') or ''),
+                "cutoff_rank": cutoff_rank,
+                "cutoff_percentile": cutoff_percentile,
+                "placement_rate": float(row.get('placement_rate') or 0),
+                "Fees": float(row.get('fees') or 0),
+                "admission_chance": chance,
+                "probability_level": fit,
+                "match_score": match_score,
+                "category": str(row.get('category', 'OPEN'))
+            })
+            
+        # Group into Dream, Best Fit, Safe
+        # Dream: Stretch & Reach
+        # Best Fit: Good Fit & Best Fit
+        # Safe: Most Probable 
+        
+        form_results = {
+            "dream": sorted([r for r in results if r['probability_level'] in ['Stretch', 'Reach']], key=lambda x: x['match_score'], reverse=True)[:20],
+            "best_fit": sorted([r for r in results if r['probability_level'] in ['Best Fit', 'Good Fit']], key=lambda x: x['match_score'], reverse=True)[:30],
+            "safe": sorted([r for r in results if r['probability_level'] == 'Most Probable'], key=lambda x: x['match_score'], reverse=True)[:50]
+        }
+        
+        return jsonify({"form": form_results})
+
+    except Exception as e:
+        print(f"Error in generate_cap_form: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/most_probable_colleges", methods=["POST", "OPTIONS"])
 def get_most_probable_colleges():
     if request.method == "OPTIONS":
@@ -1143,9 +1211,9 @@ def get_most_probable_colleges():
     try:
         data = request.get_json()
         
-        user_score = float(data.get("score", 0)) if data.get("score") else 0
-        user_rank = int(data.get("rank", 0)) if data.get("rank") else 0
-        user_category = str(data.get("category", "OPEN")).upper().strip()
+        user_score = float(data.get("score") or 0)
+        user_rank = int(data.get("rank") or 0)
+        user_category = str(data.get("category") or "OPEN").upper().strip()
         preferred_branches = data.get("branches", [])
         
         if not preferred_branches:
@@ -1173,8 +1241,8 @@ def get_most_probable_colleges():
         probable_colleges = []
         
         for _, row in filtered_df.iterrows():
-            cutoff_rank = int(row.get('cutoff_rank', 0))
-            cutoff_percentile = float(row.get('cutoff_percentile', 0))
+            cutoff_rank = int(row.get('cutoff_rank') or 0)
+            cutoff_percentile = float(row.get('cutoff_percentile') or 0)
             
             is_probable, reason = check_most_probable(
                 user_score, user_rank, cutoff_rank, cutoff_percentile
@@ -1186,19 +1254,19 @@ def get_most_probable_colleges():
                 )
                 
                 result = {
-                    'college_code': str(row.get('college_code', '')),
-                    'college_name': str(row.get('college_name', 'Unknown')),
-                    'city': str(row.get('city', 'N/A')),
-                    'branch': str(row.get('branch_name', 'N/A')),
-                    'fees': float(row.get('fees', 0)),
+                    'college_code': str(row.get('college_code') or ''),
+                    'college_name': str(row.get('college_name') or 'Unknown'),
+                    'city': str(row.get('city') or 'N/A'),
+                    'branch': str(row.get('branch_name') or 'N/A'),
+                    'fees': float(row.get('fees') or 0),
                     'cutoff_rank': cutoff_rank,
                     'cutoff_percentile': cutoff_percentile,
                     'match_score': match_score,
                     'admission_chance': admission_chance,
                     'probability_reason': reason,
-                    'image': str(row.get('image_url', '')),
-                    'degree_type': str(row.get('degree_type', 'N/A')),
-                    'accreditation': str(row.get('accreditation', 'N/A'))
+                    'image': str(row.get('image_url') or ''),
+                    'degree_type': str(row.get('degree_type') or 'N/A'),
+                    'accreditation': str(row.get('accreditation') or 'N/A')
                 }
                 probable_colleges.append(result)
         

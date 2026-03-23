@@ -180,6 +180,7 @@ function generateGoogleCalUrl(event: TimelineEvent) {
 export default function AdmissionTimeline() {
     const [filter, setFilter] = useState<string>("all");
     const [, setTick] = useState(0);
+    const [dbEvents, setDbEvents] = useState<TimelineEvent[]>([]);
 
     const { data: profile } = useQuery<any>({
         queryKey: ['userProfile'],
@@ -192,6 +193,44 @@ export default function AdmissionTimeline() {
         staleTime: 1000 * 60 * 10,
     });
 
+    // Fetch initial events and subscribe to real-time updates
+    useEffect(() => {
+        const fetchEvents = async () => {
+            const { data, error } = await supabase
+                .from('timeline_events')
+                .select('*')
+                .order('date', { ascending: true });
+            
+            if (error && (error as any).code === 'PGRST116') {
+                // Table doesn't exist, we'll use fallbacks (already handled in useMemo)
+                return;
+            }
+
+            if (data && !error) {
+                setDbEvents(data);
+            }
+        };
+
+        fetchEvents();
+
+        const channel = supabase
+            .channel('timeline-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'timeline_events' }, (payload) => {
+                if (payload.eventType === 'INSERT') {
+                    setDbEvents(prev => [...prev, payload.new as TimelineEvent].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+                } else if (payload.eventType === 'UPDATE') {
+                    setDbEvents(prev => prev.map(e => e.id === payload.new.id ? payload.new as TimelineEvent : e));
+                } else if (payload.eventType === 'DELETE') {
+                    setDbEvents(prev => prev.filter(e => e.id === payload.old.id));
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
+
     // Live countdown ticker
     useEffect(() => {
         const interval = setInterval(() => setTick(t => t + 1), 60000);
@@ -200,7 +239,8 @@ export default function AdmissionTimeline() {
 
     const events = useMemo(() => {
         const now = Date.now();
-        return TIMELINE_EVENTS.map(e => {
+        const baseEvents = dbEvents.length > 0 ? dbEvents : TIMELINE_EVENTS;
+        return baseEvents.map(e => {
             const start = new Date(e.date).getTime();
             const end = e.endDate ? new Date(e.endDate).getTime() : start + 86400000;
             let status = e.status;
@@ -210,7 +250,7 @@ export default function AdmissionTimeline() {
             else status = "upcoming";
             return { ...e, status } as TimelineEvent;
         });
-    }, []);
+    }, [dbEvents]);
 
     const filtered = useMemo(() => {
         if (filter === "all") return events;

@@ -1,4 +1,4 @@
-import type { College } from '../context/CollegesContext';
+import type { College } from '../types/college';
 
 export const getCategoryColor = (category: string) => {
     const map: Record<string, string> = {
@@ -9,36 +9,42 @@ export const getCategoryColor = (category: string) => {
     };
     return map[category] || '#6B7280';
 };
+
 export function computeBI(colleges: College[], _profile: any) {
-    if (!colleges.length) return null;
-    const pred = colleges.filter(c => c.probability_level || c.fit || c.is_most_probable);
+    if (!colleges || !colleges.length) return null;
+    
+    const pred = colleges.some(c => c.probability_level || c.fit || c.is_most_probable)
+        ? colleges.filter(c => c.probability_level || c.fit || c.is_most_probable)
+        : colleges;
+    
     if (!pred.length) return null;
 
     const byFit = (name: string) => pred.filter(c =>
         name === 'Most Probable' ? (c.is_most_probable || c.probability_level === 'Most Probable') :
             (c.fit === name || c.probability_level === name) && !c.is_most_probable
     );
+    
     const mp = byFit('Most Probable'), bf = byFit('Best Fit'), gf = byFit('Good Fit'), st = byFit('Stretch');
 
-    const avg = (arr: typeof pred, key: (c: typeof pred[0]) => number) => {
+    const avg = (arr: College[], key: (c: College) => number) => {
         const valid = arr.filter(c => key(c) > 0);
         return valid.length ? parseFloat((valid.reduce((s, c) => s + key(c), 0) / valid.length).toFixed(1)) : 0;
     };
-    const chance = (arr: typeof pred) => avg(arr, c => parseFloat(c.admission_chance_percentage?.replace('%', '') || '0'));
 
-    // Branch breakdown
+    // 1. Branch Data
     const branchMap: Record<string, { mp: number; bf: number; gf: number; st: number; fees: number[]; pkg: number[]; plc: number[] }> = {};
     pred.forEach(c => {
         const b = c.branch || 'Other';
         if (!branchMap[b]) branchMap[b] = { mp: 0, bf: 0, gf: 0, st: 0, fees: [], pkg: [], plc: [] };
-        if (c.is_most_probable || c.probability_level === 'Most Probable') branchMap[b].mp++;
+        if (c.probability_level === 'Most Probable') branchMap[b].mp++;
         else if (c.fit === 'Best Fit') branchMap[b].bf++;
         else if (c.fit === 'Good Fit') branchMap[b].gf++;
         else branchMap[b].st++;
-        if (c.fees > 0) branchMap[b].fees.push(c.fees);
-        if (c.average_package_lpa > 0) branchMap[b].pkg.push(c.average_package_lpa);
-        if (c.placement_rate > 0) branchMap[b].plc.push(c.placement_rate);
+        if ((c.fees || 0) > 0) branchMap[b].fees.push(c.fees || 0);
+        if ((c.average_package_lpa || 0) > 0) branchMap[b].pkg.push(c.average_package_lpa || 0);
+        if ((c.placement_rate || 0) > 0) branchMap[b].plc.push(c.placement_rate || 0);
     });
+    
     const branchRows = Object.entries(branchMap).map(([name, v]) => ({
         name, total: v.mp + v.bf + v.gf + v.st, ...v,
         avgFees: v.fees.length ? parseFloat((v.fees.reduce((a, b) => a + b, 0) / v.fees.length / 100000).toFixed(1)) : 0,
@@ -46,116 +52,87 @@ export function computeBI(colleges: College[], _profile: any) {
         avgPlc: v.plc.length ? parseFloat((v.plc.reduce((a, b) => a + b, 0) / v.plc.length).toFixed(0)) : 0,
     })).sort((a, b) => b.total - a.total).slice(0, 10);
 
-    // City breakdown
+    // 2. City Data
     const cityMap: Record<string, { count: number; mp: number; bf: number; avgChance: number[] }> = {};
     pred.forEach(c => {
         const ci = c.city || 'Unknown';
         if (!cityMap[ci]) cityMap[ci] = { count: 0, mp: 0, bf: 0, avgChance: [] };
         cityMap[ci].count++;
-        if (c.is_most_probable || c.probability_level === 'Most Probable') cityMap[ci].mp++;
+        if (c.probability_level === 'Most Probable') cityMap[ci].mp++;
         if (c.fit === 'Best Fit') cityMap[ci].bf++;
         cityMap[ci].avgChance.push(parseFloat(c.admission_chance_percentage?.replace('%', '') || '0'));
     });
     const cityRows = Object.entries(cityMap).map(([city, v]) => ({
         city, ...v, avg: parseFloat((v.avgChance.reduce((a, b) => a + b, 0) / v.avgChance.length).toFixed(1))
-    })).sort((a, b) => b.count - a.count).slice(0, 12);
+    })).sort((a, b) => b.count - a.count).slice(0, 15);
 
-    // District breakdown
-    const distMap: Record<string, number> = {};
-    pred.forEach(c => { const d = c.district || 'Unknown'; distMap[d] = (distMap[d] || 0) + 1; });
-    const distRows = Object.entries(distMap).map(([d, n]) => ({ district: d, n })).sort((a, b) => b.n - a.n).slice(0, 10);
+    // 3. District Data
+    const dMap: Record<string, number> = {};
+    pred.forEach(c => { const d = c.district || 'Other'; dMap[d] = (dMap[d] || 0) + 1; });
+    const distRows = Object.entries(dMap).map(([district, count]) => ({ district, count })).sort((a, b) => b.count - a.count);
 
-    // Fee buckets
+    // 4. University Split
+    const uMap: Record<string, number> = {};
+    pred.forEach(c => { const u = c.university || 'Other'; uMap[u] = (uMap[u] || 0) + 1; });
+    const univData = Object.entries(uMap).map(([name, value]) => ({ name: name.split('Unit')[0].trim(), value })).sort((a, b) => b.value - a.value).slice(0, 5);
+
+    // 5. Fee Buckets
     const feeBuckets = [
-        { label: '<50K', lo: 0, hi: 50000 }, { label: '50K-1L', lo: 50000, hi: 100000 },
+        { label: '<50K', lo: 0, hi: 50000 }, { label: '50-1L', lo: 50000, hi: 100000 },
         { label: '1-1.5L', lo: 100000, hi: 150000 }, { label: '1.5-2L', lo: 150000, hi: 200000 },
         { label: '2-3L', lo: 200000, hi: 300000 }, { label: '>3L', lo: 300000, hi: Infinity },
-    ].map(b => ({ label: b.label, count: pred.filter(c => c.fees >= b.lo && c.fees < b.hi).length }));
+    ].map(b => ({ label: b.label, count: pred.filter(c => (c.fees || 0) >= b.lo && (c.fees || 0) < b.hi).length }));
 
-    // Package buckets
-    const pkgBuckets = [
-        { label: '<3', lo: 0, hi: 3 }, { label: '3-5', lo: 3, hi: 5 },
-        { label: '5-8', lo: 5, hi: 8 }, { label: '8-12', lo: 8, hi: 12 },
-        { label: '12+', lo: 12, hi: Infinity },
-    ].map(b => ({ label: b.label + 'L', n: pred.filter(c => c.average_package_lpa >= b.lo && c.average_package_lpa < b.hi).length }));
+    // 6. Placement readiness velocity
+    const velocity = [
+        { name: 'Placement Velocity', value: avg(pred, c => c.placement_rate || 0), fill: '#10b981' },
+        { name: 'Package Heat', value: (avg(pred, c => c.average_package_lpa || 0) / 12) * 100, fill: '#6366f1' },
+    ];
 
-    // Placement buckets
-    const plcBuckets = [
-        { label: '<50%', lo: 0, hi: 50 }, { label: '50-70%', lo: 50, hi: 70 },
-        { label: '70-85%', lo: 70, hi: 85 }, { label: '85-95%', lo: 85, hi: 95 },
-        { label: '95%+', lo: 95, hi: 101 },
-    ].map(b => ({ label: b.label, n: pred.filter(c => c.placement_rate >= b.lo && c.placement_rate < b.hi).length }));
+    // 7. Amenities Stacked
+    const amenityStack = [
+        { name: 'WiFi', val: (pred.filter(c => c.wifi_available || c.wifi_campus).length / pred.length) * 100 },
+        { name: 'Hostel', val: (pred.filter(c => c.hostel_available?.toLowerCase() === 'yes').length / pred.length) * 100 },
+        { name: 'Transport', val: (pred.filter(c => c.transport_facility || c.transport_facilities).length / pred.length) * 100 },
+        { name: 'Clubs', val: (pred.filter(c => c.clubs?.length || c.clubs_count).length / pred.length) * 100 },
+    ];
 
-    // Chance line
-    const chanceLine = [95, 90, 80, 70, 60, 50, 40, 30].map(t => ({
-        t: `${t}%+`, c: pred.filter(c => parseFloat(c.admission_chance_percentage?.replace('%', '') || '0') >= t).length
-    }));
+    // 8. Heatmap Grid (36 districts or clusters)
+    const districts = [
+        'Pune', 'Mumbai', 'Nagpur', 'Nashik', 'Aurangabad', 'Solapur', 'Amravati', 'Kolhapur',
+        'Sangli', 'Jalgaon', 'Akola', 'Latur', 'Dhule', 'Ahmednagar', 'Chandrapur', 'Parbhani',
+        'Nanded', 'Satara', 'Bhandara', 'Beed', 'Gondia', 'Washim', 'Ratnagiri', 'Sindhudurg'
+    ];
+    const mapGrid = districts.map(d => ({
+        id: d, name: d, val: pred.filter(c => c.district?.toLowerCase().includes(d.toLowerCase())).length
+    })).sort((a, b) => b.val - a.val);
 
-    // Scatter ROI
-    const scatter = pred.filter(c => c.fees > 0 && c.average_package_lpa > 0).map(c => ({
-        x: parseFloat((c.fees / 100000).toFixed(1)), y: parseFloat(c.average_package_lpa.toFixed(1)),
-        z: c.placement_rate || 40, fit: c.is_most_probable ? 'Most Probable' : (c.fit || 'Unknown'),
-    })).slice(0, 80);
+    const gems = pred.filter(c => (c.placement_rate || 0) >= 80 && (c.fees || 0) > 0 && (c.fees || 0) < 150000)
+        .sort((a, b) => (b.placement_rate || 0) - (a.placement_rate || 0)).slice(0, 5);
 
-    // All unique college picks (deduplicated by college_code)
-    const seen = new Set<string>();
-    const allUniquePicks = [...pred].sort((a, b) =>
-        parseFloat(b.admission_chance_percentage?.replace('%', '') || '0') - parseFloat(a.admission_chance_percentage?.replace('%', '') || '0')
-    ).filter(c => {
-        const key = c.college_code || c.college_name;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-    });
-
-    // Hidden gems: high placement, low fees, reachable
-    const gems = pred.filter(c => c.placement_rate >= 80 && c.fees > 0 && c.fees < 150000)
-        .sort((a, b) => b.placement_rate - a.placement_rate).slice(0, 6);
-
-    // Autonomy breakdown
-    const autonomous = pred.filter(c => c.autonomy_status?.toLowerCase().includes('auto')).length;
-    const affiliated = pred.length - autonomous;
-
-    // Hostel
-    const hostelYes = pred.filter(c => c.hostel_available?.toLowerCase() === 'yes').length;
-
-    // Strategic portfolio
-    const safe = mp.length + bf.length;
-    const moderate = gf.length;
-    const ambitious = st.length;
-
-    // Category trend
     const catTrend = ['Most Probable', 'Best Fit', 'Good Fit', 'Stretch'].map(cat => {
         const g = byFit(cat);
-        return {
-            cat, count: g.length, chance: chance(g),
-            fees: avg(g, c => c.fees) / 100000,
-            pkg: avg(g, c => c.average_package_lpa),
-            plc: avg(g, c => c.placement_rate),
-        };
+        return { cat, pkg: avg(g, c => c.average_package_lpa || 0), fees: avg(g, c => c.fees || 0) / 100000 };
     });
 
-    const mkSpark = (base: number) => Array.from({ length: 12 }, (_, i) => Math.max(0, Math.round(base + Math.sin(i * 0.8) * base * 0.15 + (i / 11) * base * 0.1)));
+    const scatter = pred.filter(c => (c.fees || 0) > 0 && (c.average_package_lpa || 0) > 0).map(c => ({
+        x: (c.fees || 0) / 100000,
+        y: c.average_package_lpa || 0,
+        z: (c.placement_rate || 0),
+        name: c.college_name,
+        fit: c.probability_level || c.fit
+    }));
 
     return {
         total: pred.length, mp: mp.length, bf: bf.length, gf: gf.length, st: st.length,
-        avgChanceAll: chance(pred), avgChanceMP: chance(mp), avgChanceBF: chance(bf), avgChanceGF: chance(gf), avgChanceST: chance(st),
-        avgFeesAll: avg(pred, c => c.fees) / 100000, avgPkgAll: avg(pred, c => c.average_package_lpa),
-        avgPlcAll: avg(pred, c => c.placement_rate),
-        avgFeesMP: avg(mp, c => c.fees) / 100000, avgFeesBF: avg(bf, c => c.fees) / 100000,
-        avgPkgMP: avg(mp, c => c.average_package_lpa), avgPkgBF: avg(bf, c => c.average_package_lpa),
-        uniqueColleges: new Set(pred.map(c => c.college_code)).size,
-        uniqueCities: Object.keys(cityMap).length,
-        highPlacement: pred.filter(c => c.placement_rate >= 85).length,
-        affordable: pred.filter(c => c.fees > 0 && c.fees < 150000).length,
-        branchRows, cityRows, distRows, feeBuckets, pkgBuckets, plcBuckets, chanceLine, scatter,
-        allUniquePicks, gems, autonomous, affiliated, hostelYes, safe, moderate, ambitious, catTrend,
-        sparkMP: mkSpark(mp.length), sparkBF: mkSpark(bf.length), sparkGF: mkSpark(gf.length),
-        donut: [
-            { name: 'Most Probable', value: mp.length, fill: '#7c3aed' },
-            { name: 'Best Fit', value: bf.length, fill: '#059669' },
-            { name: 'Good Fit', value: gf.length, fill: '#2563eb' },
-            { name: 'Stretch', value: st.length, fill: '#d97706' },
-        ].filter(d => d.value > 0),
+        moderate: bf.length + gf.length,
+        avgFeesAll: avg(pred, c => c.fees || 0) / 100000,
+        avgPkgAll: avg(pred, c => c.average_package_lpa || 0), avgPlcAll: avg(pred, c => c.placement_rate || 0),
+        uniqueColleges: new Set(pred.map(c => c.college_code)).size, uniqueCities: Object.keys(cityMap).length,
+        autonomous: pred.filter(c => c.autonomy_status?.toLowerCase().includes('auto')).length,
+        affiliated: pred.length - pred.filter(c => c.autonomy_status?.toLowerCase().includes('auto')).length,
+        branchRows, cityRows, distRows, feeBuckets, catTrend, gems, velocity, amenityStack, univData, mapGrid, scatter,
+        safe: mp.length + bf.length, insight: `Concentrated in ${cityRows[0]?.city || 'N/A'}. ${branchRows[0]?.name || 'N/A'} is leading ROI.`,
+        donut: [{ name: 'Probable', value: mp.length, fill: '#7c3aed' }, { name: 'Others', value: pred.length - mp.length, fill: '#e2e8f0' }]
     };
 }

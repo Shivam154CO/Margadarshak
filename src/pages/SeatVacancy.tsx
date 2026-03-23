@@ -109,8 +109,8 @@ export default function SeatVacancy() {
         localStorage.setItem("ikigai-seat-watchlist", JSON.stringify(watchlist));
     }, [watchlist]);
 
-    // Fetch colleges from Supabase
-    const { data: rawColleges = [], isLoading } = useQuery({
+    // Fetch colleges from Supabase and subscribe to updates
+    const { data: rawColleges = [], isLoading, refetch } = useQuery({
         queryKey: ['allCollegesForVacancy'],
         queryFn: async () => {
             const { data, error } = await supabase
@@ -122,6 +122,19 @@ export default function SeatVacancy() {
         },
         staleTime: 1000 * 60 * 30,
     });
+
+    useEffect(() => {
+        const channel = supabase
+            .channel('seat-vacancy-updates')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'colleges' }, () => {
+                refetch();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [refetch]);
 
     const seatData = useMemo(() => generateSeatData(rawColleges), [rawColleges]);
 

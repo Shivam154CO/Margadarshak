@@ -30,6 +30,7 @@ export const ROUTES = {
   CUTOFF_TRENDS: '/cutoff-trends',
   POST_ADMISSION: '/post-admission',
   SEAT_VACANCY: '/seat-vacancy',
+  DSE_OPTION_FORM: '/dse-option-form',
   
   DATA_PIPELINE: '/data-pipeline', // Admin / dev only
   NOT_FOUND: '*',

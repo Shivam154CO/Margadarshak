@@ -73,6 +73,8 @@ export interface College {
     highest_package_lpa?: number;
     total_intake?: number;
     naac_grade?: string;
+    accreditation?: string | string[];
+    status?: string | 'Government' | 'Private' | 'Aided';
     nirf_ranking?: number;
 
     // Branch specific (often used in search results)
@@ -144,11 +146,6 @@ export interface College {
     wifi_coverage?: boolean;
     research_centers?: number;
     international_tieups?: number;
-    accreditation?: string | string[];
-    ranking_national?: number;
-    ranking_state?: number;
-    keywords?: string[];
-    tags?: string[];
     views_count?: number;
     saves_count?: number;
     compares_count?: number;
