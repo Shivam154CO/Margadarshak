@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
 
 # ✅ Load full dataset
-csv_path = r"C:\ReactJS\SmartCF\MachineLeaning\Maharashtra_Diploma_Dataset.csv"
+csv_path = os.path.join(os.path.dirname(__file__), "Maharashtra_Diploma_Datasets.csv")
 
 # Check if file exists
 if not os.path.exists(csv_path):
