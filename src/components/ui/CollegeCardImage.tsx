@@ -106,10 +106,10 @@ export function CollegeCardImage({
 
   return (
     <>
-      {/* Shimmer skeleton shown while image loads */}
+      {/* Static placeholder shown while image loads */}
       {!loaded && (
         <div
-          className={`${className} absolute inset-0 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-shimmer bg-[length:200%_100%]`}
+          className={`${className} absolute inset-0 bg-slate-100 flex items-center justify-center`}
           aria-hidden="true"
         />
       )}

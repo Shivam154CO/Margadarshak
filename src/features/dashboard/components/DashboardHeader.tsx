@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Database } from 'lucide-react';
+import { User } from 'lucide-react';
 import type { UserProfile } from '../../../types/user';
 import { ROUTES } from '../../../constants/routes';
 
@@ -47,10 +47,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ profile }) => 
               </div>
             </div>
             <div className="flex items-center space-x-3 w-full sm:w-auto">
-              <div className="flex items-center justify-center space-x-2 text-sm text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-200 flex-1 sm:flex-none">
-                <Database className="w-4 h-4 flex-shrink-0" />
-                <span className="truncate">AI Analysis</span>
-              </div>
               <button
                 onClick={() => navigate(ROUTES.PROFILE_VIEW)}
                 className="bg-indigo-600 text-white px-5 py-2 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-sm inline-flex justify-center items-center space-x-2 flex-1 sm:flex-none"

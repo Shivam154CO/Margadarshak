@@ -6,10 +6,11 @@ import { supabase } from "../lib/supabase";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {
-  Building, Cpu, MapPin, ChevronDown,
-  Grid3x3, List, Brain, Database,
-  Search, X, Mail, Briefcase, Bookmark, BookmarkCheck,
-  Award, Info, Layers
+  Building, MapPin, ChevronDown,
+  Grid3x3, List, Brain,
+  Search, X, Bookmark, BookmarkCheck,
+  Info, Layers, Filter, ArrowRight, Zap, CheckCircle2, AlertTriangle,
+  Mail, Briefcase
 } from "lucide-react";
 import SEO from "../components/SEO";
 import { useNavigate } from "react-router-dom";
@@ -520,68 +521,110 @@ export default function CollegeSearch() {
       <SEO title="College Explorer" description="Explore engineering colleges with AI matching." />
       <Navbar activeTab="search" userProfile={userProfile} />
 
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-slate-900">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-white mb-4 sm:mb-6">Discover Your <span className="text-indigo-400">Dream College</span></h1>
-          <p className="text-base sm:text-xl text-white/80 mb-6 sm:mb-8 max-w-3xl mx-auto px-2">AI-powered predictions for India's premier engineering institutes.</p>
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">College Explorer</h1>
+          <p className="text-sm text-slate-500 mt-1">Discover and analyze India's premier engineering institutions</p>
+        </div>
 
-          <div className="inline-flex bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 mb-6 sm:mb-8 border border-white/10 w-full sm:w-auto">
-            <button onClick={() => setViewMode("predicted")} className={`flex-1 sm:flex-none px-4 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base ${viewMode === "predicted" ? "text-white bg-indigo-600" : "text-white/60"}`}>
-              <Brain className="w-4 h-4 sm:w-5 sm:h-5" /> AI Predictions
-            </button>
-            <button onClick={() => setViewMode("all")} className={`flex-1 sm:flex-none px-4 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base ${viewMode === "all" ? "text-white bg-white/10" : "text-white/60"}`}>
-              <Database className="w-4 h-4 sm:w-5 sm:h-5" /> All Colleges
-            </button>
-          </div>
+        {/* Stats Strip */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+          {[
+            { label: "Total Institutions", value: allColleges.length, color: "border-l-slate-400" },
+            { label: "AI Recommendations", value: predictedColleges.length, color: "border-l-indigo-500" },
+            { label: "Cities Covered", value: availableLocations.length, color: "border-l-emerald-500" },
+            { label: "Specializations", value: availableBranches.length, color: "border-l-amber-500" },
+          ].map(s => (
+            <div key={s.label} className={`bg-white rounded-xl border border-slate-200 border-l-4 ${s.color} p-4 shadow-sm transition-all hover:shadow-md`}>
+              <div className="text-2xl font-bold text-slate-800">{s.value}</div>
+              <div className="text-xs font-semibold text-slate-500 mt-1">{s.label}</div>
+            </div>
+          ))}
+        </div>
 
-          <div className="relative max-w-4xl mx-auto w-full">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-white rounded-2xl p-1 shadow-2xl gap-1 sm:gap-0">
-              <Search className="hidden sm:block w-5 h-5 text-slate-400 ml-5" />
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search colleges, branches, cities..." className="flex-1 py-4 sm:py-5 px-4 outline-none text-slate-900 placeholder-slate-400 text-base sm:text-lg rounded-xl sm:rounded-none" />
-              <button className="px-6 sm:px-8 py-3 sm:py-3.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 mx-1 sm:mx-0">Search</button>
+        {/* Search & Filter Controls */}
+        <div className="bg-white rounded-xl border border-slate-200 p-4 mb-8 shadow-sm">
+          <div className="flex flex-col gap-4">
+            {/* Main Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by college name, city, or branch..."
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all text-sm"
+              />
+              {search && (
+                <button 
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Quick Filters */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Filter className="w-3.5 h-3.5 text-slate-400 mr-1" />
+              
+              {/* Prediction Toggle */}
+              <button
+                onClick={() => setViewMode(viewMode === "predicted" ? "all" : "predicted")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === "predicted" ? "bg-indigo-600 text-white shadow-sm" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+              >
+                <Brain className="w-3.5 h-3.5" />
+                AI Mode: {viewMode === "predicted" ? "ON" : "OFF"}
+              </button>
+
+              <div className="h-4 w-px bg-slate-200 mx-1" />
+
+              <FilterSelectSmall
+                label="Type"
+                value={filters.collegeType}
+                onChange={(v: string) => setFilters(p => ({ ...p, collegeType: v }))}
+                options={["All Types", "Government", "Private", "Autonomous"]}
+              />
+
+              <FilterSelectSmall
+                label="City"
+                value={filters.location || "All Locations"}
+                onChange={(v: string) => setFilters(p => ({ ...p, location: v === "All Locations" ? "" : v }))}
+                options={["All Locations", ...availableLocations.filter(l => l !== "All Locations")]}
+              />
+
+              {(filters.collegeType !== "All Types" || filters.location || search || viewMode === "predicted") && (
+                <button 
+                  onClick={clearFilters}
+                  className="px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                >
+                  Reset
+                </button>
+              )}
+
+              <div className="ml-auto flex items-center gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
+                <button onClick={() => setActiveTab("grid")} className={`p-1.5 rounded-md transition-all ${activeTab === "grid" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}><Grid3x3 className="w-4 h-4" /></button>
+                <button onClick={() => setActiveTab("list")} className={`p-1.5 rounded-md transition-all ${activeTab === "list" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}><List className="w-4 h-4" /></button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-12 flex-1">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <div className="flex items-center gap-2">
-            <button onClick={() => setActiveTab("grid")} className={`p-3 rounded-xl ${activeTab === "grid" ? "bg-indigo-50 text-indigo-600" : "bg-white text-slate-400"}`}><Grid3x3 className="w-5 h-5" /></button>
-            <button onClick={() => setActiveTab("list")} className={`p-3 rounded-xl ${activeTab === "list" ? "bg-indigo-50 text-indigo-600" : "bg-white text-slate-400"}`}><List className="w-5 h-5" /></button>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl border border-slate-200 w-full sm:w-auto">
-            <FilterSelect
-              label="Institute Type"
-              value={filters.collegeType}
-              onChange={(v: string) => setFilters(p => ({ ...p, collegeType: v }))}
-              options={["All Types", "Government", "Private", "Autonomous"]}
-              icon={<Building className="w-3.5 h-3.5" />}
-            />
-            <FilterSelect
-              label="Branch Preference"
-              value={filters.branch}
-              onChange={(v: string) => setFilters(p => ({ ...p, branch: v }))}
-              options={["All Branches", ...availableBranches.filter(b => b !== "All Branches")]}
-              icon={<Cpu className="w-3.5 h-3.5" />}
-            />
-            <FilterSelect
-              label="Preferred City"
-              value={filters.location || "All Locations"}
-              onChange={(v: string) => setFilters(p => ({ ...p, location: v === "All Locations" ? "" : v }))}
-              options={["All Locations", ...availableLocations.filter(l => l !== "All Locations")]}
-              icon={<MapPin className="w-3.5 h-3.5" />}
-            />
-          </div>
+        {/* Results Info */}
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-sm font-medium text-slate-600">
+            Showing <span className="text-slate-900 font-bold">{filteredColleges.length}</span> results
+          </p>
         </div>
 
-        <div className="min-h-[600px]">
+        {/* Colleges Grid/List */}
+        <div className="min-h-[400px]">
           {filteredColleges.length > 0 ? (
-            activeTab === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredColleges.map((college, i) => (
+            <div className={activeTab === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "space-y-4"}>
+              {filteredColleges.map((college, i) => (
+                activeTab === "grid" ? (
                   <CollegeCard
                     key={college.college_code}
                     college={college}
@@ -592,11 +635,7 @@ export default function CollegeSearch() {
                     isPredicted={viewMode === "predicted"}
                     userProfile={userProfile}
                   />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {filteredColleges.map((college, i) => (
+                ) : (
                   <CollegeListCard
                     key={college.college_code}
                     college={college}
@@ -607,14 +646,20 @@ export default function CollegeSearch() {
                     isPredicted={viewMode === "predicted"}
                     userProfile={userProfile}
                   />
-                ))}
-              </div>
-            )
+                )
+              ))}
+            </div>
           ) : (
-            <div className="text-center py-20 bg-white rounded-3xl border border-slate-100">
-              <img src={NoResultsFoundImg} alt="No results found" className="w-48 h-48 mx-auto mb-6 opacity-90" />
-              <h3 className="text-xl font-bold text-slate-900">No colleges matched your filters</h3>
-              <button onClick={clearFilters} className="mt-4 text-indigo-600 font-bold">Clear all filters</button>
+            <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
+              <img src={NoResultsFoundImg} alt="No results found" className="w-40 h-40 mx-auto mb-4 opacity-50 contrast-50" />
+              <h3 className="text-lg font-bold text-slate-900">No institutions found</h3>
+              <p className="text-sm text-slate-500 mt-1 max-w-xs mx-auto">Try adjusting your filters or search terms to find what you're looking for.</p>
+              <button 
+                onClick={clearFilters} 
+                className="mt-6 px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+              >
+                Clear all filters
+              </button>
             </div>
           )}
         </div>
@@ -631,71 +676,120 @@ export default function CollegeSearch() {
 
 // ---------- COMPONENTS ----------
 
-function FilterSelect({ label, value, onChange, options, icon }: any) {
+function FilterSelectSmall({ label, value, onChange, options }: any) {
   return (
-    <div className="space-y-2">
-      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">{icon}{label}</label>
-      <div className="relative">
-        <select value={value} onChange={e => onChange(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none appearance-none font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500/20">
-          {options.map((o: any) => <option key={o} value={o}>{o}</option>)}
-        </select>
-        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-      </div>
+    <div className="relative">
+      <select 
+        value={value} 
+        onChange={e => onChange(e.target.value)} 
+        className="pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg outline-none appearance-none text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-50 transition-colors"
+      >
+        <option value={options[0]}>{label}: {value || options[0]}</option>
+        {options.slice(1).map((o: any) => <option key={o} value={o}>{o}</option>)}
+      </select>
+      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
     </div>
   );
 }
 
 function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, isPredicted, userProfile }: any) {
   const navigate = useNavigate();
-  // Prioritize preferred branches when selecting the 'best' branch to display
   const preferredBranches = userProfile?.preferred_branches || [];
-  const filteredBranches = college.branches.filter((b: any) =>
+  const branchesToConsider = college.branches.filter((b: any) =>
     preferredBranches.length === 0 ||
     preferredBranches.some((pref: string) =>
       b.branch.toLowerCase().includes(pref.toLowerCase()) ||
       pref.toLowerCase().includes(b.branch.toLowerCase())
     )
-  );
+  ).length > 0 ? college.branches.filter((b: any) =>
+    preferredBranches.length === 0 ||
+    preferredBranches.some((pref: string) =>
+      b.branch.toLowerCase().includes(pref.toLowerCase()) ||
+      pref.toLowerCase().includes(b.branch.toLowerCase())
+    )
+  ) : college.branches;
 
-  // Use filtered branches if any match, otherwise fall back to all branches
-  const branchesToConsider = filteredBranches.length > 0 ? filteredBranches : college.branches;
   const bestBranch = branchesToConsider.reduce((a: any, b: any) => a.admission_chance > b.admission_chance ? a : b);
-  const color = bestBranch.admission_chance >= 70 ? "text-emerald-600" : bestBranch.admission_chance >= 40 ? "text-indigo-600" : "text-amber-600";
+  
+  const getProbabilityStyles = (chance: number) => {
+    if (chance >= 80) return { color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", icon: CheckCircle2, label: "Best Match" };
+    if (chance >= 60) return { color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200", icon: Zap, label: "Good Match" };
+    if (chance >= 40) return { color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", icon: Info, label: "Stretch" };
+    return { color: "text-rose-700", bg: "bg-rose-50", border: "border-rose-200", icon: AlertTriangle, label: "Reach" };
+  };
+
+  const prob = getProbabilityStyles(isPredicted ? bestBranch.admission_chance : 0);
+  const IconComp = prob.icon;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden hover:shadow-2xl transition-all group">
-      <div className="h-48 relative overflow-hidden">
-        <CollegeCardImage src={college.image} fallbackIndex={index} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
-        {isPredicted && (
-          <div className="absolute top-4 left-6 bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg border border-white/20 uppercase tracking-widest z-10">AI Match</div>
-        )}
-        <button onClick={onToggleSaved} className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur rounded-2xl shadow-xl">{saved ? <BookmarkCheck className="text-indigo-600 fill-indigo-600" /> : <Bookmark className="text-slate-400" />}</button>
-        <div className="absolute bottom-4 left-6 text-white w-full pr-12">
-          <h3 className="text-xl font-bold line-clamp-1 mb-0.5">{college.college_name}</h3>
-          <div className="flex flex-col gap-1">
-            <p className="text-xs opacity-90 flex items-center gap-1.5"><MapPin className="w-3 h-3" />{college.city}</p>
-            <p className="text-[10px] font-black bg-indigo-500/80 backdrop-blur-sm self-start px-2 py-0.5 rounded uppercase tracking-wider line-clamp-1 max-w-[90%]">
-              {bestBranch.branch}
-            </p>
-          </div>
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      transition={{ duration: 0.2 }} 
+      className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all group relative flex flex-col"
+    >
+      <div className="h-40 relative overflow-hidden">
+        <CollegeCardImage 
+          src={college.image} 
+          fallbackIndex={index} 
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" 
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+        <button 
+          onClick={onToggleSaved} 
+          className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur rounded-lg shadow-sm hover:bg-white transition-colors"
+        >
+          {saved ? <BookmarkCheck className="w-4 h-4 text-indigo-600 fill-indigo-600" /> : <Bookmark className="w-4 h-4 text-slate-400" />}
+        </button>
+        <div className="absolute bottom-3 left-3 right-3">
+           <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-1.5 py-0.5 bg-indigo-600 text-white rounded text-[9px] font-black uppercase tracking-wider">
+                {college.autonomy_status}
+              </span>
+              {isPredicted && (
+                <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${prob.bg} ${prob.color} border ${prob.border}`}>
+                  <IconComp className="w-2.5 h-2.5" /> {prob.label}
+                </span>
+              )}
+           </div>
         </div>
       </div>
-      <div className="p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="space-y-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">AI Matching Chance</p>
-            <p className={`text-2xl font-black ${color}`}>{bestBranch.admission_chance.toFixed(1)}%</p>
+
+      <div className="p-4 flex-1 flex flex-col">
+          <div className="mb-3">
+            <h3 className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1 text-sm">{college.college_name}</h3>
+            <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5 font-semibold"><MapPin className="w-2.5 h-2.5 text-indigo-400" />{college.city}</p>
           </div>
-          <div className="text-right">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Avg Pkg</p>
-            <p className="text-lg font-bold text-slate-900">₹{college.average_package_lpa}L</p>
+
+          <div className="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100 flex-1">
+            <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">AI Top Branch</span>
+                {isPredicted && <span className={`text-[10px] font-black ${prob.color}`}>{bestBranch.admission_chance.toFixed(1)}%</span>}
+            </div>
+            <p className="text-xs font-bold text-slate-700 line-clamp-1">{bestBranch.branch}</p>
           </div>
-        </div>
-        <div className="flex gap-3">
-          <button onClick={onOpenBranches} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-colors">Branches</button>
-          <button onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch)}`, { state: { college } })} className="flex-1 py-4 bg-slate-50 text-slate-700 rounded-2xl font-bold text-sm border border-slate-200 hover:bg-slate-100 transition-colors">Details</button>
-        </div>
+
+          <div className="flex items-center justify-between gap-4 pt-3 border-t border-slate-100 mt-auto">
+            <div className="flex flex-col">
+                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Avg Package</span>
+                <span className="text-xs font-bold text-slate-800">₹{college.average_package_lpa}L</span>
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={onOpenBranches} 
+                className="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-bold hover:bg-slate-50 transition-colors"
+              >
+                Branches
+              </button>
+              <button 
+                onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch)}`, { state: { college } })} 
+                className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-bold hover:bg-slate-800 transition-colors flex items-center gap-1"
+              >
+                View Details <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
       </div>
     </motion.div>
   );
@@ -703,7 +797,6 @@ function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, isP
 
 function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches, isPredicted, userProfile }: any) {
   const navigate = useNavigate();
-  // Prioritize preferred branches
   const preferredBranches = userProfile?.preferred_branches || [];
   const filteredBranches = college.branches.filter((b: any) =>
     preferredBranches.length === 0 ||
@@ -717,30 +810,48 @@ function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches,
   const bestBranch = branchesToConsider.reduce((a: any, b: any) => a.admission_chance > b.admission_chance ? a : b);
 
   return (
-    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} className="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col md:flex-row gap-8 hover:shadow-xl transition-all">
-      <div className="w-full md:w-64 h-48 rounded-2xl overflow-hidden flex-shrink-0">
-        <CollegeCardImage src={college.image} fallbackIndex={index} sizes="(max-width: 768px) 100vw, 256px" className="w-full h-full object-cover" />
+    <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        transition={{ duration: 0.2 }} 
+        className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col md:flex-row items-center gap-6 hover:shadow-md transition-all group"
+    >
+      <div className="w-full md:w-48 h-32 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-100">
+        <CollegeCardImage src={college.image} fallbackIndex={index} sizes="256px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
       </div>
-      <div className="flex-1 py-2">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-1">{college.college_name}</h3>
-            <p className="text-slate-500 font-medium flex items-center gap-1.5 text-sm uppercase tracking-wide">
-              <MapPin className="w-4 h-4 text-indigo-500" />
-              {college.city} • {college.autonomy_status} • <span className="text-indigo-600 font-bold">{bestBranch.branch}</span>
-            </p>
-          </div>
-          <button onClick={onToggleSaved} className="p-3 bg-slate-50 rounded-2xl">{saved ? <BookmarkCheck className="text-indigo-600 fill-indigo-600" /> : <Bookmark className="text-slate-400" />}</button>
+      <div className="flex-1 min-w-0 py-2">
+        <div className="flex items-center gap-2 mb-2">
+            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-black uppercase tracking-wider">{college.autonomy_status}</span>
+            {saved && <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-black uppercase tracking-wider">Saved</span>}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">AI Chance</p><p className="text-xl font-bold text-indigo-600">{(bestBranch.admission_chance).toFixed(1)}%</p></div>
-          <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Avg Pkg</p><p className="text-xl font-bold text-slate-900">₹{college.average_package_lpa}L</p></div>
-          <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">High Pkg</p><p className="text-xl font-bold text-emerald-600">₹{college.highest_package_lpa}L</p></div>
-          <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Placement</p><p className="text-xl font-bold text-slate-900">{college.placement_rate}%</p></div>
+        <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">{college.college_name}</h3>
+        <p className="text-xs text-slate-500 flex items-center gap-4 mt-1 font-medium">
+          <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-indigo-400" />{college.city}</span>
+          <span className="text-indigo-600 font-bold truncate max-w-[250px]">{bestBranch.branch}</span>
+        </p>
+      </div>
+      <div className="flex items-center gap-8 flex-shrink-0 pr-4">
+        {isPredicted && (
+            <div className="text-right">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">AI Match</p>
+                <p className="text-sm font-black text-indigo-600">{(bestBranch.admission_chance).toFixed(1)}%</p>
+            </div>
+        )}
+        <div className="text-right">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Avg Package</p>
+            <p className="text-sm font-bold text-slate-900">₹{college.average_package_lpa}L</p>
         </div>
-        <div className="flex gap-4">
-          <button onClick={onOpenBranches} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold">Branches</button>
-          <button onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch)}`, { state: { college } })} className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold">Full Profile</button>
+        <div className="flex gap-2">
+            <button onClick={onToggleSaved} className="p-2.5 hover:bg-slate-50 rounded-xl transition-colors border border-slate-100">
+                {saved ? <BookmarkCheck className="w-4 h-4 text-indigo-600 fill-indigo-600" /> : <Bookmark className="w-4 h-4 text-slate-400" />}
+            </button>
+            <button onClick={onOpenBranches} className="p-2.5 hover:bg-slate-50 rounded-xl transition-colors border border-slate-100 text-slate-400 hover:text-indigo-600"><Layers className="w-4 h-4" /></button>
+            <button 
+                onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch)}`, { state: { college } })} 
+                className="p-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all flex items-center gap-2 text-[10px] font-bold"
+            >
+                View <ArrowRight className="w-3.5 h-3.5" />
+            </button>
         </div>
       </div>
     </motion.div>
@@ -798,7 +909,6 @@ function BranchModal({ college, onClose, getProbabilityColor }: any) {
 }
 
 function CollegeDetailsModal({ college, onClose, getProbabilityColor }: any) {
-  const bestBranch = college.branches.reduce((a: any, b: any) => a.admission_chance > b.admission_chance ? a : b);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-slate-900/70 backdrop-blur-xl z-[120] flex items-center justify-center p-4">
