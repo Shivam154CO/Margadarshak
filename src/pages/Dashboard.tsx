@@ -378,52 +378,52 @@ export default function Dashboard() {
               Showing {sortedColleges.length} matches
             </h3>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-start sm:justify-end w-full sm:w-auto">
             <button
               onClick={handleExportPDF}
-              className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all flex items-center space-x-2"
+              className="px-3 sm:px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-all flex items-center space-x-2"
             >
               <FileText className="w-4 h-4 text-indigo-600" />
-              <span>Download PDF</span>
+              <span className="sm:inline">PDF</span>
             </button>
             <button
               onClick={handleExportCSV}
-              className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all flex items-center space-x-2"
+              className="px-3 sm:px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-all flex items-center space-x-2"
             >
               <FileDown className="w-4 h-4 text-emerald-600" />
-              <span>Download CSV</span>
+              <span className="sm:inline">CSV</span>
             </button>
             <button
               onClick={handleExportDream}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-sm transition-all flex items-center space-x-2"
+              className="px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-indigo-700 shadow-sm transition-all flex items-center space-x-2"
             >
               <FileText className="w-4 h-4 text-amber-200" />
-              <span>Dream PDF</span>
+              <span className="sm:inline">Dream</span>
             </button>
             <button
               onClick={handleExportDreamCSV}
-              className="px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-bold hover:bg-slate-900 shadow-sm transition-all flex items-center space-x-2"
+              className="px-3 sm:px-4 py-2 bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-slate-900 shadow-sm transition-all flex items-center space-x-2"
             >
               <FileDown className="w-4 h-4 text-amber-200" />
-              <span>Dream CSV</span>
+              <span className="sm:inline">Dream</span>
             </button>
-            <div className="flex items-center bg-white border border-slate-200 rounded-xl px-3 py-1">
-              <span className="text-xs font-bold text-slate-500 mr-2">Limit:</span>
+            <div className="flex items-center bg-white border border-slate-200 rounded-xl px-2 sm:px-3 py-1">
+              <span className="text-[10px] sm:text-xs font-bold text-slate-500 mr-2">Limit:</span>
               <input
                 type="number"
                 min="1"
                 max="300"
                 value={dreamLimit}
                 onChange={(e) => setDreamLimit(Math.min(300, Math.max(1, parseInt(e.target.value) || 1)))}
-                className="w-12 bg-transparent border-none text-sm font-bold text-slate-800 focus:ring-0 p-0"
+                className="w-8 sm:w-12 bg-transparent border-none text-xs sm:text-sm font-bold text-slate-800 focus:ring-0 p-0"
               />
             </div>
             <button
               onClick={handleExportStrategic}
-              className="px-4 py-2 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700 shadow-sm transition-all flex items-center space-x-2"
+              className="px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-purple-700 shadow-sm transition-all flex items-center space-x-2"
             >
               <ClipboardList className="w-4 h-4 text-purple-200" />
-              <span>Option Form</span>
+              <span className="sm:inline">Options</span>
             </button>
           </div>
         </div>
@@ -472,7 +472,7 @@ export default function Dashboard() {
                       <button
                         key={idx}
                         onClick={() => setCurrentPage(pageNumber)}
-                        className={`w-10 h-10 rounded-xl font-medium transition-colors ${currentPage === pageNumber
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl font-medium transition-colors text-xs sm:text-sm ${currentPage === pageNumber
                           ? 'bg-indigo-600 text-white shadow-md'
                           : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                           }`}
@@ -493,7 +493,7 @@ export default function Dashboard() {
                   <button
                     key={idx}
                     onClick={() => setCurrentPage(pageNumber)}
-                    className={`w-10 h-10 rounded-xl font-medium transition-colors ${currentPage === pageNumber
+                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl font-medium transition-colors text-xs sm:text-sm ${currentPage === pageNumber
                       ? 'bg-indigo-600 text-white shadow-md'
                       : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                       }`}

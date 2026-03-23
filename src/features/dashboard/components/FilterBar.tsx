@@ -40,10 +40,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     <>
       {/* Filter Buttons */}
       <div className="mb-6">
-        <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
+        <div className="flex overflow-x-auto lg:flex-wrap gap-2 lg:gap-3 justify-start lg:justify-start pb-4 lg:pb-0 scrollbar-hidden -mx-4 px-4 lg:mx-0 lg:px-0 scroll-smooth">
           <button
             onClick={() => setActiveFilter("all")}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${activeFilter === "all"
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap ${activeFilter === "all"
               ? "bg-slate-800 text-white shadow-sm"
               : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
               }`}
@@ -52,7 +52,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
           <button
             onClick={() => setActiveFilter("most-probable")}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 ${activeFilter === "most-probable"
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 whitespace-nowrap ${activeFilter === "most-probable"
               ? "bg-purple-600 text-white shadow-sm"
               : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
               }`}
@@ -62,7 +62,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
           <button
             onClick={() => setActiveFilter("best-fit")}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 ${activeFilter === "best-fit"
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 whitespace-nowrap ${activeFilter === "best-fit"
               ? "bg-emerald-600 text-white shadow-sm"
               : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
               }`}
@@ -72,7 +72,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
           <button
             onClick={() => setActiveFilter("good-fit")}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 ${activeFilter === "good-fit"
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 whitespace-nowrap ${activeFilter === "good-fit"
               ? "bg-blue-600 text-white shadow-sm"
               : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
               }`}
@@ -82,7 +82,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
           <button
             onClick={() => setActiveFilter("stretch")}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 ${activeFilter === "stretch"
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 whitespace-nowrap ${activeFilter === "stretch"
               ? "bg-orange-500 text-white shadow-sm"
               : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
               }`}
@@ -92,7 +92,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
           <button
             onClick={() => setActiveFilter("reach")}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 ${activeFilter === "reach"
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 whitespace-nowrap ${activeFilter === "reach"
               ? "bg-red-600 text-white shadow-sm"
               : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
               }`}
@@ -102,7 +102,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
           <button
             onClick={() => setActiveFilter("saved")}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 ${activeFilter === "saved"
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center space-x-1.5 whitespace-nowrap ${activeFilter === "saved"
               ? "bg-indigo-600 text-white shadow-sm"
               : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
               }`}
