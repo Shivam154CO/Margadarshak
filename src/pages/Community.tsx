@@ -14,9 +14,8 @@ interface Reply {
     user_id: string;
     content: string;
     created_at: string;
-    profiles?: {
-        full_name: string;
-        avatar_url: string;
+    users?: {
+        name: string;
     };
 }
 
@@ -64,7 +63,7 @@ export default function Community() {
             if (session?.user) {
                 setCurrentUserId(session.user.id);
                 const { data } = await supabase
-                    .from('profiles')
+                    .from('users')
                     .select('*')
                     .eq('id', session.user.id)
                     .single();
@@ -133,7 +132,7 @@ export default function Community() {
                 .from('college_replies')
                 .select(`
                     *,
-                    profiles:user_id (full_name, avatar_url)
+                    users:user_id (name)
                 `)
                 .order('created_at', { ascending: true });
 
@@ -422,11 +421,11 @@ export default function Community() {
                                                         {replies[review.id]?.map((reply: Reply) => (
                                                             <div key={reply.id} className="flex gap-3">
                                                                 <div className="w-6 h-6 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                                                                    <span className="text-[8px] font-black text-slate-300 uppercase">{reply.profiles?.full_name?.slice(0, 1) || 'A'}</span>
+                                                                    <span className="text-[8px] font-black text-slate-300 uppercase">{reply.users?.name?.slice(0, 1) || 'A'}</span>
                                                                 </div>
                                                                 <div className="min-w-0">
                                                                     <div className="flex items-center gap-2">
-                                                                        <span className="text-[10px] font-black text-slate-700">{reply.profiles?.full_name || 'Anonymous'}</span>
+                                                                        <span className="text-[10px] font-black text-slate-700">{reply.users?.name || 'Anonymous'}</span>
                                                                         <span className="text-[8px] font-bold text-slate-300 uppercase">{new Date(reply.created_at).toLocaleDateString()}</span>
                                                                     </div>
                                                                     <p className="text-[12px] text-slate-500 mt-0.5 leading-relaxed">{reply.content}</p>
