@@ -1,12 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
-  Building, MapPin, ChevronDown,
+  MapPin, ChevronDown,
   Grid3x3, List, Brain,
   Search, X, Bookmark, BookmarkCheck,
   Info, Layers, Filter, ArrowRight, Zap, CheckCircle2, AlertTriangle,
@@ -21,375 +19,9 @@ import NoResultsFoundImg from "@/assets/No-results-found.svg";
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 
 
-// ---------- TYPES ----------
-interface RawCollege {
-  college_code: string;
-  college_name: string;
-  city: string;
-  branch: string;
-  branch_code: string;
-  Fees: number;
-  placement_rate: number;
-  cutoff_rank: number;
-  cutoff_percentile: number;
-  category: string;
-  average_package_lpa: number;
-  highest_package_lpa: number;
-  total_intake: number;
-  seats: number;
-  autonomy_status: string;
-  hostel_available: string;
-  image: string;
-  probability_level: string;
-  is_most_probable: boolean;
-  admission_chance: number;
-  admission_chance_percentage: string;
-  fit: string;
-  fit_reason: string;
-  match_score: number;
-  match_percentage: string;
-  address?: string;
-  website?: string;
-  contact_email?: string;
-  phone?: string;
-}
+import { useCollegeData } from "./hooks/useCollegeData";
+import type { College } from "@/types/college";
 
-interface Branch {
-  branch: string;
-  branch_code: string;
-  cutoff_rank: number;
-  cutoff_percentile: number;
-  seats: number;
-  Fees: number;
-  admission_chance: number;
-  admission_chance_percentage: string;
-  match_score: number;
-  probability_level: string;
-  is_most_probable: boolean;
-}
-
-interface College {
-  college_code: string;
-  college_name: string;
-  city: string;
-  image: string;
-  autonomy_status: string;
-  hostel_available: string;
-  placement_rate: number;
-  average_package_lpa: number;
-  highest_package_lpa: number;
-  branches: Branch[];
-  is_predicted?: boolean;
-  // Additional fields for details view
-  state?: string;
-  established_year?: number;
-  campus_size?: string;
-  faculty_count?: number;
-  accreditation?: string;
-  naac_grade?: string;
-  research_papers?: number;
-  library_books?: number;
-  sports_facilities?: string[];
-  clubs?: string[];
-  campus_recruiters?: string[];
-  website?: string;
-  contact_email?: string;
-  phone?: string;
-  address?: string;
-}
-
-const getCollegeImage = (collegeCode: string): string => {
-  if (!collegeCode) {
-    return "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-  }
-  // Try multiple resolution strategies for Vite/Dev/Prod
-  try {
-    // Strategy 1: Vite dynamic URL (most robust for src/assets)
-    const viteUrl = new URL(`../assets/${collegeCode}/campus.png`, import.meta.url).href;
-    if (viteUrl && !viteUrl.includes('undefined')) return viteUrl;
-
-    // Strategy 2: Root relative (fallback for some dev setups)
-    return `/src/assets/${collegeCode}/campus.png`;
-  } catch (e) {
-    return "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-  }
-};
-
-
-
-
-// Helper function to get state from city
-const getStateFromCity = (city: string): string => {
-  const cityStateMap: Record<string, string> = {
-    "Mumbai": "Maharashtra", "Pune": "Maharashtra", "Nagpur": "Maharashtra",
-    "Thane": "Maharashtra", "Nashik": "Maharashtra", "Aurangabad": "Maharashtra",
-    "Navi Mumbai": "Maharashtra", "Solapur": "Maharashtra", "Kolhapur": "Maharashtra",
-    "Amravati": "Maharashtra", "Jalgaon": "Maharashtra", "Ahmednagar": "Maharashtra",
-    "Nanded": "Maharashtra", "Sangli": "Maharashtra", "Akola": "Maharashtra",
-    "Latur": "Maharashtra", "Dhule": "Maharashtra", "Chandrapur": "Maharashtra",
-    "Parbhani": "Maharashtra", "Ratnagiri": "Maharashtra", "Gadchiroli": "Maharashtra",
-    "Gondia": "Maharashtra", "Bhandara": "Maharashtra", "Washim": "Maharashtra",
-    "Hingoli": "Maharashtra", "Osmanabad": "Maharashtra", "Beed": "Maharashtra",
-    "Jalna": "Maharashtra", "Yavatmal": "Maharashtra", "Wardha": "Maharashtra",
-    "Satara": "Maharashtra", "Delhi": "Delhi", "Bangalore": "Karnataka",
-    "Chennai": "Tamil Nadu", "Hyderabad": "Telangana", "Kolkata": "West Bengal",
-    "Ahmedabad": "Gujarat", "Jaipur": "Rajasthan", "Lucknow": "Uttar Pradesh",
-    "Bhopal": "Madhya Pradesh", "Chandigarh": "Chandigarh",
-  };
-  return cityStateMap[city] || "Maharashtra";
-};
-
-// ---------- HOOKS / LOGIC ----------
-function useCollegeData() {
-  const [colleges, setColleges] = useState<College[]>([]);
-  const [allColleges, setAllColleges] = useState<College[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Helper function to group colleges by college_code
-  const groupCollegesByCode = (rawColleges: RawCollege[]): College[] => {
-    const collegeMap = new Map<string, College>();
-
-    rawColleges.forEach((rawCollege) => {
-      const collegeCode = rawCollege.college_code;
-
-      if (!collegeMap.has(collegeCode)) {
-        // Create new college entry with additional details
-        collegeMap.set(collegeCode, {
-          college_code: collegeCode,
-          college_name: rawCollege.college_name,
-          city: rawCollege.city,
-          image: rawCollege.image || getCollegeImage(collegeCode),
-          autonomy_status: rawCollege.autonomy_status,
-          hostel_available: rawCollege.hostel_available,
-          placement_rate: rawCollege.placement_rate,
-          average_package_lpa: rawCollege.average_package_lpa,
-          highest_package_lpa: rawCollege.highest_package_lpa,
-          branches: [],
-          is_predicted: true,
-          state: getStateFromCity(rawCollege.city),
-          established_year: 0,
-          campus_size: "N/A",
-          faculty_count: 0,
-          accreditation: "AICTE Approved",
-          naac_grade: "N/A",
-          research_papers: 0,
-          library_books: 0,
-          sports_facilities: [],
-          clubs: [],
-          campus_recruiters: [],
-          address: rawCollege.address || `${rawCollege.college_name}, ${rawCollege.city}`,
-          website: rawCollege.website || "",
-          contact_email: rawCollege.contact_email || "",
-          phone: rawCollege.phone || ""
-        });
-      }
-
-      // Add branch to the college
-      const college = collegeMap.get(collegeCode)!;
-      college.branches.push({
-        branch: rawCollege.branch,
-        branch_code: rawCollege.branch_code,
-        cutoff_rank: rawCollege.cutoff_rank,
-        cutoff_percentile: rawCollege.cutoff_percentile,
-        seats: rawCollege.seats,
-        Fees: rawCollege.Fees,
-        admission_chance: rawCollege.admission_chance,
-        admission_chance_percentage: rawCollege.admission_chance_percentage,
-        match_score: rawCollege.match_score,
-        probability_level: rawCollege.probability_level,
-        is_most_probable: rawCollege.is_most_probable,
-      });
-    });
-
-    // Convert map to array and sort branches within each college by admission chance
-    return Array.from(collegeMap.values()).map(college => ({
-      ...college,
-      branches: college.branches.sort((a, b) => b.admission_chance - a.admission_chance)
-    }));
-  };
-
-  // Fetch all colleges from Supabase
-  const fetchAllCollegesFromSupabase = async (): Promise<College[]> => {
-    try {
-      let { data: dbColleges, error } = await supabase
-        .from('colleges_2025')
-        .select('*');
-
-      if (error) {
-        console.error("Error fetching colleges from Supabase:", error);
-        return [];
-      }
-
-      if (!dbColleges || dbColleges.length === 0) {
-        console.log("No colleges found in Supabase");
-        return [];
-      }
-
-      // Group colleges by college_code to ensure uniqueness
-      const collegeMap = new Map<string, College>();
-
-      dbColleges.forEach((college: any) => {
-        const collegeCode = (college.college_code || college.College_code || college.id || "UNKNOWN").toString();
-        const collegeName = college.college_name || college.College_name || "Unknown College";
-        const city = college.city || college.City || "Unknown";
-
-        if (!collegeCode || collegeCode === "UNKNOWN") return;
-
-        if (!collegeMap.has(collegeCode)) {
-          collegeMap.set(collegeCode, {
-            college_code: collegeCode,
-            college_name: collegeName,
-            city: city,
-            image: college.image_url || getCollegeImage(collegeCode),
-            autonomy_status: college.autonomy_status || college.Autonomy_status || "Government",
-            hostel_available: college.hostel_available || college.Hostel_available || "No",
-            placement_rate: parseFloat(college.placement_rate || college.Placement_rate || 0),
-            average_package_lpa: parseFloat(college.average_package_lpa || college.Average_package_lpa || 0),
-            highest_package_lpa: parseFloat(college.highest_package_lpa || college.Highest_package_lpa || 0),
-            branches: [],
-            is_predicted: false,
-            state: getStateFromCity(city),
-            established_year: college.established_year || college.Established_year || 0,
-            campus_size: college.campus_area || college.Campus_area ? `${college.campus_area || college.Campus_area} acres` : "N/A",
-            faculty_count: college.student_faculty_ratio || college.Student_faculty_ratio || 0,
-            accreditation: college.accreditation || college.Accreditation || "AICTE Approved",
-            naac_grade: college.naac_grade || college.NAAC_grade || "N/A",
-            research_papers: college.research_papers || college.Research_papers || 0,
-            library_books: college.library_books || college.Library_books || 0,
-            sports_facilities: (college.sports_facilities || college.Sports_facilities) ? (typeof (college.sports_facilities || college.Sports_facilities) === 'string' ? (college.sports_facilities || college.Sports_facilities).split(',') : (college.sports_facilities || college.Sports_facilities)) : [],
-            clubs: [],
-            campus_recruiters: (college.top_recruiters || college.Top_recruiters) ? (typeof (college.top_recruiters || college.Top_recruiters) === 'string' ? (college.top_recruiters || college.Top_recruiters).split(',') : (college.top_recruiters || college.Top_recruiters)) : [],
-            website: college.website_url || college.Website_url || "",
-            contact_email: college.contact_email || college.Contact_email || "",
-            phone: college.contact_phone || college.Contact_phone || "",
-            address: `${collegeName}, ${city}`
-          });
-        }
-
-        // Add branch information
-        const existingCollege = collegeMap.get(collegeCode)!;
-        const branchName = college.branch_name || college.Branch_name || "N/A";
-
-        // Avoid duplicate branches
-        if (!existingCollege.branches.find(b => b.branch_code === (college.branch_code || college.Branch_code))) {
-          existingCollege.branches.push({
-            branch: branchName,
-            branch_code: college.branch_code || college.Branch_code || "N/A",
-            cutoff_rank: college.cutoff_rank || college.Cutoff_rank || 0,
-            cutoff_percentile: college.cutoff_percentile || college.Cutoff_percentile || 0,
-            seats: college.seats || college.Seats || 0,
-            Fees: college.fees || college.Fees || 0,
-            admission_chance: 0,
-            admission_chance_percentage: "0%",
-            match_score: 0,
-            probability_level: "Unknown",
-            is_most_probable: false,
-          });
-        }
-      });
-
-      const colleges = Array.from(collegeMap.values());
-      console.log(`✅ Loaded ${colleges.length} unique colleges from Supabase`);
-
-      return colleges;
-    } catch (err) {
-      console.error("Failed to fetch colleges from Supabase:", err);
-      return [];
-    }
-  };
-
-
-  // Simplified deduplication - trust the college_code
-  const deduplicateColleges = (colleges: College[]): College[] => {
-    const seenCodes = new Set<string>();
-    const uniqueColleges: College[] = [];
-
-    for (const college of colleges) {
-      if (college.college_code && !seenCodes.has(college.college_code)) {
-        seenCodes.add(college.college_code);
-        uniqueColleges.push(college);
-      }
-    }
-
-    return uniqueColleges;
-  };
-
-  const { data: profile } = useQuery({
-    queryKey: ['userProfile'],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return null;
-      const { data: prof } = await supabase.from('users').select('*').eq('id', session.user.id).single();
-      return prof;
-    }
-  });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const allCollegesFromDB = await fetchAllCollegesFromSupabase();
-        setAllColleges(allCollegesFromDB);
-
-        if (profile) {
-          const rank = profile.exam_type === "CET" ? parseFloat(profile.cet_rank || "0") : parseFloat(profile.diploma_rank || "0");
-          const score = profile.exam_type === "CET" ? parseFloat(profile.cet_score || "0") : parseFloat(profile.diploma_score || "0");
-          const category = profile.category || "OPEN";
-          const branches = profile.preferred_branches || [];
-
-
-
-          if (rank && score && branches.length) {
-            try {
-              const res = await axios.post(`${ML_API_URL}/predict_admission`, {
-                score,
-                rank,
-                category,
-                branches,
-              });
-
-              const raw: RawCollege[] = res.data.colleges || [];
-              const predicted = deduplicateColleges(groupCollegesByCode(raw));
-              setColleges(predicted);
-
-              const allCollegesMap = new Map<string, College>();
-              allCollegesFromDB.forEach(c => allCollegesMap.set(c.college_code, c));
-
-              predicted.forEach(p => {
-                if (allCollegesMap.has(p.college_code)) {
-                  const existing = allCollegesMap.get(p.college_code)!;
-                  allCollegesMap.set(p.college_code, {
-                    ...existing,
-                    ...p,
-                    established_year: existing.established_year || p.established_year,
-                    campus_size: existing.campus_size !== "N/A" ? existing.campus_size : p.campus_size,
-                    faculty_count: existing.faculty_count || p.faculty_count,
-                    website: existing.website || p.website,
-                    is_predicted: true
-                  });
-                } else {
-                  allCollegesMap.set(p.college_code, p);
-                }
-              });
-
-              setAllColleges(Array.from(allCollegesMap.values()));
-            } catch (err) {
-              console.error("❌ Prediction API failed", err);
-            }
-          }
-        }
-        setLoading(false);
-      } catch (err) {
-        console.error("❌ Data load failed", err);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [profile]);
-
-  return { colleges, allColleges, userProfile: profile, loading };
-}
 
 // ---------- MAIN COMPONENT ----------
 export default function CollegeSearch() {
@@ -434,7 +66,7 @@ export default function CollegeSearch() {
           const locationsSet = new Set<string>();
           allColleges.forEach(college => {
             if (college.city) locationsSet.add(college.city);
-            college.branches.forEach(branch => { if (branch.branch) branchesSet.add(branch.branch); });
+            (college.branches || []).forEach(branch => { if (branch.branch_name) branchesSet.add(branch.branch_name); });
           });
           setAvailableBranches(["All Branches", ...Array.from(branchesSet).sort()]);
           setAvailableLocations(["All Locations", ...Array.from(locationsSet).sort()]);
@@ -456,22 +88,22 @@ export default function CollegeSearch() {
       filtered = filtered.filter(college =>
         (college.college_name?.toLowerCase() || "").includes(query) ||
         (college.city?.toLowerCase() || "").includes(query) ||
-        (college.branches || []).some(b => (b.branch?.toLowerCase() || "").includes(query))
+        (college.branches || []).some(b => (b.branch_name?.toLowerCase() || "").includes(query))
       );
     }
     if (filters.collegeType !== "All Types") filtered = filtered.filter(c => c.autonomy_status === filters.collegeType);
-    if (filters.branch !== "All Branches") filtered = filtered.filter(c => c.branches.some(b => b.branch === filters.branch));
+    if (filters.branch !== "All Branches") filtered = filtered.filter(c => c.branches?.some(b => b.branch_name === filters.branch));
     if (filters.location) filtered = filtered.filter(c => c.city === filters.location);
-    if (filters.minFees) filtered = filtered.filter(c => c.branches.some(b => b.Fees >= parseInt(filters.minFees)));
-    if (filters.maxFees) filtered = filtered.filter(c => c.branches.some(b => b.Fees <= parseInt(filters.maxFees)));
-    if (filters.admissionChance) filtered = filtered.filter(c => c.branches.some(b => b.admission_chance >= parseInt(filters.admissionChance)));
-    if (filters.placementRate) filtered = filtered.filter(c => c.placement_rate >= parseInt(filters.placementRate));
+    if (filters.minFees) filtered = filtered.filter(c => c.branches?.some(b => (b.fees || 0) >= parseInt(filters.minFees)));
+    if (filters.maxFees) filtered = filtered.filter(c => c.branches?.some(b => (b.fees || 0) <= parseInt(filters.maxFees)));
+    if (filters.admissionChance) filtered = filtered.filter(c => c.branches?.some(b => (b.admission_chance || 0) >= parseInt(filters.admissionChance)));
+    if (filters.placementRate) filtered = filtered.filter(c => (c.placement_rate || 0) >= parseInt(filters.placementRate));
 
     return filtered.sort((a, b) => {
       switch (sortBy) {
         case "match_score":
-          const aScore = Math.max(...a.branches.map(b => b.match_score), 0);
-          const bScore = Math.max(...b.branches.map(b => b.match_score), 0);
+          const aScore = Math.max(...(a.branches?.map(b => b.match_score || 0) || [0]), 0);
+          const bScore = Math.max(...(b.branches?.map(b => b.match_score || 0) || [0]), 0);
           return bScore - aScore;
         default: return 0;
       }
@@ -483,12 +115,6 @@ export default function CollegeSearch() {
     setSearch("");
   };
 
-  const getProbabilityColor = (chance: number) => {
-    if (chance >= 80) return "from-emerald-500 to-green-400";
-    if (chance >= 60) return "from-blue-500 to-cyan-400";
-    if (chance >= 40) return "from-amber-500 to-yellow-400";
-    return "from-rose-500 to-pink-400";
-  };
 
   useEffect(() => {
     const savedColleges = JSON.parse(localStorage.getItem("savedColleges") || "[]");
@@ -666,8 +292,8 @@ export default function CollegeSearch() {
       </main>
 
       <AnimatePresence>
-        {branchModal && <BranchModal college={branchModal} onClose={() => setBranchModal(null)} getProbabilityColor={getProbabilityColor} />}
-        {detailsModal && <CollegeDetailsModal college={detailsModal} onClose={() => setDetailsModal(null)} getProbabilityColor={getProbabilityColor} />}
+        {branchModal && <BranchModal college={branchModal} onClose={() => setBranchModal(null)} />}
+        {detailsModal && <CollegeDetailsModal college={detailsModal} onClose={() => setDetailsModal(null)} />}
       </AnimatePresence>
       <Footer />
     </div>
@@ -695,21 +321,23 @@ function FilterSelectSmall({ label, value, onChange, options }: any) {
 function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, isPredicted, userProfile }: any) {
   const navigate = useNavigate();
   const preferredBranches = userProfile?.preferred_branches || [];
-  const branchesToConsider = college.branches.filter((b: any) =>
+  const branchesToConsider = (college.branches || []).filter((b: any) =>
     preferredBranches.length === 0 ||
     preferredBranches.some((pref: string) =>
-      b.branch.toLowerCase().includes(pref.toLowerCase()) ||
-      pref.toLowerCase().includes(b.branch.toLowerCase())
+      b.branch_name.toLowerCase().includes(pref.toLowerCase()) ||
+      pref.toLowerCase().includes(b.branch_name.toLowerCase())
     )
-  ).length > 0 ? college.branches.filter((b: any) =>
+  ).length > 0 ? (college.branches || []).filter((b: any) =>
     preferredBranches.length === 0 ||
     preferredBranches.some((pref: string) =>
-      b.branch.toLowerCase().includes(pref.toLowerCase()) ||
-      pref.toLowerCase().includes(b.branch.toLowerCase())
+      b.branch_name.toLowerCase().includes(pref.toLowerCase()) ||
+      pref.toLowerCase().includes(b.branch_name.toLowerCase())
     )
-  ) : college.branches;
+  ) : (college.branches || []);
 
-  const bestBranch = branchesToConsider.reduce((a: any, b: any) => a.admission_chance > b.admission_chance ? a : b);
+  const bestBranch = branchesToConsider.length > 0
+    ? branchesToConsider.reduce((a: any, b: any) => (a.admission_chance || 0) > (b.admission_chance || 0) ? a : b)
+    : { branch_name: "N/A", admission_chance: 0 };
   
   const getProbabilityStyles = (chance: number) => {
     if (chance >= 80) return { color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", icon: CheckCircle2, label: "Best Match" };
@@ -765,9 +393,9 @@ function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, isP
           <div className="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100 flex-1">
             <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">AI Top Branch</span>
-                {isPredicted && <span className={`text-[10px] font-black ${prob.color}`}>{bestBranch.admission_chance.toFixed(1)}%</span>}
+                {isPredicted && <span className={`text-[10px] font-black ${prob.color}`}>{(bestBranch.admission_chance || 0).toFixed(1)}%</span>}
             </div>
-            <p className="text-xs font-bold text-slate-700 line-clamp-1">{bestBranch.branch}</p>
+            <p className="text-xs font-bold text-slate-700 line-clamp-1">{bestBranch.branch_name}</p>
           </div>
 
           <div className="flex items-center justify-between gap-4 pt-3 border-t border-slate-100 mt-auto">
@@ -783,7 +411,7 @@ function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, isP
                 Branches
               </button>
               <button 
-                onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch)}`, { state: { college } })} 
+                onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch_name || "")}`, { state: { college } })} 
                 className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-bold hover:bg-slate-800 transition-colors flex items-center gap-1"
               >
                 View Details <ArrowRight className="w-3 h-3" />
@@ -798,16 +426,18 @@ function CollegeCard({ college, index, saved, onToggleSaved, onOpenBranches, isP
 function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches, isPredicted, userProfile }: any) {
   const navigate = useNavigate();
   const preferredBranches = userProfile?.preferred_branches || [];
-  const filteredBranches = college.branches.filter((b: any) =>
+  const filteredBranches = (college.branches || []).filter((b: any) =>
     preferredBranches.length === 0 ||
     preferredBranches.some((pref: string) =>
-      b.branch.toLowerCase().includes(pref.toLowerCase()) ||
-      pref.toLowerCase().includes(b.branch.toLowerCase())
+      b.branch_name.toLowerCase().includes(pref.toLowerCase()) ||
+      pref.toLowerCase().includes(b.branch_name.toLowerCase())
     )
   );
 
-  const branchesToConsider = filteredBranches.length > 0 ? filteredBranches : college.branches;
-  const bestBranch = branchesToConsider.reduce((a: any, b: any) => a.admission_chance > b.admission_chance ? a : b);
+  const branchesToConsider = filteredBranches.length > 0 ? filteredBranches : (college.branches || []);
+  const bestBranch = branchesToConsider.length > 0 
+    ? branchesToConsider.reduce((a: any, b: any) => (a.admission_chance || 0) > (b.admission_chance || 0) ? a : b)
+    : { branch_name: "N/A", admission_chance: 0 };
 
   return (
     <motion.div 
@@ -827,7 +457,7 @@ function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches,
         <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">{college.college_name}</h3>
         <p className="text-xs text-slate-500 flex items-center gap-4 mt-1 font-medium">
           <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-indigo-400" />{college.city}</span>
-          <span className="text-indigo-600 font-bold truncate max-w-[250px]">{bestBranch.branch}</span>
+          <span className="text-indigo-600 font-bold truncate max-w-[250px]">{bestBranch.branch_name}</span>
         </p>
       </div>
       <div className="flex items-center gap-8 flex-shrink-0 pr-4">
@@ -847,7 +477,7 @@ function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches,
             </button>
             <button onClick={onOpenBranches} className="p-2.5 hover:bg-slate-50 rounded-xl transition-colors border border-slate-100 text-slate-400 hover:text-indigo-600"><Layers className="w-4 h-4" /></button>
             <button 
-                onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch)}`, { state: { college } })} 
+                onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch_name || "")}`, { state: { college } })} 
                 className="p-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all flex items-center gap-2 text-[10px] font-bold"
             >
                 View <ArrowRight className="w-3.5 h-3.5" />
@@ -858,57 +488,84 @@ function CollegeListCard({ college, index, saved, onToggleSaved, onOpenBranches,
   );
 }
 
-function BranchModal({ college, onClose, getProbabilityColor }: any) {
+function BranchModal({ college, onClose }: any) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[110] flex items-center justify-center p-4">
-      <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} onClick={e => e.stopPropagation()} className="bg-white rounded-[2rem] max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
-        <div className="bg-slate-900 p-8 md:p-10 relative flex-shrink-0">
-          <div className="relative flex items-start justify-between">
-            <div className="space-y-4">
-              <span className="px-3 py-1 bg-indigo-500/10 rounded-lg text-xs font-bold text-indigo-400 border border-indigo-500/20 uppercase tracking-widest">Available Specializations</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">{college.college_name}</h2>
-              <div className="flex items-center gap-6 text-slate-400">
-                <span className="flex items-center gap-2 text-sm font-medium leading-none"><MapPin className="w-4 h-4 text-indigo-400" />{college.city}</span>
-                <span className="h-1.5 w-1.5 bg-slate-700 rounded-full" />
-                <span className="text-emerald-400 text-sm font-bold">{college.placement_rate}% Placement</span>
-              </div>
-            </div>
-            <button onClick={onClose} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-colors border border-slate-700"><X className="w-6 h-6 text-slate-300" /></button>
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      exit={{ opacity: 0 }} 
+      onClick={onClose} 
+      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[110] flex items-center justify-center p-4"
+    >
+      <motion.div 
+        initial={{ scale: 0.98, opacity: 0 }} 
+        animate={{ scale: 1, opacity: 1 }} 
+        exit={{ scale: 0.98, opacity: 0 }} 
+        onClick={e => e.stopPropagation()} 
+        className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-xl flex flex-col border border-slate-200"
+      >
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 line-clamp-1">{college.college_name}</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Available Branches & Cutoffs</p>
           </div>
+          <button 
+            onClick={onClose} 
+            className="p-2 hover:bg-slate-50 rounded-lg transition-colors text-slate-400 hover:text-slate-600"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-10 bg-slate-50">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {college.branches.map((b: any, i: number) => (
-              <div key={i} className="bg-white rounded-3xl p-8 border border-slate-200">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded border border-slate-100">{b.branch_code}</span>
-                    <h4 className="text-xl font-bold text-slate-900 mt-2">{b.branch}</h4>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-slate-50/30">
+          {(college.branches || []).map((b: any, i: number) => {
+            const chanceColor = (b.admission_chance || 0) >= 80 ? 'text-emerald-600' : 
+                               (b.admission_chance || 0) >= 50 ? 'text-indigo-600' : 'text-slate-600';
+            
+            return (
+              <div key={i} className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors">
+                <div className="flex justify-between items-start gap-4 mb-4">
+                  <div className="min-w-0">
+                    <span className="text-[9px] font-black text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 uppercase tracking-wider">{b.branch_code}</span>
+                    <h4 className="text-sm font-bold text-slate-800 mt-2 leading-snug">{b.branch_name}</h4>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">AI Chance</p>
-                    <p className={`text-xl font-bold ${b.admission_chance >= 70 ? 'text-emerald-600' : 'text-indigo-600'}`}>{(b.admission_chance).toFixed(1)}%</p>
+                  <div className="text-right flex-shrink-0">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">AI Match</span>
+                    <span className={`text-base font-black ${chanceColor}`}>{(b.admission_chance || 0).toFixed(1)}%</span>
                   </div>
                 </div>
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden mb-8">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${b.admission_chance}%` }} className={`h-full bg-gradient-to-r ${getProbabilityColor(b.admission_chance)}`} />
-                </div>
-                <div className="grid grid-cols-3 gap-8">
-                  <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cutoff</p><p className="font-bold text-slate-700">{b.cutoff_rank || 'N/A'}</p></div>
-                  <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Seats</p><p className="font-bold text-slate-700">{b.seats}</p></div>
-                  <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Fees</p><p className="font-bold text-slate-700">₹{b.Fees?.toLocaleString()}</p></div>
+
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-50">
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Cutoff</p>
+                    <p className="text-xs font-bold text-slate-700">{b.cutoff_rank ? b.cutoff_rank.toLocaleString() : 'N/A'}</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Seats</p>
+                    <p className="text-xs font-bold text-slate-700">{b.seats}</p>
+                  </div>
+                  <div className="space-y-0.5 text-right">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Fees</p>
+                    <p className="text-xs font-bold text-indigo-600">₹{b.fees?.toLocaleString()}</p>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
+        </div>
+        
+        {/* Footer */}
+        <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-center">
+          <p className="text-[10px] text-slate-400 font-medium italic">Cutoff data is based on 2024-25 CAP Rounds</p>
         </div>
       </motion.div>
     </motion.div>
   );
 }
 
-function CollegeDetailsModal({ college, onClose, getProbabilityColor }: any) {
+function CollegeDetailsModal({ college, onClose }: any) {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-slate-900/70 backdrop-blur-xl z-[120] flex items-center justify-center p-4">
@@ -947,11 +604,11 @@ function CollegeDetailsModal({ college, onClose, getProbabilityColor }: any) {
                   <table className="w-full">
                     <thead className="bg-slate-50 border-b border-slate-100"><tr className="text-left"><th className="py-5 px-8 text-[11px] font-black text-slate-500 uppercase tracking-widest">Specialization</th><th className="py-5 px-8 text-[11px] font-black text-slate-500 uppercase tracking-widest">AI Chance</th><th className="py-5 px-8 text-[11px] font-black text-slate-500 uppercase tracking-widest">Fees</th></tr></thead>
                     <tbody className="divide-y divide-slate-50">
-                      {college.branches.map((b: any, i: number) => (
+                      {(college.branches || []).map((b: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="py-6 px-8"><p className="font-bold text-slate-800">{b.branch}</p><p className="text-xs text-slate-400 font-bold">{b.branch_code}</p></td>
-                          <td className="py-6 px-8"><div className="flex items-center gap-3"><div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full bg-gradient-to-r ${getProbabilityColor(b.admission_chance)}`} style={{ width: `${b.admission_chance}%` }} /></div><span className="font-black text-slate-600 text-sm">{(b.admission_chance).toFixed(1)}%</span></div></td>
-                          <td className="py-6 px-8 font-bold text-slate-700">₹{b.Fees?.toLocaleString()}</td>
+                          <td className="py-6 px-8"><p className="font-bold text-slate-800">{b.branch_name}</p><p className="text-xs text-slate-400 font-bold">{b.branch_code}</p></td>
+                          <td className="py-6 px-8"><div className="flex items-center gap-3"><div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full bg-rose-600`} style={{ width: `${b.admission_chance || 0}%` }} /></div><span className="font-black text-slate-600 text-sm">{(b.admission_chance || 0).toFixed(1)}%</span></div></td>
+                          <td className="py-6 px-8 font-bold text-slate-700">₹{b.fees?.toLocaleString()}</td>
                         </tr>
                       ))}
                     </tbody>

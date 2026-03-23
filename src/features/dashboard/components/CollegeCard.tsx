@@ -116,7 +116,7 @@ const CollegeCardComponent: React.FC<CollegeCardProps> = ({
         <div className="flex flex-wrap items-center gap-2 mb-5">
           <div className="inline-flex items-center space-x-1.5 bg-slate-50 text-slate-700 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide border border-slate-200/60">
             <Layers className="w-3 h-3 text-indigo-500" />
-            <span className="line-clamp-1 max-w-[180px]">{college.branch}</span>
+            <span className="line-clamp-1 max-w-[180px]">{college.branch_name || college.branch}</span>
           </div>
           <div className="inline-flex items-center space-x-1.5 bg-slate-50 text-slate-600 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide border border-slate-200/60">
             <Award className="w-3 h-3 text-emerald-500" />

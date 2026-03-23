@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform, motionValue, useSpring, AnimatePresenc
 import ScrollAnimationWrapper from "../components/ScrollAnimationWrapper";
 import LiveFeatureIcon from "../components/LiveFeatureIcon";
 import IkigaiLogo from "../components/IkigaiLogo";
-import { useCollegeData } from "../hooks/useCollegeData";
+import { useCollegeData } from "@/features/colleges/hooks/useCollegeData";
 import { useColleges } from "../context/CollegesContext";
 import SEO from "../components/SEO";
 import { LiveCastePreview, LiveMatchSimulator, LiveTrendPulse, LiveAIAssistant, LiveDistanceTracker, LiveScholarshipGuide } from "../components/LiveFeatureShowcase";

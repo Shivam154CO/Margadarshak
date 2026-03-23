@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { supabase } from "../lib/supabase";
-import type { College, RawCollege } from "../types/college";
+import { supabase } from "@/lib/supabase";
+import type { College, RawCollege } from "@/types/college";
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? "http://127.0.0.1:5001";
 
 export function useCollegeData() {
-    const [predictedColleges, setPredictedColleges] = useState<College[]>([]);
+    const [colleges, setColleges] = useState<College[]>([]);
     const [allColleges, setAllColleges] = useState<College[]>([]);
     const [userRank, setUserRank] = useState<number | null>(null);
     const [userCategory, setUserCategory] = useState("");
@@ -240,8 +240,7 @@ export function useCollegeData() {
 
                         const raw: RawCollege[] = res.data.colleges || [];
                         const predicted = deduplicateColleges(groupCollegesByCode(raw));
-
-                        setPredictedColleges(predicted);
+                        setColleges(predicted);
 
                         // Merge predicted into all colleges map
                         const allCollegesMap = new Map<string, College>();
@@ -273,7 +272,7 @@ export function useCollegeData() {
                 // 5. Listen for auth state changes (e.g., logout)
                 const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
                     if (event === 'SIGNED_OUT') {
-                        setPredictedColleges([]);
+                        setColleges([]);
                         setUserRank(null);
                         setUserCategory("");
                         setUserProfile(null);
@@ -292,7 +291,7 @@ export function useCollegeData() {
     }, []);
 
     return {
-        predictedColleges,
+        colleges,
         allColleges,
         userRank,
         userCategory,
