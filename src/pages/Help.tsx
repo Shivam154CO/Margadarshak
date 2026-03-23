@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  HelpCircle,
+
   Search,
   ChevronDown,
   ChevronUp,
@@ -220,10 +220,7 @@ export default function Help() {
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-                  <HelpCircle className="w-5 h-5 text-indigo-600" />
-                </div>
+              <div className="mb-2">
                 <div>
                   <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
                     Help & Support Center
@@ -435,25 +432,7 @@ export default function Help() {
         </div>
       </div>
 
-      {/* ===== Footer CTA ===== */}
-      <div className="mt-auto bg-slate-800 rounded-2xl p-8 text-center text-white shadow-xl mx-4 sm:mx-6 lg:mx-8 mb-8">
-        <div className="max-w-4xl mx-auto">
-          <h3 className="text-2xl font-bold mb-2">Still Need Help?</h3>
-          <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
-            Can't find what you're looking for? Our support team is here to help you navigate your college admission journey.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button className="bg-white text-slate-800 px-8 py-3 rounded-xl font-semibold hover:bg-slate-100 transition-all shadow-lg hover:shadow-xl inline-flex items-center space-x-2">
-              <MessageCircle className="w-5 h-5" />
-              <span>Start Live Chat</span>
-            </button>
-            <button className="border border-white/30 text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/10 transition-all inline-flex items-center space-x-2">
-              <Mail className="w-5 h-5" />
-              <span>Send Email</span>
-            </button>
-          </div>
-        </div>
-      </div>
+
       <Footer />
     </div>
   );

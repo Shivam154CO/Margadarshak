@@ -26,8 +26,24 @@ interface CollegesProviderProps {
 }
 
 export const CollegesProvider: React.FC<CollegesProviderProps> = ({ children }) => {
-  const [colleges, setColleges] = useState<College[]>([]);
-  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
+  const [colleges, setCollegesState] = useState<College[]>(() => {
+    const saved = localStorage.getItem('ikigai_colleges');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [lastFetchTime, setLastFetchTimeState] = useState<number | null>(() => {
+    const saved = localStorage.getItem('ikigai_last_fetch');
+    return saved ? parseInt(saved) : null;
+  });
+
+  const setColleges = (newColleges: College[]) => {
+    setCollegesState(newColleges);
+    localStorage.setItem('ikigai_colleges', JSON.stringify(newColleges));
+  };
+
+  const setLastFetchTime = (time: number) => {
+    setLastFetchTimeState(time);
+    localStorage.setItem('ikigai_last_fetch', time.toString());
+  };
 
   return (
     <CollegesContext.Provider value={{

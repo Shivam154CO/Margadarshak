@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Heart,
+
   MapPin,
   Award,
   Layers,
@@ -25,6 +25,8 @@ import { useColleges } from "../context/CollegesContext";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import { useFavorites } from "../hooks/useFavorites";
+import type { UserProfile } from "../types/user";
+
 
 // Illustrations
 import EmptyInboxImg from "../assets/Empty-inbox.svg";
@@ -67,25 +69,6 @@ interface College {
   display_placement?: string;
 }
 
-interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  state: string;
-  category: string;
-  exam_type: string;
-  cet_rank: string;
-  cet_score: string;
-  diploma_rank: string;
-  diploma_score: string;
-  preferred_branches: string[];
-  university_preference: string;
-  address: string;
-  receive_updates: boolean;
-  profile_complete: boolean;
-  created_at: string;
-  updated_at: string;
-}
 
 // Function to get college image from local assets
 const getCollegeImage = (collegeCode: string): string => {
@@ -398,7 +381,7 @@ export default function Favorites() {
       </div>
 
       {/* ===== Main Content ===== */}
-      <div className="flex-grow w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col pt-24">
+      <div className="flex-grow w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col pt-6">
         {/* ===== Header Section ===== */}
         <div className="mb-6">
           <button
@@ -411,11 +394,8 @@ export default function Favorites() {
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Heart className="w-5 h-5 text-indigo-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Favorites</h1>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Favorites</h1>
                 <p className="text-gray-600 text-sm sm:text-base">
                   {savedColleges.length} saved colleges
                 </p>

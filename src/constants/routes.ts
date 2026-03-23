@@ -17,6 +17,7 @@ export const ROUTES = {
   
   COLLEGE_EXPLORER: '/college-explorer',
   COLLEGE_DETAILS: '/college-details',
+  COLLEGE_BY_CODE: '/college/:code',
   COLLEGE_MAP: '/college-map',
   COLLEGE_COMPARISON: '/compare-college',
   

@@ -10,52 +10,10 @@ import { CollegeCardImage } from "../components/ui/CollegeCardImage";
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 
+import type { UserProfile } from "../types/user";
+import type { College } from "../types/college";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-interface College {
-  college_code: string;
-  college_name: string;
-  city: string;
-  district?: string;
-  branch: string;
-  branch_name?: string;
-  branch_code?: string;
-  fees?: number;
-  placement_rate?: number;
-  cutoff_rank?: number;
-  cutoff_percentile?: number;
-  category?: string;
-  average_package_lpa?: number;
-  highest_package_lpa?: number;
-  total_intake?: number;
-  seats?: number;
-  autonomy_status?: string;
-  hostel_available?: string;
-  image?: string;
-  probability_level?: string;
-  is_most_probable?: boolean;
-  admission_chance?: number;
-  admission_chance_percentage?: string;
-  fit?: string;
-  fit_reason?: string;
-  match_score?: number;
-}
-
-interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  state?: string;
-  city?: string;
-  category?: string;
-  exam_type?: string;
-  cet_rank?: string;
-  cet_score?: string;
-  diploma_rank?: string;
-  diploma_score?: string;
-  preferred_branches?: string[];
-  profile_complete?: boolean;
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -71,12 +29,6 @@ const fitColor = (fit: string) => {
   return { bg: "bg-orange-50 border-orange-200", text: "text-orange-700", bar: "bg-orange-500" };
 };
 
-const CITY_COORDS: Record<string, [number, number]> = {
-  "Mumbai": [19.08, 72.88], "Pune": [18.52, 73.86], "Nagpur": [21.15, 79.09],
-  "Nashik": [19.99, 73.79], "Aurangabad": [19.88, 75.34], "Kolhapur": [16.71, 74.24],
-  "Solapur": [17.68, 75.91], "Amravati": [20.93, 77.78], "Nanded": [19.16, 77.31],
-  "Sangli": [16.85, 74.56], "Ratnagiri": [16.99, 73.31], "Latur": [18.40, 76.57],
-};
 
 // ─── Small Components ─────────────────────────────────────────────────────────
 
@@ -130,14 +82,15 @@ export default function OverviewScreen() {
   }, [navigate]);
 
   useEffect(() => {
-    if (!profile?.preferred_branches?.length) return;
+    const branches = profile?.preferred_branches || [];
+    if (!branches.length) return;
     (async () => {
       setPredictionsLoading(true);
       try {
-        const score = profile.exam_type === "CET" ? parseFloat(profile.cet_score || "0") : parseFloat(profile.diploma_score || "0");
-        const rank = profile.exam_type === "CET" ? parseFloat(profile.cet_rank || "0") : parseFloat(profile.diploma_rank || "0");
+        const score = profile?.exam_type === "CET" ? parseFloat(profile?.cet_score || "0") : parseFloat(profile?.diploma_score || "0");
+        const rank = profile?.exam_type === "CET" ? parseFloat(profile?.cet_rank || "0") : parseFloat(profile?.diploma_rank || "0");
         const res = await axios.post(`${ML_API_URL}/predict_admission`,
-          { score, rank, category: profile.category, branches: profile.preferred_branches },
+          { score, rank, category: profile?.category, branches: branches },
           { timeout: 30000 }
         );
         if (res.data?.colleges?.length) {
@@ -264,13 +217,13 @@ export default function OverviewScreen() {
   const branchStats = useMemo(() => {
     const map = new Map<string, { count: number; avgChance: number; topCollege: string }>();
     colleges.forEach(c => {
-      const b = c.branch;
+      const b = c.branch || "Unknown";
       const prev = map.get(b);
-      if (!prev) map.set(b, { count: 1, avgChance: c.admission_chance ?? 0, topCollege: c.college_name });
+      if (!prev) map.set(b, { count: 1, avgChance: c.admission_chance ?? 0, topCollege: c.college_name || "Unknown" });
       else {
         prev.count++;
         prev.avgChance = ((prev.avgChance * (prev.count - 1)) + (c.admission_chance ?? 0)) / prev.count;
-        if ((c.admission_chance ?? 0) > prev.avgChance) prev.topCollege = c.college_name;
+        if ((c.admission_chance ?? 0) > prev.avgChance) prev.topCollege = c.college_name || "Unknown";
       }
     });
     return Array.from(map.entries()).map(([b, d]) => ({ branch: b, ...d })).sort((a, b) => b.avgChance - a.avgChance);
@@ -760,7 +713,6 @@ export default function OverviewScreen() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {cityDistribution.slice(0, 9).map(([city, count], i) => {
                     const isExpanded = expandedCity === city;
-                    const cityColleges = colleges.filter(c => c.city === city);
 
                     return (
                       <div key={city} className="col-span-1">
@@ -1028,7 +980,7 @@ export default function OverviewScreen() {
                   {/* EXPANDED ROI SANDBOX PANEL */}
                   <div className={`lg:col-span-3 transition-all duration-500 origin-top overflow-hidden ${expandedFeeTier ? 'max-h-[800px] opacity-100 mt-2' : 'max-h-0 opacity-0 mt-0'}`}>
                     {expandedFeeTier && (() => {
-                      let filtered = [];
+                      let filtered: College[] = [];
                       if (expandedFeeTier === "Under ₹50K") filtered = colleges.filter(c => (c.fees ?? 0) > 0 && (c.fees ?? 0) < 50000);
                       if (expandedFeeTier === "₹50K – 1L") filtered = colleges.filter(c => (c.fees ?? 0) >= 50000 && (c.fees ?? 0) < 100000);
                       if (expandedFeeTier === "₹1L – 2L") filtered = colleges.filter(c => (c.fees ?? 0) >= 100000 && (c.fees ?? 0) < 200000);

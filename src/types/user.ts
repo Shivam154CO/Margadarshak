@@ -32,6 +32,12 @@ export interface UserProfile {
   linguistic_minority?: string;
   diploma_course_group?: string;
   
+  // Extra fields from ProfileView
+  home_university?: string;
+  phone?: string;
+  tenth_percentage?: number;
+  twelfth_percentage?: number;
+  
   created_at: string;
   updated_at: string;
 }

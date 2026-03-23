@@ -14,6 +14,7 @@ import { MapContainer, TileLayer, Marker as LeafletMarker, Popup as LeafletPopup
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Navbar from "../components/Navbar";
+import { ROUTES } from "../constants/routes";
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 
@@ -125,25 +126,7 @@ interface MapMarker {
   is_predicted: boolean;
 }
 
-interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  state: string;
-  category: string;
-  exam_type: string;
-  cet_rank: string;
-  cet_score: string;
-  diploma_rank: string;
-  diploma_score: string;
-  preferred_branches: string[];
-  university_preference: string;
-  address: string;
-  receive_updates: boolean;
-  profile_complete: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import type { UserProfile } from "../types/user";
 
 const MAHARASHTRA_CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   "Mumbai": { lat: 19.0760, lng: 72.8777 },
@@ -1076,7 +1059,7 @@ function CollegeMapContent() {
                   className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors"
                   onClick={() => {
                     if (selectedCollege?.college_code) {
-                      navigate(`/college/${selectedCollege.college_code}`);
+                      navigate(ROUTES.COLLEGE_BY_CODE.replace(':code', selectedCollege.college_code));
                     }
                   }}
                 >

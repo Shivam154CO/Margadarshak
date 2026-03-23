@@ -46,7 +46,7 @@ const SeatVacancy = lazy(() => import("./pages/SeatVacancy"));
 const ScholarshipFinder = lazy(() => import("./pages/ScholarshipFinder"));
 const CutoffTrends = lazy(() => import("./pages/CutoffTrends"));
 const PostAdmission = lazy(() => import("./pages/PostAdmission"));
-const DseOptionForm = lazy(() => import("./pages/DseOptionForm"));
+const DseOptionForm = lazy(() => import("@/pages/DseOptionForm"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Scroll restorer
@@ -102,6 +102,7 @@ const AnimatedRoutes = () => {
         <Route path={ROUTES.DASHBOARD} element={<Protected><Dashboard /></Protected>} />
         <Route path={ROUTES.OVERVIEW} element={<Protected><OverviewScreen /></Protected>} />
         <Route path={ROUTES.COLLEGE_DETAILS} element={<Protected><CollegeDetails /></Protected>} />
+        <Route path={ROUTES.COLLEGE_BY_CODE} element={<Protected><CollegeDetails /></Protected>} />
         <Route path={ROUTES.COLLEGE_MAP} element={<Protected><InteractiveCollegeMap /></Protected>} />
         <Route path={ROUTES.COLLEGE_EXPLORER} element={<Protected><CollegeExplorer /></Protected>} />
         <Route path={ROUTES.COLLEGE_COMPARISON} element={<Protected><CollegeComparison /></Protected>} />

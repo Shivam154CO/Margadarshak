@@ -10,7 +10,7 @@ import {
   Building, Calendar, GraduationCap, Users, 
   TrendingUp, DollarSign, Briefcase, Trophy, Home
 } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams } from 'react-router-dom';
 
 const getCategoryColor = (category: string) => {
   const cat = category.toUpperCase();
@@ -28,8 +28,9 @@ const getCategoryColor = (category: string) => {
 export function useCollegeDetails() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const { code: pathCode } = useParams();
   
-  const urlCollegeCode = searchParams.get('code');
+  const urlCollegeCode = searchParams.get('code') || pathCode;
   const urlBranchName = searchParams.get('branch');
   
   const getInitialCollege = useCallback((): any => {
