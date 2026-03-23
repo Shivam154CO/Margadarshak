@@ -353,28 +353,6 @@ export default function Dashboard() {
         <DashboardHeader profile={profile} />
         <StatsBar stats={stats} />
 
-        {/* AI Insights Card */}
-        {aiInsights && (
-          <div className="mb-8 p-0.5 bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500 rounded-2xl shadow-lg animate-in fade-in slide-in-from-top-4 duration-1000">
-            <div className="bg-white rounded-[15px] p-6 lg:p-8 flex items-start space-x-6">
-              <div className="hidden sm:flex w-16 h-16 bg-indigo-50 rounded-2xl items-center justify-center flex-shrink-0 animate-pulse">
-                <FileText className="w-8 h-8 text-indigo-600" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="bg-indigo-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
-                    AI Strategic Analysis
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Smart Admission Strategy</h3>
-                <p className="text-slate-600 leading-relaxed font-medium">
-                  {aiInsights}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         <FilterBar
           activeFilter={activeFilter}
           setActiveFilter={setActiveFilter}
