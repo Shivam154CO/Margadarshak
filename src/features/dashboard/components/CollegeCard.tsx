@@ -2,8 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Bookmark, BookmarkCheck, ExternalLink, Trophy, Layers, Award, Zap, CheckCircle, Target, TrendingUp, AlertCircle, AlertTriangle } from 'lucide-react';
-import type { College } from '../../../types/college';
-import { ROUTES } from '../../../constants/routes';
+import type { College } from '@/types/college';
+import { ROUTES } from '@/constants/routes';
 
 interface CollegeCardProps {
   college: College;

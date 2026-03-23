@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { debounce } from "lodash";
-import type { College } from "../../../types/college";
+import type { College } from "@/types/college";
 
 export function useDashboardFilters(colleges: College[]) {
   const [activeFilter, setActiveFilter] = useState("all");

@@ -13,11 +13,11 @@ import {
 } from 'lucide-react';
 
 // Illustrations
-import chaosMain from '../../../assets/illustrations/mw.jpg';
+import chaosMain from '@/assets/illustrations/mw.jpg';
 
-import overloadMain from '../../../assets/problem-complex-data.png';
+import overloadMain from '@/assets/problem-complex-data.png';
 
-import uncertaintyMain from '../../../assets/illustrations/problem-uncertainty.png';
+import uncertaintyMain from '@/assets/illustrations/problem-uncertainty.png';
 
 // =========================================
 // 1. CONFIGURATION & DATA TYPES

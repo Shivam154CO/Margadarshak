@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from 'lucide-react';
-import type { UserProfile } from '../../../types/user';
-import { ROUTES } from '../../../constants/routes';
+import type { UserProfile } from '@/types/user';
+import { ROUTES } from '@/constants/routes';
 
 interface DashboardHeaderProps {
   profile: UserProfile | null;

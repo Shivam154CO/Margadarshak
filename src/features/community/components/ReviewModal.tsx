@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Star, GraduationCap, Building2, Briefcase, HeartHandshake, Zap, ThumbsUp, AlertTriangle, Check } from 'lucide-react';
-import { supabase } from '../../../lib/supabase';
-import type { UserProfile } from '../../../types/user';
-import { useToast } from '../../../context/ToastContext';
+import { supabase } from '@/lib/supabase';
+import type { UserProfile } from '@/types/user';
+import { useToast } from '@/context/ToastContext';
 
 interface ReviewModalProps {
     isOpen: boolean;
