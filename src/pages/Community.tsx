@@ -5,9 +5,24 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useToast } from '../context/ToastContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReviewModal from '../features/community/components/ReviewModal';
+import type { UserProfile } from '../types/user';
+
+interface Reply {
+    id: string;
+    review_id: string;
+    user_id: string;
+    content: string;
+    created_at: string;
+    profiles?: {
+        full_name: string;
+        avatar_url: string;
+    };
+}
 
 interface Review {
     id: string;
+    user_id: string;
     created_at: string;
     college_code: string;
     academics_rating: number;
@@ -25,46 +40,74 @@ interface Review {
 }
 
 export default function Community() {
-    const { info, warning } = useToast();
+    const { warning, success, error: toastError } = useToast();
     const [reviews, setReviews] = useState<Review[]>([]);
+    const [replies, setReplies] = useState<Record<string, Reply[]>>({});
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [showReplyFor, setShowReplyFor] = useState<string | null>(null);
+    const [replyContent, setReplyContent] = useState('');
+    const [submittingReply, setSubmittingReply] = useState(false);
+    
+    // Modal states
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentEditReview, setCurrentEditReview] = useState<Review | null>(null);
 
     useEffect(() => {
         fetchReviews();
+        fetchReplies();
         
-        const getSession = async () => {
+        const getSessionData = async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            setCurrentUserId(session?.user?.id || null);
+            if (session?.user) {
+                setCurrentUserId(session.user.id);
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+                setProfile(data);
+            }
         };
-        getSession();
+        getSessionData();
 
-        const channel = supabase
+        const reviewsChannel = supabase
             .channel('public:college_reviews')
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'college_reviews' },
-                (payload) => {
+                (payload: any) => {
                     if (payload.eventType === 'UPDATE') {
-                        setReviews((prev) =>
-                            prev.map((r) =>
+                        setReviews((prev: Review[]) =>
+                            prev.map((r: Review) =>
                                 r.id === payload.new.id
-                                    ? { ...r, upvotes: payload.new.upvotes }
+                                    ? { ...r, ...payload.new }
                                     : r
                             )
                         );
-                    } else if (payload.eventType === 'INSERT') {
+                    } else if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
                         fetchReviews();
-                    } else if (payload.eventType === 'DELETE') {
-                        setReviews((prev) => prev.filter((r) => r.id !== payload.old.id));
                     }
                 }
             )
             .subscribe();
 
+        const repliesChannel = supabase
+            .channel('public:college_replies')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'college_replies' },
+                () => {
+                    fetchReplies();
+                }
+            )
+            .subscribe();
+
         return () => {
-            supabase.removeChannel(channel);
+            supabase.removeChannel(reviewsChannel);
+            supabase.removeChannel(repliesChannel);
         };
     }, []);
 
@@ -75,15 +118,35 @@ export default function Community() {
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('Error fetching reviews:', error);
-            } else {
-                setReviews(data || []);
-            }
+            if (error) throw error;
+            setReviews(data || []);
         } catch (err) {
-            console.error(err);
+            console.error('Error fetching reviews:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchReplies = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('college_replies')
+                .select(`
+                    *,
+                    profiles:user_id (full_name, avatar_url)
+                `)
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            const grouped: Record<string, Reply[]> = {};
+            data?.forEach((r: any) => {
+                if (!grouped[r.review_id]) grouped[r.review_id] = [];
+                grouped[r.review_id].push(r);
+            });
+            setReplies(grouped);
+        } catch (err) {
+            console.error('Error fetching replies:', err);
         }
     };
 
@@ -96,10 +159,11 @@ export default function Community() {
             }
 
             const userId = session.user.id;
-            const hasUpvoted = currentUpvotes.includes(userId);
+            const upvotes = currentUpvotes || [];
+            const hasUpvoted = upvotes.includes(userId);
             const newUpvotes = hasUpvoted
-                ? currentUpvotes.filter(id => id !== userId)
-                : [...currentUpvotes, userId];
+                ? upvotes.filter((id: string) => id !== userId)
+                : [...upvotes, userId];
 
             const { error } = await supabase
                 .from('college_reviews')
@@ -108,14 +172,65 @@ export default function Community() {
 
             if (error) throw error;
 
-            setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, upvotes: newUpvotes } : r));
+            setReviews((prev: Review[]) => prev.map((r: Review) => r.id === reviewId ? { ...r, upvotes: newUpvotes } : r));
         } catch (err) {
             console.error('Upvote failed:', err);
         }
     };
 
+    const handleDeleteReview = async (reviewId: string) => {
+        if (!confirm("Are you sure you want to delete this review?")) return;
+        try {
+            const { error } = await supabase
+                .from('college_reviews')
+                .delete()
+                .eq('id', reviewId);
+            
+            if (error) throw error;
+            success("Deleted", "Your review has been removed.");
+            setReviews((prev: Review[]) => prev.filter((r: Review) => r.id !== reviewId));
+        } catch (err: any) {
+            toastError("Delete Failed", err.message);
+        }
+    };
+
+    const handleEditReview = (review: Review) => {
+        setCurrentEditReview(review);
+        setIsModalOpen(true);
+    };
+
+    const handlePostReply = async (reviewId: string) => {
+        if (!replyContent.trim()) return;
+        setSubmittingReply(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                warning("Login Required", "Sign in to join the conversation.");
+                return;
+            }
+
+            const { error } = await supabase
+                .from('college_replies')
+                .insert([{
+                    review_id: reviewId,
+                    user_id: session.user.id,
+                    content: replyContent.trim()
+                }]);
+
+            if (error) throw error;
+            setReplyContent('');
+            setShowReplyFor(null);
+            success("Posted", "Your reply is live.");
+            fetchReplies();
+        } catch (err: any) {
+            toastError("Reply Failed", err.message);
+        } finally {
+            setSubmittingReply(false);
+        }
+    };
+
     const filteredReviews = useMemo(() => {
-        return reviews.filter(r =>
+        return reviews.filter((r: Review) =>
             r.college_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
             r.best_thing.toLowerCase().includes(searchTerm.toLowerCase()) ||
             r.reality_check.toLowerCase().includes(searchTerm.toLowerCase())
@@ -124,9 +239,9 @@ export default function Community() {
 
     const stats = useMemo(() => {
         const total = reviews.length;
-        const verified = reviews.filter(r => r.is_verified_student).length;
-        const avgRating = total > 0 ? (reviews.reduce((acc, r) => acc + (r.overall_rating || 0), 0) / total).toFixed(1) : "0.0";
-        const totalUpvotes = (reviews || []).reduce((acc, r) => acc + (r.upvotes?.length || 0), 0);
+        const verified = reviews.filter((r: Review) => r.is_verified_student).length;
+        const avgRating = total > 0 ? (reviews.reduce((acc: number, r: Review) => acc + (r.overall_rating || 0), 0) / total).toFixed(1) : "0.0";
+        const totalUpvotes = (reviews || []).reduce((acc: number, r: Review) => acc + (r.upvotes?.length || 0), 0);
         return { total, verified, avgRating, totalUpvotes };
     }, [reviews]);
 
@@ -137,8 +252,8 @@ export default function Community() {
             <main className="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
                 {/* Header Segment */}
                 <div className="mb-8">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">Community Voice</h1>
-                    <p className="text-sm text-slate-500 mt-1">Raw, unfiltered feedback from students across Maharashtra campuses</p>
+                    <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">Community Voice</h1>
+                    <p className="text-sm text-slate-500 mt-1 uppercase tracking-[0.1em] font-black opacity-50"> Maharashtra Campus Hub </p>
                 </div>
 
                 {/* Stats Strip */}
@@ -165,7 +280,7 @@ export default function Community() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Find reviews by college, branch, or keywords..."
+                            placeholder="Search by college or branch..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium transition-all"
@@ -177,117 +292,178 @@ export default function Community() {
                 <div className="space-y-6">
                     <AnimatePresence mode="popLayout">
                         {loading ? (
-                            <div className="text-center py-20 text-slate-400 text-sm font-bold animate-pulse uppercase tracking-widest italic">Syncing with Community Records...</div>
+                            <div className="text-center py-20 text-slate-400 text-xs font-black uppercase tracking-[0.2em] animate-pulse italic">Syncing Records...</div>
                         ) : filteredReviews.length > 0 ? (
-                            filteredReviews.map((review, idx) => {
+                            filteredReviews.map((review: Review, idx: number) => {
                                 const ratingColor = review.overall_rating >= 4 ? "border-l-emerald-500" : review.overall_rating >= 3 ? "border-l-amber-500" : "border-l-rose-500";
                                 const userHasUpvoted = currentUserId && review.upvotes?.includes(currentUserId);
-                                
+                                const isOwner = currentUserId === review.user_id;
+
                                 return (
                                     <motion.div
                                         key={review.id}
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: Math.min(idx * 0.05, 0.4) }}
-                                        className={`bg-white rounded-xl border border-slate-200 border-l-4 ${ratingColor} p-6 shadow-sm hover:shadow-md transition-all hover:border-r-slate-200`}
+                                        className={`bg-white rounded-xl border border-slate-200 border-l-4 ${ratingColor} p-6 shadow-sm hover:shadow-md transition-all group/card overflow-hidden`}
                                     >
                                         {/* Card Header */}
                                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
                                             <div className="flex items-start gap-4">
-                                                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center shrink-0 border border-slate-200">
-                                                    <span className="text-sm font-black text-slate-600 tracking-tighter uppercase">{review.reviewer_name?.slice(0, 2) || 'S'}</span>
+                                                <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center shrink-0 border border-slate-100">
+                                                    <span className="text-xs font-black text-slate-400 tracking-tighter uppercase">{review.reviewer_name?.slice(0, 2) || 'S'}</span>
                                                 </div>
                                                 <div className="min-w-0">
                                                     <div className="flex items-center gap-2 flex-wrap">
-                                                        <h3 className="font-bold text-slate-900 text-base">{review.reviewer_name || 'Anonymous Student'}</h3>
+                                                        <h3 className="font-bold text-slate-900 text-sm">{review.reviewer_name || 'Anonymous Student'}</h3>
                                                         {review.is_verified_student && (
-                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold uppercase tracking-wider border border-indigo-100">
-                                                                <Check className="w-3 h-3" /> Verified
+                                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50/50 text-indigo-600 text-[9px] font-black uppercase tracking-wider border border-indigo-100/30">
+                                                                <Check className="w-2.5 h-2.5" /> Verified
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-xs font-semibold text-slate-400 mt-1 flex items-center gap-1.5">
-                                                        <span>Targeting</span>
-                                                        <span className="text-indigo-600 font-bold px-1.5 py-0.5 bg-indigo-50 rounded border border-indigo-100/50">{review.college_code}</span>
-                                                        <span>• {new Date(review.created_at).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                                    <p className="text-[10px] font-bold text-slate-400 mt-1 flex items-center gap-1.5 uppercase tracking-wide">
+                                                        <span>{review.college_code}</span>
+                                                        <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                                                        <span>{new Date(review.created_at).toLocaleDateString("en-IN", { month: 'short', year: 'numeric' })}</span>
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col items-end shrink-0">
-                                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl">
-                                                    <Star className={`w-3.5 h-3.5 fill-current ${review.overall_rating >= 4 ? 'text-emerald-500' : 'text-amber-500'}`} />
-                                                    <span className="font-black text-slate-800 text-base tabular-nums">{review.overall_rating.toFixed(1)}</span>
+                                            <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start shrink-0">
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50/50 border border-slate-100 rounded-lg">
+                                                    <Star className={`w-3 h-3 fill-current ${review.overall_rating >= 4 ? 'text-emerald-500' : 'text-amber-500'}`} />
+                                                    <span className="font-black text-slate-700 text-sm tabular-nums">{review.overall_rating.toFixed(1)}</span>
                                                 </div>
-                                                <span className="text-[9px] font-black text-slate-300 uppercase mt-1 tracking-widest">Global Rating</span>
+                                                {isOwner && (
+                                                    <div className="flex gap-2 mt-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                                                        <button 
+                                                            onClick={() => handleEditReview(review)}
+                                                            className="text-[9px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-widest"
+                                                        >Edit</button>
+                                                        <span className="text-slate-200">|</span>
+                                                        <button 
+                                                            onClick={() => handleDeleteReview(review.id)}
+                                                            className="text-[9px] font-black text-slate-400 hover:text-rose-600 uppercase tracking-widest"
+                                                        >Delete</button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
                                         {/* Ratings Dashboard */}
-                                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                                        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-6">
                                             {[
                                                 { label: "Academics", value: review.academics_rating },
                                                 { label: "Placement", value: review.placement_rating },
-                                                { label: "Campus Life", value: review.campus_rating },
-                                                { label: "Infrastructure", value: review.infrastructure_rating },
-                                                { label: "Return on Inv", value: review.roi_rating }
-                                            ].map(m => (
-                                                <div key={m.label} className="bg-slate-50/50 rounded-lg p-2.5 border border-slate-100 text-center">
-                                                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{m.label}</div>
-                                                    <div className="text-sm font-black text-slate-700">{m.value}/5</div>
+                                                { label: "Campus", value: review.campus_rating },
+                                                { label: "Infras", value: review.infrastructure_rating },
+                                                { label: "ROI", value: review.roi_rating }
+                                            ].map((m: any) => (
+                                                <div key={m.label} className="bg-slate-50/30 rounded-lg p-2 border border-slate-100/50 text-center">
+                                                    <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-0.5">{m.label}</div>
+                                                    <div className="text-xs font-black text-slate-600">{m.value}/5</div>
                                                 </div>
                                             ))}
                                         </div>
 
-                                        {/* Content Segments */}
-                                        <div className="space-y-4 mb-6">
-                                            <div className="bg-emerald-50 items-start border border-emerald-100 rounded-xl p-4 flex gap-4">
-                                                <ThumbsUp className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                                        {/* Content Segments - Minimalist */}
+                                        <div className="space-y-3 mb-6">
+                                            <div className="flex gap-3">
+                                                <div className="mt-1"><ThumbsUp className="w-3.5 h-3.5 text-emerald-500/50" /></div>
                                                 <div className="min-w-0">
-                                                    <h4 className="text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em] mb-1.5">Primary Advantages</h4>
-                                                    <p className="text-slate-700 text-sm font-medium leading-relaxed">{review.best_thing}</p>
+                                                    <p className="text-slate-600 text-[13px] font-medium leading-relaxed leading-snug">{review.best_thing}</p>
                                                 </div>
                                             </div>
-                                            <div className="bg-rose-50 items-start border border-rose-100 rounded-xl p-4 flex gap-4">
-                                                <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                                            <div className="flex gap-3">
+                                                <div className="mt-1"><AlertTriangle className="w-3.5 h-3.5 text-rose-500/50" /></div>
                                                 <div className="min-w-0">
-                                                    <h4 className="text-[10px] font-black text-rose-700 uppercase tracking-[0.2em] mb-1.5">Reality Assessment</h4>
-                                                    <p className="text-slate-700 text-sm font-medium leading-relaxed">{review.reality_check}</p>
+                                                    <p className="text-slate-600 text-[13px] font-medium leading-relaxed leading-snug">{review.reality_check}</p>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Actions */}
-                                        <div className="flex items-center justify-between flex-wrap gap-4 pt-4 border-t border-slate-100">
-                                            <button
-                                                onClick={() => handleUpvote(review.id, review.upvotes || [])}
-                                                className={`flex items-center gap-2.5 px-4 py-2 rounded-lg transition-all border ${
-                                                    userHasUpvoted
-                                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105'
-                                                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                                                }`}
-                                            >
-                                                <Heart className={`w-4 h-4 ${(review.upvotes?.length > 0 || userHasUpvoted) ? 'fill-current' : ''}`} />
-                                                <span className="font-bold text-xs uppercase tracking-wider">Helpful ({review.upvotes?.length || 0})</span>
-                                            </button>
-                                            <div className="flex gap-2">
+                                        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                                            <div className="flex items-center gap-1">
                                                 <button
-                                                    onClick={() => info('Coming Soon', 'Reply threads will be available in the next release.')}
-                                                    className="inline-flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 tracking-widest transition-colors"
+                                                    onClick={() => handleUpvote(review.id, review.upvotes)}
+                                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
+                                                        userHasUpvoted
+                                                            ? 'text-indigo-600 font-black'
+                                                            : 'text-slate-400 font-bold hover:text-slate-600'
+                                                    }`}
                                                 >
-                                                    <MessageSquare className="w-4 h-4" /> Reply
+                                                    <Heart className={`w-3.5 h-3.5 ${userHasUpvoted ? 'fill-current' : ''}`} />
+                                                    <span className="text-[10px] uppercase tracking-wider">{review.upvotes?.length || 0}</span>
+                                                </button>
+                                                <button
+                                                    onClick={() => setShowReplyFor(showReplyFor === review.id ? null : review.id)}
+                                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
+                                                        showReplyFor === review.id ? 'text-indigo-600 font-black' : 'text-slate-400 font-bold hover:text-slate-600'
+                                                    }`}
+                                                >
+                                                    <MessageSquare className="w-3.5 h-3.5" />
+                                                    <span className="text-[10px] uppercase tracking-wider">{replies[review.id]?.length || 0}</span>
                                                 </button>
                                             </div>
                                         </div>
+
+                                        {/* Nested Replies - Minimalist & Reactive */}
+                                        <AnimatePresence>
+                                            {showReplyFor === review.id && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: "auto", opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="mt-4 pt-4 border-t border-slate-50 space-y-4"
+                                                >
+                                                    {/* Reply List */}
+                                                    <div className="space-y-3 pl-8">
+                                                        {replies[review.id]?.map((reply: Reply) => (
+                                                            <div key={reply.id} className="flex gap-3">
+                                                                <div className="w-6 h-6 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                                                                    <span className="text-[8px] font-black text-slate-300 uppercase">{reply.profiles?.full_name?.slice(0, 1) || 'A'}</span>
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[10px] font-black text-slate-700">{reply.profiles?.full_name || 'Anonymous'}</span>
+                                                                        <span className="text-[8px] font-bold text-slate-300 uppercase">{new Date(reply.created_at).toLocaleDateString()}</span>
+                                                                    </div>
+                                                                    <p className="text-[12px] text-slate-500 mt-0.5 leading-relaxed">{reply.content}</p>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    {/* Reply Input */}
+                                                    <div className="flex gap-3 pl-8">
+                                                        <input 
+                                                            type="text"
+                                                            value={replyContent}
+                                                            onChange={(e) => setReplyContent(e.target.value)}
+                                                            placeholder="Write a reply..."
+                                                            className="flex-grow bg-slate-50 border border-slate-100 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500/20"
+                                                            onKeyDown={(e) => e.key === 'Enter' && handlePostReply(review.id)}
+                                                        />
+                                                        <button 
+                                                            disabled={submittingReply || !replyContent.trim()}
+                                                            onClick={() => handlePostReply(review.id)}
+                                                            className="text-[10px] font-black text-indigo-600 uppercase tracking-widest disabled:opacity-30"
+                                                        >Post</button>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </motion.div>
                                 );
                             })
                         ) : (
                             <div className="text-center py-24 bg-white rounded-xl border border-slate-200 shadow-sm">
                                 <Info className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No community matching found</p>
+                                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No community matching found</p>
                                 <button
                                     onClick={() => setSearchTerm('')}
-                                    className="mt-4 text-indigo-600 font-black text-xs uppercase hover:underline underline-offset-4"
+                                    className="mt-4 text-indigo-600 font-black text-[10px] uppercase hover:underline underline-offset-4 tracking-[0.2em]"
                                 >
                                     Clear Global Search
                                 </button>
@@ -296,6 +472,21 @@ export default function Community() {
                     </AnimatePresence>
                 </div>
             </main>
+
+            {profile && (
+                <ReviewModal
+                    isOpen={isModalOpen}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setCurrentEditReview(null);
+                    }}
+                    collegeCode={currentEditReview?.college_code || ''}
+                    collegeName={currentEditReview?.college_code || 'Update Review'}
+                    profile={profile}
+                    onSuccess={fetchReviews}
+                    initialReview={currentEditReview}
+                />
+            )}
 
             <Footer />
         </div>

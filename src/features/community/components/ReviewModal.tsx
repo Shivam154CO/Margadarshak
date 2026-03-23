@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, GraduationCap, Building2, Briefcase, HeartHandshake, Zap, ThumbsUp, AlertTriangle } from 'lucide-react';
+import { X, Star, GraduationCap, Building2, Briefcase, HeartHandshake, Zap, ThumbsUp, AlertTriangle, Check } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import type { UserProfile } from '../../../types/user';
 import { useToast } from '../../../context/ToastContext';
@@ -12,10 +12,11 @@ interface ReviewModalProps {
     collegeName: string;
     profile: UserProfile | null;
     onSuccess: () => void;
+    initialReview?: any;
 }
 
-export default function ReviewModal({ isOpen, onClose, collegeCode, collegeName, profile, onSuccess }: ReviewModalProps) {
-    const { error: toastError } = useToast();
+export default function ReviewModal({ isOpen, onClose, collegeCode, collegeName, profile, onSuccess, initialReview }: ReviewModalProps) {
+    const { error: toastError, success } = useToast();
     const [step, setStep] = useState(1);
     const [submitting, setSubmitting] = useState(false);
     const [isVerified, setIsVerified] = useState(false);
@@ -30,6 +31,29 @@ export default function ReviewModal({ isOpen, onClose, collegeCode, collegeName,
         best: '',
         worst: ''
     });
+
+    useEffect(() => {
+        if (initialReview && isOpen) {
+            setRatings({
+                academics: initialReview.academics_rating || 0,
+                placement: initialReview.placement_rating || 0,
+                campus: initialReview.campus_rating || 0,
+                infrastructure: initialReview.infrastructure_rating || 0,
+                roi: initialReview.roi_rating || 0,
+            });
+            setTextReviews({
+                best: initialReview.best_thing || '',
+                worst: initialReview.reality_check || ''
+            });
+            setIsVerified(initialReview.is_verified_student || false);
+            setStep(1);
+        } else if (isOpen) {
+            setRatings({ academics: 0, placement: 0, campus: 0, infrastructure: 0, roi: 0 });
+            setTextReviews({ best: '', worst: '' });
+            setIsVerified(false);
+            setStep(1);
+        }
+    }, [initialReview, isOpen]);
 
     const overallRating = Object.values(ratings).filter(Boolean).length > 0
         ? (Object.values(ratings).reduce((a, b) => a + b, 0) / 5).toFixed(1)
@@ -46,41 +70,54 @@ export default function ReviewModal({ isOpen, onClose, collegeCode, collegeName,
         if (!profile) return;
         setSubmitting(true);
 
+        const payload = {
+            user_id: profile.id,
+            college_code: collegeCode,
+            academics_rating: ratings.academics || 1,
+            placement_rating: ratings.placement || 1,
+            campus_rating: ratings.campus || 1,
+            infrastructure_rating: ratings.infrastructure || 1,
+            roi_rating: ratings.roi || 1,
+            overall_rating: parseFloat(overallRating),
+            best_thing: textReviews.best || 'N/A',
+            reality_check: textReviews.worst || 'N/A',
+            is_verified_student: isVerified
+        };
+
         try {
-            const { error } = await supabase
-                .from('college_reviews')
-                .insert([{
-                    user_id: profile.id,
-                    college_code: collegeCode,
-                    academics_rating: ratings.academics || 1,
-                    placement_rating: ratings.placement || 1,
-                    campus_rating: ratings.campus || 1,
-                    infrastructure_rating: ratings.infrastructure || 1,
-                    roi_rating: ratings.roi || 1,
-                    overall_rating: parseFloat(overallRating),
-                    best_thing: textReviews.best || 'N/A',
-                    reality_check: textReviews.worst || 'N/A',
-                    is_verified_student: isVerified
-                }]);
+            let error;
+            if (initialReview?.id) {
+                const { error: updateError } = await supabase
+                    .from('college_reviews')
+                    .update(payload)
+                    .eq('id', initialReview.id);
+                error = updateError;
+            } else {
+                const { error: insertError } = await supabase
+                    .from('college_reviews')
+                    .insert([payload]);
+                error = insertError;
+            }
 
             if (error) throw error;
 
+            success('Success', initialReview ? 'Review updated successfully' : 'Thank you for your feedback!');
             onSuccess();
             onClose();
         } catch (err: any) {
             console.error(err);
-            toastError('Review Failed', err.message || 'Failed to submit review. Please try again.');
+            toastError('Review Failed', err.message || 'Failed to submit review');
         } finally {
             setSubmitting(false);
         }
     };
 
     const categories = [
-        { key: 'academics', label: 'Academics & Faculty', icon: GraduationCap, color: 'text-blue-500' },
-        { key: 'placement', label: 'Placement Reality', icon: Briefcase, color: 'text-emerald-500' },
-        { key: 'campus', label: 'Campus Life & Events', icon: HeartHandshake, color: 'text-purple-500' },
-        { key: 'infrastructure', label: 'Infrastructure & Labs', icon: Building2, color: 'text-orange-500' },
-        { key: 'roi', label: 'Return on Investment (ROI)', icon: Zap, color: 'text-yellow-500' },
+        { key: 'academics', label: 'Academics & Faculty', icon: GraduationCap },
+        { key: 'placement', label: 'Placement Reality', icon: Briefcase },
+        { key: 'campus', label: 'Campus Life & Events', icon: HeartHandshake },
+        { key: 'infrastructure', label: 'Infrastructure & Labs', icon: Building2 },
+        { key: 'roi', label: 'Return on Investment', icon: Zap },
     ];
 
     if (!isOpen) return null;
@@ -91,132 +128,119 @@ export default function ReviewModal({ isOpen, onClose, collegeCode, collegeName,
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+                className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
             >
                 <motion.div
                     initial={{ scale: 0.95, y: 20 }}
                     animate={{ scale: 1, y: 0 }}
                     exit={{ scale: 0.95, y: 20 }}
-                    className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                    className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border border-slate-200"
                 >
-                    {/* Header */}
-                    <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white relative z-10">
+                    <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
                         <div>
-                            <h2 className="text-xl font-black text-slate-800 tracking-tight">Rate & Review</h2>
-                            <p className="text-sm text-slate-500 font-medium truncate max-w-sm">{collegeName}</p>
+                            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">{initialReview ? 'Edit Your Voice' : 'Add Your Voice'}</h2>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{collegeName}</p>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-full flex items-center justify-center transition-colors shadow-sm"
-                        >
-                            <X className="w-5 h-5" />
+                        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                            <X className="w-4 h-4 text-slate-400" />
                         </button>
                     </div>
 
-                    <div className="overflow-y-auto p-6 flex-1 bg-slate-50/50">
+                    <div className="flex-grow overflow-y-auto p-6 scroll-smooth">
                         {step === 1 ? (
                             <div className="space-y-6">
-                                <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-6 flex items-start gap-4">
-                                    <div className="bg-indigo-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-bold shadow-md shrink-0">
-                                        {overallRating}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-slate-800">Overall Rating</h3>
-                                        <p className="text-sm text-slate-500">Provide specific ratings across 5 key dimensions to help other students.</p>
-                                    </div>
-                                </div>
-
                                 <div className="space-y-4">
-                                    {categories.map((cat) => {
-                                        const Icon = cat.icon;
-                                        return (
-                                            <div key={cat.key} className="bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-indigo-200 transition-colors">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`p-2 rounded-lg bg-slate-50 ${cat.color}`}>
-                                                        <Icon className="w-5 h-5 flex-shrink-0" />
-                                                    </div>
-                                                    <span className="font-bold text-slate-700 text-sm md:text-base">{cat.label}</span>
-                                                </div>
-                                                <div className="flex items-center gap-1 self-end sm:self-auto">
-                                                    {[1, 2, 3, 4, 5].map((star) => (
-                                                        <button
-                                                            key={star}
-                                                            onClick={() => handleRating(cat.key as any, star)}
-                                                            className={`p-1 transition-transform hover:scale-110`}
-                                                        >
-                                                            <Star className={`w-6 h-6 ${ratings[cat.key as keyof typeof ratings] >= star ? 'fill-yellow-400 text-yellow-400' : 'text-slate-200 fill-slate-50'}`} />
-                                                        </button>
-                                                    ))}
-                                                </div>
+                                    {categories.map((cat) => (
+                                        <div key={cat.key} className="space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <cat.icon className="w-3.5 h-3.5 text-slate-400" />
+                                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider">{cat.label}</span>
                                             </div>
-                                        );
-                                    })}
+                                            <div className="flex gap-2">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <button
+                                                        key={star}
+                                                        onClick={() => handleRating(cat.key as any, star)}
+                                                        className={`p-1.5 rounded-lg border transition-all ${
+                                                            ratings[cat.key as keyof typeof ratings] >= star
+                                                                ? 'bg-indigo-600 border-indigo-600'
+                                                                : 'bg-white border-slate-200 hover:border-indigo-200'
+                                                        }`}
+                                                    >
+                                                        <Star className={`w-3.5 h-3.5 ${ratings[cat.key as keyof typeof ratings] >= star ? 'text-white fill-current' : 'text-slate-300'}`} />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         ) : (
                             <div className="space-y-6">
-                                <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
-                                    <label className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                                        <ThumbsUp className="w-5 h-5 text-emerald-600" /> The Best Thing (What I Loved)
-                                    </label>
-                                    <textarea
-                                        value={textReviews.best}
-                                        onChange={(e) => setTextReviews(p => ({ ...p, best: e.target.value }))}
-                                        placeholder="e.g., The coding culture here is incredible, seniors help you so much..."
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all min-h-[100px] leading-relaxed"
-                                    />
-                                </div>
-
-                                <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm">
-                                    <label className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                                        <AlertTriangle className="w-5 h-5 text-rose-600" /> The Reality Check (Watch Out For)
-                                    </label>
-                                    <textarea
-                                        value={textReviews.worst}
-                                        onChange={(e) => setTextReviews(p => ({ ...p, worst: e.target.value }))}
-                                        placeholder="e.g., Hostel food can be repetitive, and the attendance rule is strictly enforced..."
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all min-h-[100px] leading-relaxed"
-                                    />
-                                </div>
-
-                                <div onClick={() => setIsVerified(!isVerified)} className={`cursor-pointer p-4 rounded-2xl border-2 transition-all flex items-center gap-4 ${isVerified ? 'bg-sky-50 border-sky-400' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${isVerified ? 'bg-sky-500 text-white' : 'bg-slate-200 text-slate-400'}`}>
-                                        {isVerified && <Zap className="w-3.5 h-3.5 fill-white" />}
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <ThumbsUp className="w-3.5 h-3.5 text-emerald-500/50" />
+                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">The Best Part</span>
+                                        </div>
+                                        <textarea
+                                            value={textReviews.best}
+                                            onChange={e => setTextReviews(p => ({ ...p, best: e.target.value }))}
+                                            placeholder="What makes this college special?"
+                                            className="w-full min-h-[100px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500/20 focus:outline-none transition-all placeholder:text-slate-300"
+                                        />
                                     </div>
-                                    <div>
-                                        <h4 className={`font-bold text-sm ${isVerified ? 'text-sky-800' : 'text-slate-700'}`}>Claim "Verified Student" Badge</h4>
-                                        <p className="text-xs text-slate-500">I confirm I am currently admitted to or an alumnus of this specific college.</p>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <AlertTriangle className="w-3.5 h-3.5 text-rose-500/50" />
+                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Reality Check</span>
+                                        </div>
+                                        <textarea
+                                            value={textReviews.worst}
+                                            onChange={e => setTextReviews(p => ({ ...p, worst: e.target.value }))}
+                                            placeholder="What should new students be careful about?"
+                                            className="w-full min-h-[100px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500/20 focus:outline-none transition-all placeholder:text-slate-300"
+                                        />
                                     </div>
+
+                                    <button
+                                        onClick={() => setIsVerified(!isVerified)}
+                                        className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
+                                            isVerified ? 'bg-indigo-50/50 border-indigo-200' : 'bg-slate-50 border-slate-100'
+                                        }`}
+                                    >
+                                        <div className="text-left">
+                                            <div className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Verified Student Status</div>
+                                            <p className="text-[9px] font-medium text-slate-500 mt-0.5">I confirm that I am/was a student of this institution</p>
+                                        </div>
+                                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                                            isVerified ? 'bg-indigo-600 border-indigo-600 shadow-sm' : 'bg-white border-slate-200'
+                                        }`}>
+                                            {isVerified && <Check className="w-3 h-3 text-white" />}
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* Footer Actions */}
-                    <div className="p-5 border-t border-slate-100 bg-white flex justify-between items-center z-10 shrink-0">
-                        {step === 1 ? (
-                            <>
-                                <button onClick={onClose} className="text-slate-500 font-bold px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">Cancel</button>
-                                <button
-                                    onClick={handleNext}
-                                    disabled={Object.values(ratings).some(v => v === 0)}
-                                    className="bg-indigo-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Next Step →
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button onClick={handlePrev} className="text-slate-500 font-bold px-4 py-2 hover:bg-slate-50 rounded-lg transition-colors">← Back</button>
-                                <button
-                                    onClick={handleSubmit}
-                                    disabled={submitting || !textReviews.best || !textReviews.worst}
-                                    className="bg-indigo-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center gap-2"
-                                >
-                                    {submitting ? 'Submitting...' : 'Post Review'}
-                                </button>
-                            </>
+                    <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3 shrink-0">
+                        {step === 2 && (
+                            <button
+                                onClick={handlePrev}
+                                className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50 transition-all"
+                            >
+                                Back
+                            </button>
                         )}
+                        <button
+                            onClick={step === 1 ? handleNext : handleSubmit}
+                            disabled={submitting || (step === 1 && !Object.values(ratings).some(v => v > 0))}
+                            className="flex-[2] py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-slate-900/10 hover:bg-slate-800 disabled:opacity-50 transition-all"
+                        >
+                            {submitting ? 'Processing...' : (step === 1 ? 'Continue' : initialReview ? 'Update Review' : 'Submit Voice')}
+                        </button>
                     </div>
                 </motion.div>
             </motion.div>
