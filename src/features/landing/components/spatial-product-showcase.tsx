@@ -243,12 +243,13 @@ const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) =>
                                 transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
                                 className="w-36 h-36 md:w-44 md:h-44 rounded-full bg-white flex items-center justify-center shadow-[0_15px_30px_rgba(0,0,0,0.06)] border border-slate-100/50"
                             >
-                                <img
-                                    src={data.illustration}
-                                    alt={data.title}
-                                    className="w-full h-full object-contain p-6 hover:scale-105 transition-transform duration-700"
-                                    loading="eager"
-                                />
+                                    <img
+                                        src={data.illustration}
+                                        alt={data.title}
+                                        className="w-full h-full object-contain p-6 hover:scale-105 transition-transform duration-700"
+                                        loading="lazy"
+                                        decoding="async"
+                                    />
                             </motion.div>
 
                             {/* Orbiting Secondary Image */}

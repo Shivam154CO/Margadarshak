@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useQuery } from '@tanstack/react-query';
-import { normalizeCollegeData } from '@/utils';
+import { normalizeCollegeData } from '@/utils/collegeHelpers';
 import type { College } from '@/types/college';
-import { useFavorites } from '@/hooks/useFavorites';
+import { useFavorites } from '../../../hooks/useFavorites';
 import seatMatrixMap from '@/assets/seat_matrix_map.json';
-import { 
-  Building, Calendar, GraduationCap, Users, 
+import {
+  Building, Calendar, GraduationCap, Users,
   TrendingUp, DollarSign, Briefcase, Trophy, Home
 } from 'lucide-react';
 import { useSearchParams, useParams } from 'react-router-dom';
@@ -29,10 +29,10 @@ export function useCollegeDetails() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { code: pathCode } = useParams();
-  
+
   const urlCollegeCode = searchParams.get('code') || pathCode;
   const urlBranchName = searchParams.get('branch');
-  
+
   const getInitialCollege = useCallback((): any => {
     // 1. Priority: Location state (passed from Search/Dashboard)
     if (location.state?.college) {
@@ -40,13 +40,13 @@ export function useCollegeDetails() {
       localStorage.setItem('selectedCollege', JSON.stringify(stateCollege));
       return stateCollege;
     }
-    
+
     // 2. Secondary: URL Parameters (for refresh/bookmarks)
     if (urlCollegeCode) {
-        return {
-            college_code: urlCollegeCode,
-            branch_name: urlBranchName || 'N/A'
-        };
+      return {
+        college_code: urlCollegeCode,
+        branch_name: urlBranchName || 'N/A'
+      };
     }
 
     // 3. Last Resort: LocalStorage
@@ -111,9 +111,9 @@ export function useCollegeDetails() {
       }
 
       // Check if we need to fetch (if branches or seat matrix missing)
-      const hasFullData = college.branches && college.branches.length > 0 && 
-                         college.branches[0].categories && college.branches[0].categories.length > 0;
-      
+      const hasFullData = college.branches && college.branches.length > 0 &&
+        college.branches[0].categories && college.branches[0].categories.length > 0;
+
       if (hasFullData && college.college_code === code) {
         setLoading(false);
         return;
@@ -128,22 +128,22 @@ export function useCollegeDetails() {
           .eq('college_code', code);
 
         if (fetchError) throw fetchError;
-        
+
         if (rows && rows.length > 0) {
           // 1. Identify primary branch (prioritize URL/State)
           const searchBranch = (urlBranchName || college.branch_name || college.branch || rows[0].branch_name || '').toLowerCase().replace(/engineering/g, '').replace(/engg/g, '').trim();
-          
+
           // Case-insensitive match find
           const primaryRow = rows.find(r => {
             const rowBranch = (r.branch_name || '').toLowerCase().replace(/engineering/g, '').replace(/engg/g, '').trim();
             return rowBranch.includes(searchBranch) || searchBranch.includes(rowBranch);
           }) || rows[0];
-          
+
           const targetBranch = primaryRow.branch_name;
 
           // 2. Aggregate available branches and their specific seat matrices
           const branchMap = new Map<string, any>();
-          
+
           rows.forEach(row => {
             const bName = row.branch_name || 'N/A';
             const bKey = bName.toLowerCase().trim();
@@ -155,17 +155,17 @@ export function useCollegeDetails() {
                 categories: []
               });
             }
-            
+
             const b = branchMap.get(bKey);
             const rowSeats = typeof row.seats === 'number' ? row.seats : (parseInt(row.seats) || 0);
             const rowCategory = (row.category || '').toUpperCase().trim();
-            
+
             // Prioritize the minimum non-zero total_intake if available in any row for this branch
             // This avoids inflated numbers from supernumerary seats (like EWS/TFWS)
             const rowIntake = row.total_intake || row.Total_Intake || 0;
             if (rowIntake > 0) {
               if (b.total_intake === 0 || rowIntake < b.total_intake) {
-                 b.total_intake = rowIntake;
+                b.total_intake = rowIntake;
               }
             } else if (b.total_intake === 0 || !row.total_intake) {
               // Only sum seats if total_intake is missing
@@ -174,7 +174,7 @@ export function useCollegeDetails() {
                 b.total_intake += rowSeats;
               }
             }
-            
+
             // Add category to this branch's seat matrix
             if (row.category && rowSeats > 0) {
               b.categories.push({
@@ -187,16 +187,16 @@ export function useCollegeDetails() {
 
           // Sort and compute percentages
           const branches = Array.from(branchMap.values()).map(b => {
-             const intake = b.total_intake || 1;
-             return {
-                ...b,
-                categories: b.categories.map((c: any) => ({
-                   ...c,
-                   percentage: (c.seats / intake) * 100
-                }))
-             };
+            const intake = b.total_intake || 1;
+            return {
+              ...b,
+              categories: b.categories.map((c: any) => ({
+                ...c,
+                percentage: (c.seats / intake) * 100
+              }))
+            };
           }).sort((a, b) => b.total_intake - a.total_intake);
-          
+
           const currentBranchData = branches.find(b => b.branch_name === targetBranch) || branches[0];
           const totalIntake = currentBranchData?.total_intake || 0;
 
@@ -206,23 +206,23 @@ export function useCollegeDetails() {
             seats: totalIntake,
             branches,
             seat_matrix: currentBranchData?.categories?.map((c: any) => ({
-                ...c,
-                percentage: (c.seats / (totalIntake || 1)) * 100
+              ...c,
+              percentage: (c.seats / (totalIntake || 1)) * 100
             })) || []
           });
 
           setCollege(fullCollege);
           localStorage.setItem('selectedCollege', JSON.stringify(fullCollege));
-          
+
           // Update URL silently if possible to reflect the state
           if (!urlCollegeCode) {
-             const newUrl = new URL(window.location.href);
-             newUrl.searchParams.set('code', code);
-             newUrl.searchParams.set('branch', targetBranch);
-             window.history.replaceState({}, '', newUrl.toString());
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('code', code);
+            newUrl.searchParams.set('branch', targetBranch);
+            window.history.replaceState({}, '', newUrl.toString());
           }
         } else {
-            setError("College data not found in our 2025-26 database.");
+          setError("College data not found in our 2025-26 database.");
         }
       } catch (err: any) {
         console.error("[useCollegeDetails] Fetch error:", err);
@@ -242,7 +242,7 @@ export function useCollegeDetails() {
   }, [profile?.id, college?.college_code, fetchCollegeInsights]);
 
   const { isFavorite, toggleFavorite } = useFavorites();
-  const saved = useMemo(() => 
+  const saved = useMemo(() =>
     college.college_code && college.branch_name ? isFavorite(college.college_code, college.branch_name) : false,
     [college.college_code, college.branch_name, isFavorite]
   );
@@ -320,7 +320,7 @@ export function useCollegeDetails() {
   const automationData = useMemo(() => {
     const collegeCode = college.college_code;
     const branchName = college.branch_name;
-    
+
     let pageNumber = 1;
     if (collegeCode && (seatMatrixMap as any)[collegeCode]) {
       const collegeBranches = (seatMatrixMap as any)[collegeCode];
@@ -336,7 +336,7 @@ export function useCollegeDetails() {
         if (match) pageNumber = collegeBranches[match];
       }
     }
-    
+
     return {
       pageNumber,
       pdfUrl: "/assets/2025-26.pdf"
@@ -371,14 +371,14 @@ export function useCollegeDetails() {
   const handleGetLocation = () => {
     setIsGettingLocation(true);
     navigator.geolocation.getCurrentPosition(
-        () => {
-            setDistance(15.5); // Mocked for now
-            setIsGettingLocation(false);
-        },
-        () => {
-            setLocationError("Failed to get location");
-            setIsGettingLocation(false);
-        }
+      () => {
+        setDistance(15.5); // Mocked for now
+        setIsGettingLocation(false);
+      },
+      () => {
+        setLocationError("Failed to get location");
+        setIsGettingLocation(false);
+      }
     );
   };
 

@@ -33,25 +33,14 @@ type DomeGalleryProps = {
   grayscale?: boolean;
 };
 
-// Import all campus images dynamically
-const CAMPUS_IMAGES_GLOB = import.meta.glob('../assets/*/campus.png', { eager: true, query: '?url', import: 'default' });
-const ALL_CAMPUS_IMAGES: ImageItem[] = Object.keys(CAMPUS_IMAGES_GLOB).map((path) => {
-  const parts = path.split('/');
-  const name = parts[parts.length - 2] || 'Campus';
-  const formattedName = name.replace(/-/g, ' ').toUpperCase();
-  return {
-    src: CAMPUS_IMAGES_GLOB[path] as string,
-    alt: formattedName
-  };
-});
-
-const DEFAULT_IMAGES: ImageItem[] = ALL_CAMPUS_IMAGES;
+// Removed eager glob to prevent Vite performance issues
+const DEFAULT_IMAGES: ImageItem[] = [];
 
 const DEFAULTS = {
   maxVerticalRotationDeg: 5,
   dragSensitivity: 20,
   enlargeTransitionMs: 300,
-  segments: 60 // Increased to show all colleges (approx 300 slots)
+  segments: 36 // Reduced from 60 for better performance (approx 250 slots)
 };
 
 // High-fidelity fallback mapping for common colleges
@@ -729,6 +718,8 @@ export default function DomeGallery({
       transform: translateZ(calc(var(--radius) * -1));
       will-change: transform;
       position: absolute;
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
     }
     
     .sphere-item {

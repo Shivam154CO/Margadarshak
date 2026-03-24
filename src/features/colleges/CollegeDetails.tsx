@@ -31,7 +31,7 @@ import { useCollegeAIChat } from '@/features/colleges/hooks/useCollegeAIChat';
 
 // Utils
 import { exportDetailedCollegeReport } from '@/utils/exportUtils';
-import { formatPercentage } from '@/features/colleges/utils';
+import { formatPercentage } from '@/features/colleges/utils/utils';
 
 export default function CollegeDetails() {
   const navigate = useNavigate();
@@ -298,10 +298,10 @@ export default function CollegeDetails() {
                 <StatCard label="Other Seats" value={seatData.otherSeats} icon={Building} gradient="from-purple-500 to-pink-600" />
                 <StatCard label="Percentage" value={`${((seatData.currentSeats / seatData.totalIntake) * 100).toFixed(1)}%`} icon={Trophy} gradient="from-amber-500 to-orange-600" />
                 <div className="lg:col-span-4 mt-8">
-                  <SeatMatrixSection 
-                    seatMatrix={college.seat_matrix || []} 
-                    userCategory={college.category || "GOPEN"} 
-                    branchName={college.branch_name || ""} 
+                  <SeatMatrixSection
+                    seatMatrix={college.seat_matrix || []}
+                    userCategory={college.category || "GOPEN"}
+                    branchName={college.branch_name || ""}
                     totalIntake={college.total_intake}
                   />
                 </div>
@@ -352,8 +352,8 @@ export default function CollegeDetails() {
                   <div className="flex flex-col md:flex-row justify-between items-start mb-12 gap-8">
                     <div className="flex-1">
                       <h3 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-3">
-                         <Sparkles className="w-6 h-6 text-indigo-600" />
-                         AI Strategic Personal Analysis
+                        <Sparkles className="w-6 h-6 text-indigo-600" />
+                        AI Strategic Personal Analysis
                       </h3>
                       <p className="text-slate-500 font-medium">Generating results for Rank {profile?.cet_rank || profile?.diploma_rank} | Category: {college.category}</p>
                     </div>
@@ -361,7 +361,7 @@ export default function CollegeDetails() {
                       onClick={() => exportDetailedCollegeReport(college, collegeInsights, profile)}
                       className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-600/20 hover:scale-105 transition-transform flex items-center gap-3"
                     >
-                       <FileText className="w-5 h-5" /> Download Full Detailed Report
+                      <FileText className="w-5 h-5" /> Download Full Detailed Report
                     </button>
                   </div>
 
@@ -376,78 +376,78 @@ export default function CollegeDetails() {
                       {/* Strategic Outcome Grid */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="p-8 bg-indigo-50 border-2 border-indigo-100 rounded-3xl relative overflow-hidden group">
-                           <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp className="w-20 h-20" /></div>
-                           <h4 className="text-indigo-700 font-black uppercase text-xs tracking-widest mb-4">Admission Verdict</h4>
-                           <p className="text-3xl font-black text-slate-900 mb-2">
-                             {collegeInsights.split('\n').find(l => l.includes('Verdict:'))?.replace('**Verdict:**', '').split('(')[0] || "Target Option"}
-                           </p>
-                           <p className="text-sm font-bold text-indigo-600/80">Success Probability: {collegeInsights.split('\n').find(l => l.includes('Verdict:'))?.match(/\d+/)?.[0] || "85"}%</p>
+                          <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp className="w-20 h-20" /></div>
+                          <h4 className="text-indigo-700 font-black uppercase text-xs tracking-widest mb-4">Admission Verdict</h4>
+                          <p className="text-3xl font-black text-slate-900 mb-2">
+                            {collegeInsights.split('\n').find(l => l.includes('Verdict:'))?.replace('**Verdict:**', '').split('(')[0] || "Target Option"}
+                          </p>
+                          <p className="text-sm font-bold text-indigo-600/80">Success Probability: {collegeInsights.split('\n').find(l => l.includes('Verdict:'))?.match(/\d+/)?.[0] || "85"}%</p>
                         </div>
 
                         <div className="p-8 bg-emerald-50 border-2 border-emerald-100 rounded-3xl relative overflow-hidden group">
-                           <div className="absolute top-0 right-0 p-4 opacity-10"><Award className="w-20 h-20" /></div>
-                           <h4 className="text-emerald-700 font-black uppercase text-xs tracking-widest mb-4">Placement Standing</h4>
-                           <p className="text-3xl font-black text-slate-900 mb-2">₹{placementData.averagePackage} LPA</p>
-                           <p className="text-sm font-bold text-emerald-600/80">Premium Industry Connection</p>
+                          <div className="absolute top-0 right-0 p-4 opacity-10"><Award className="w-20 h-20" /></div>
+                          <h4 className="text-emerald-700 font-black uppercase text-xs tracking-widest mb-4">Placement Standing</h4>
+                          <p className="text-3xl font-black text-slate-900 mb-2">₹{placementData.averagePackage} LPA</p>
+                          <p className="text-sm font-bold text-emerald-600/80">Premium Industry Connection</p>
                         </div>
 
                         <div className="p-8 bg-blue-50 border-2 border-blue-100 rounded-3xl relative overflow-hidden group">
-                           <div className="absolute top-0 right-0 p-4 opacity-10"><Layers className="w-20 h-20" /></div>
-                           <h4 className="text-blue-700 font-black uppercase text-xs tracking-widest mb-4">Academic ROI</h4>
-                           <p className="text-3xl font-black text-slate-900 mb-2">EXCELLENT</p>
-                           <p className="text-sm font-bold text-blue-600/80">Based on Fees vs. Placements</p>
+                          <div className="absolute top-0 right-0 p-4 opacity-10"><Layers className="w-20 h-20" /></div>
+                          <h4 className="text-blue-700 font-black uppercase text-xs tracking-widest mb-4">Academic ROI</h4>
+                          <p className="text-3xl font-black text-slate-900 mb-2">EXCELLENT</p>
+                          <p className="text-sm font-bold text-blue-600/80">Based on Fees vs. Placements</p>
                         </div>
                       </div>
 
                       {/* Detailed AI Sections */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                         <div className="space-y-6">
-                            <h5 className="font-black text-slate-900 text-lg flex items-center gap-3">
-                               <Bot className="w-5 h-5 text-indigo-600" />
-                               Intelligence Briefing
-                            </h5>
-                            {(collegeInsights || "").split('\n').filter(l => !l.includes('Verdict:') && l.trim() !== '').map((line, i) => (
-                               <div key={i} className="flex gap-4 p-6 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors">
-                                  <div className="w-2 h-2 rounded-full bg-indigo-600 mt-2 flex-shrink-0" />
-                                  <p className="text-slate-700 leading-relaxed font-medium">
-                                     {line.replace(/### /g, '').replace(/\*\*/g, '')}
-                                  </p>
-                               </div>
+                        <div className="space-y-6">
+                          <h5 className="font-black text-slate-900 text-lg flex items-center gap-3">
+                            <Bot className="w-5 h-5 text-indigo-600" />
+                            Intelligence Briefing
+                          </h5>
+                          {(collegeInsights || "").split('\n').filter(l => !l.includes('Verdict:') && l.trim() !== '').map((line, i) => (
+                            <div key={i} className="flex gap-4 p-6 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors">
+                              <div className="w-2 h-2 rounded-full bg-indigo-600 mt-2 flex-shrink-0" />
+                              <p className="text-slate-700 leading-relaxed font-medium">
+                                {line.replace(/### /g, '').replace(/\*\*/g, '')}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="space-y-8">
+                          <h5 className="font-black text-slate-900 text-lg flex items-center gap-3">
+                            <ClipboardList className="w-5 h-5 text-indigo-600" />
+                            Data Breakdown
+                          </h5>
+                          <div className="bg-white border-2 border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+                            {[
+                              { label: "Annual Tuition Fee", value: college.display_fees || "₹1,25,000", icon: CreditCard },
+                              { label: "Prev. Cutoff Rank", value: college.cutoff_rank || "8,452", icon: BarChart3 },
+                              { label: "Max Intake Seats", value: seatData.totalIntake || 60, icon: Users },
+                              { label: "Shift Type", value: college.shift || "Full Time", icon: Clock },
+                              { label: "Course Duration", value: college.duration_years || 4, icon: Calendar },
+                            ].map((item, i) => (
+                              <div key={i} className="flex justify-between items-center p-5 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
+                                <span className="flex items-center gap-3 text-slate-500 font-bold text-sm">
+                                  <item.icon className="w-4 h-4" /> {item.label}
+                                </span>
+                                <span className="font-black text-slate-900">{item.value}</span>
+                              </div>
                             ))}
-                         </div>
+                          </div>
 
-                         <div className="space-y-8">
-                            <h5 className="font-black text-slate-900 text-lg flex items-center gap-3">
-                               <ClipboardList className="w-5 h-5 text-indigo-600" />
-                               Data Breakdown
-                            </h5>
-                            <div className="bg-white border-2 border-slate-100 rounded-3xl overflow-hidden shadow-sm">
-                               {[
-                                 { label: "Annual Tuition Fee", value: college.display_fees || "₹1,25,000", icon: CreditCard },
-                                 { label: "Prev. Cutoff Rank", value: college.cutoff_rank || "8,452", icon: BarChart3 },
-                                 { label: "Max Intake Seats", value: seatData.totalIntake || 60, icon: Users },
-                                 { label: "Shift Type", value: college.shift || "Full Time", icon: Clock },
-                                 { label: "Course Duration", value: college.duration_years || 4, icon: Calendar },
-                               ].map((item, i) => (
-                                 <div key={i} className="flex justify-between items-center p-5 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
-                                    <span className="flex items-center gap-3 text-slate-500 font-bold text-sm">
-                                       <item.icon className="w-4 h-4" /> {item.label}
-                                    </span>
-                                    <span className="font-black text-slate-900">{item.value}</span>
-                                 </div>
-                               ))}
-                            </div>
-
-                            <div className="p-8 bg-gradient-to-br from-slate-900 to-indigo-950 rounded-3xl text-white">
-                               <h6 className="font-black mb-4 flex items-center gap-2">
-                                  <AlertCircle className="w-5 h-5 text-amber-400" />
-                                  AI Counselor Note
-                               </h6>
-                               <p className="text-sm opacity-80 leading-relaxed italic">
-                                  "Our algorithms indicate that {college.college_name.split(' ')[0]} has a high preference for students with your category background. We recommend selecting several related branches in this same college to maximize your probability."
-                               </p>
-                            </div>
-                         </div>
+                          <div className="p-8 bg-gradient-to-br from-slate-900 to-indigo-950 rounded-3xl text-white">
+                            <h6 className="font-black mb-4 flex items-center gap-2">
+                              <AlertCircle className="w-5 h-5 text-amber-400" />
+                              AI Counselor Note
+                            </h6>
+                            <p className="text-sm opacity-80 leading-relaxed italic">
+                              "Our algorithms indicate that {college.college_name.split(' ')[0]} has a high preference for students with your category background. We recommend selecting several related branches in this same college to maximize your probability."
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}

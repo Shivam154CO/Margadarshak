@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 // Services & Hooks
 import { supabase } from "@/lib/supabase";
 import { useColleges } from "@/context/CollegesContext";
-import { useFavorites } from "@/hooks/useFavorites";
+import { useFavorites } from "../../hooks/useFavorites";
 import { useDashboardFilters } from "@/features/dashboard/hooks/useDashboardFilters";
 import { fetchUserProfile } from "@/services/supabase/users";
 import { predictAdmission } from "@/services/ml-api/predictions";
@@ -146,10 +146,10 @@ export default function Dashboard() {
   const predictionsLoading = predictionsQuery.isLoading;
 
   useEffect(() => {
-    if (predictionsData && predictionsData.length > 0 && colleges.length === 0) {
+    if (predictionsData && predictionsData.length > 0) {
       setColleges(predictionsData);
     }
-  }, [predictionsData, colleges.length, setColleges]);
+  }, [predictionsData, setColleges]);
 
   // ── Filters & Formatting ───────────────────────────────────────────────────
   const {

@@ -43,44 +43,28 @@ export default function Landing() {
   }, [allColleges, setColleges]);
 
   const domeImages = useMemo(() => {
-    // Vite Glob for all campus.png images in the local assets
-    const campusImages = import.meta.glob('../assets/*/campus.png', { eager: true, query: '?url', import: 'default' });
-    
-    // Create a lookup map [college_code]: url
-    const campusMap: Record<string, string> = {};
-    Object.keys(campusImages).forEach(path => {
-      const parts = path.split('/');
-      const code = parts[parts.length - 2];
-      campusMap[code] = campusImages[path] as string;
-    });
-
-    // Normalize the map keys - ensure no trailing spaces or weird slashes
-    const normalizedCampusMap: Record<string, string> = {};
-    Object.entries(campusMap).forEach(([k, v]) => {
-      normalizedCampusMap[k.trim()] = v;
-    });
-
     const colleges = allColleges || [];
     
-    // If we have no backend colleges yet, just show all local images with fallback names
+    // Instead of eager globbing 300+ images (which crashes Vite/memory),
+    // we use the established convention: /src/assets/{code}/campus.png
+    // In build, Vite handles these dynamic URLs if we use new URL(...)
+    
+    // If we have no backend colleges yet, just show a few placeholders or empty
     if (colleges.length === 0) {
-      return Object.entries(normalizedCampusMap).map(([code, src]) => ({
-        src,
-        alt: `Institute ${code} | ${code}`
-      }));
+      return [];
     }
 
-    // Map all colleges to their images
+    // Map all colleges to their resolved image paths
     return colleges.map(college => {
       const code = String(college.college_code).trim();
       const name = college.college_name || `Institute ${code}`;
-      const src = normalizedCampusMap[code] || normalizedCampusMap[Object.keys(normalizedCampusMap)[0]] || '';
+      const src = new URL(`../assets/${code}/campus.png`, import.meta.url).href;
       
       return {
         src,
         alt: `${name} | ${code}`
       };
-    });
+    }).filter(item => item.src);
   }, [allColleges]);
 
   const scrollToSection = (id: string) => {
@@ -102,44 +86,37 @@ export default function Landing() {
 
   // Scroll-aware navbar: detect when over dark sections
   useEffect(() => {
-    // Optimized approach: track which sections are "active" relative to the navbar
-    const handleThemeChange = () => {
-      const nav = navRef.current;
-      if (!nav) return;
-
-      const navRect = nav.getBoundingClientRect();
-      const navCenter = navRect.top + navRect.height / 2;
-
-      const darkSections = document.querySelectorAll('[data-theme="dark"]');
-      let overDark = false;
-      for (const section of Array.from(darkSections)) {
-        const rect = section.getBoundingClientRect();
-        if (navCenter >= rect.top && navCenter <= rect.bottom) {
-          overDark = true;
-          break;
-        }
-      }
-      setIsNavDark(overDark);
+    // Detect scroll to handle navbar compactness
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
     };
 
-    let ticking = false;
-    const scrollListener = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 20);
-          handleThemeChange();
-          ticking = false;
-        });
-        ticking = true;
+    // Detect dark sections to toggle navbar theme
+    const darkObserver = new IntersectionObserver((entries) => {
+      // Find the entry that's currently intersecting the navbar area
+      // Since navbar is at the top, we care about what's in the viewport top
+      const topIntersecting = entries.find(entry => entry.isIntersecting);
+      if (topIntersecting) {
+        setIsNavDark(topIntersecting.target.getAttribute('data-theme') === 'dark');
+      } else if (window.scrollY === 0) {
+        // Fallback for top of the page
+        const firstSection = document.querySelector('section');
+        setIsNavDark(firstSection?.getAttribute('data-theme') === 'dark');
       }
-    };
+    }, {
+      rootMargin: '-80px 0px -90% 0px', // Navbar height approx 80px
+      threshold: 0
+    });
 
-    window.addEventListener('scroll', scrollListener, { passive: true });
+    const sections = document.querySelectorAll('section[data-theme]');
+    sections.forEach(s => darkObserver.observe(s));
 
-    scrollListener();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
 
     return () => {
-      window.removeEventListener('scroll', scrollListener);
+      window.removeEventListener('scroll', handleScroll);
+      darkObserver.disconnect();
     };
   }, []);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -340,7 +317,7 @@ export default function Landing() {
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
-                className="w-full h-auto animate-float scale-100 md:scale-110 object-contain will-change-transform"
+                className="w-full h-auto animate-float scale-100 md:scale-110 object-contain will-change-transform transform-gpu"
               />
             </div>
           </motion.div>

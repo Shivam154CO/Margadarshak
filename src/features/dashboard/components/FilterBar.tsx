@@ -136,7 +136,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none appearance-none text-sm cursor-pointer"
               >
                 <option value="">All Branches</option>
-                {branches.map(b => <option key={b} value={b}>{b}</option>)}
+                {branches.map((b, idx) => <option key={`branch-${b}-${idx}`} value={b}>{b}</option>)}
               </select>
             </div>
             
@@ -148,7 +148,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none appearance-none text-sm cursor-pointer"
               >
                 <option value="">All Cities</option>
-                {cities.map(c => <option key={c} value={c}>{c}</option>)}
+                {cities.map((c, idx) => <option key={`city-${c}-${idx}`} value={c}>{c}</option>)}
               </select>
             </div>
 
@@ -160,7 +160,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none appearance-none text-sm cursor-pointer"
               >
                 <option value="">All Districts</option>
-                {districts.map(d => <option key={d} value={d}>{d}</option>)}
+                {districts.map((d, idx) => <option key={`district-${d}-${idx}`} value={d}>{d}</option>)}
               </select>
             </div>
           </div>
