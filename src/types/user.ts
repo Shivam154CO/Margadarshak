@@ -37,6 +37,7 @@ export interface UserProfile {
   phone?: string;
   tenth_percentage?: number;
   twelfth_percentage?: number;
+  digilocker_verified?: boolean;
   
   created_at: string;
   updated_at: string;

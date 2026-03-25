@@ -60,9 +60,7 @@ export default function ProfileView() {
   const [activeSection, setActiveSection] = useState("overview");
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authStep, setAuthStep] = useState(0);
-  const [isDigilockerVerified, setIsDigilockerVerified] = useState(
-    localStorage.getItem("digilockerVerified") === "true"
-  );
+  const [isDigilockerVerified, setIsDigilockerVerified] = useState(false);
 
   useEffect(() => {
     const fetchAllUserData = async () => {
@@ -98,6 +96,7 @@ export default function ProfileView() {
         }
 
         setUserProfile(profileRes.data);
+        setIsDigilockerVerified(!!profileRes.data.digilocker_verified);
         if (analyticsRes.data) setAnalytics(analyticsRes.data);
         if (achievementsRes.data) setAchievements(achievementsRes.data);
         if (skillsRes.data) setSkills(skillsRes.data);
@@ -134,7 +133,7 @@ export default function ProfileView() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-['Nunito_Sans'] font-bold text-slate-400">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-['Inter_var',_sans-serif] font-bold text-slate-400">
         Loading...
     </div>
   );
@@ -142,10 +141,10 @@ export default function ProfileView() {
   if (!userProfile) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 font-['Nunito_Sans'] font-bold text-slate-800">
+    <div className="min-h-screen flex flex-col bg-slate-50 font-['Inter_var'] text-[rgb(51,51,51)]">
       <Navbar activeTab="profile" userProfile={userProfile} />
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 mt-16 pb-24">
+      <main className="flex-1 max-w-none mx-auto w-full px-6 sm:px-12 lg:px-20 py-8 mt-16 pb-24">
         {/* Header - Reduced Font Sizes and No Colors */}
         <div className="mb-10 border-b border-slate-200 pb-6">
             <div className="mb-2">
@@ -153,7 +152,19 @@ export default function ProfileView() {
             </div>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">{userProfile.name}</h1>
+                    <h1 
+                        className="tracking-tight"
+                        style={{ 
+                            fontFamily: '"Playfair Display", serif',
+                            fontSize: '28px',
+                            fontWeight: 700,
+                            lineHeight: '36px',
+                            color: 'rgb(51, 51, 51)',
+                            fontStyle: 'normal'
+                        }}
+                    >
+                        {userProfile.name}
+                    </h1>
                     <p className="text-slate-400 font-bold mt-1 text-xs uppercase tracking-wide">Candidate Identity Data</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -176,15 +187,15 @@ export default function ProfileView() {
                 { l: "Streak", v: analytics?.login_streak || 1 }
             ].map(s => (
                 <div key={s.l} className="bg-white p-4 border border-slate-200 rounded-xl">
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{s.l}</div>
-                    <div className="text-lg font-black text-slate-800 lowercase">{s.v}</div>
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{s.l}</div>
+                    <div className="text-lg font-bold text-slate-800 lowercase">{s.v}</div>
                 </div>
             ))}
         </div>
 
         {/* Verification Status - Subtle */}
         <div className="mb-8 p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-between">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Digital Authentication</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Digital Authentication</span>
             <div className="flex items-center gap-3">
                 {isDigilockerVerified ? (
                     <span className="text-[10px] font-bold text-slate-600 border border-slate-200 px-3 py-1 rounded-md uppercase">Verified Account</span>
@@ -222,7 +233,12 @@ export default function ProfileView() {
             {activeSection === 'overview' && (
                 <motion.div key="ov" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                     <div className="bg-white border border-slate-200 p-6 rounded-2xl">
-                        <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-6 border-b border-slate-50 pb-3">Dossier Data</h4>
+                        <h4 
+                            className="text-sm font-bold secondary-heading uppercase tracking-widest mb-6 border-b border-slate-50 pb-3"
+                            style={{ fontFamily: '"Playfair Display", serif' }}
+                        >
+                            Dossier Data
+                        </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                             {[
                                 { l: "Name", v: userProfile.name },
@@ -233,7 +249,7 @@ export default function ProfileView() {
                                 { l: "Joined", v: new Date(userProfile.created_at).toLocaleDateString("en-IN") }
                             ].map(x => (
                                 <div key={x.l}>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-1">{x.l}</span>
+                                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] block mb-1">{x.l}</span>
                                     <p className="text-sm font-bold text-slate-700">{x.v}</p>
                                 </div>
                             ))}
@@ -242,15 +258,15 @@ export default function ProfileView() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-white border border-slate-200 p-6 rounded-2xl">
-                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">University Pref</span>
+                             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">University Pref</span>
                              <p className="text-sm font-bold text-slate-700">{userProfile.university_preference || "Standard Institutions"}</p>
                         </div>
                         <div className="bg-white border border-slate-200 p-6 rounded-2xl">
-                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">State Target</span>
+                             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">State Target</span>
                              <p className="text-sm font-bold text-slate-700">{userProfile.state || "Maharashtra"}</p>
                         </div>
                         <div className="col-span-1 md:col-span-2 bg-white border border-slate-200 p-6 rounded-2xl">
-                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Address</span>
+                             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Address</span>
                              <p className="text-sm font-bold text-slate-700">{userProfile.address || "No address provided"}</p>
                         </div>
                     </div>
@@ -261,16 +277,16 @@ export default function ProfileView() {
                 <motion.div key="acad" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                     <div className="bg-slate-900 rounded-2xl p-8 text-white">
                         <div className="mb-6">
-                            <h2 className="text-xl font-black tracking-tight uppercase">{userProfile.exam_type} Profile</h2>
+                            <h2 className="text-xl font-bold tracking-tight uppercase" style={{ fontFamily: '"Playfair Display", serif' }}>{userProfile.exam_type} Profile</h2>
                         </div>
                         <div className="grid grid-cols-2 gap-8">
                             <div className="border-l-2 border-slate-700 pl-4">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">State Rank</span>
-                                <p className="text-3xl font-black tabular-nums">#{userProfile.exam_type === 'CET' ? (userProfile.cet_rank || '--') : (userProfile.diploma_rank || '--')}</p>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">State Rank</span>
+                                <p className="text-3xl font-bold tabular-nums">#{userProfile.exam_type === 'CET' ? (userProfile.cet_rank || '--') : (userProfile.diploma_rank || '--')}</p>
                             </div>
                             <div className="border-l-2 border-slate-700 pl-4">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Score</span>
-                                <p className="text-3xl font-black tabular-nums">{userProfile.exam_type === 'CET' ? (userProfile.cet_score || '--') : (userProfile.diploma_score || '--')}</p>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Score</span>
+                                <p className="text-3xl font-bold tabular-nums">{userProfile.exam_type === 'CET' ? (userProfile.cet_score || '--') : (userProfile.diploma_score || '--')}</p>
                             </div>
                         </div>
                     </div>
@@ -303,20 +319,25 @@ export default function ProfileView() {
                     {predictions.length > 0 ? predictions.map((p, i) => (
                         <div key={i} className="bg-white border border-slate-200 p-4 rounded-xl flex items-center justify-between gap-4">
                             <div className="min-w-0">
-                                <h4 className="font-extrabold text-slate-800 text-sm tracking-tight uppercase mb-1">{p.college_name}</h4>
+                                <h4 
+                                    className="font-bold text-[rgb(51,51,51)] text-sm tracking-tight uppercase mb-1"
+                                    style={{ fontFamily: '"Playfair Display", serif' }}
+                                >
+                                    {p.college_name}
+                                </h4>
                                 <div className="flex items-center gap-2 overflow-hidden">
-                                    <span className="text-[8px] font-black bg-slate-50 border border-slate-100 px-2 py-0.5 rounded text-slate-400 uppercase whitespace-nowrap">{p.branch}</span>
-                                    <span className="text-[8px] font-black text-slate-300 uppercase truncate shrink-0">• {p.city}</span>
+                                    <span className="text-[8px] font-bold bg-slate-50 border border-slate-100 px-2 py-0.5 rounded text-slate-500 uppercase whitespace-nowrap">{p.branch}</span>
+                                    <span className="text-[8px] font-bold text-slate-400 uppercase truncate shrink-0">• {p.city}</span>
                                 </div>
                             </div>
                             <div className="text-right shrink-0 border-l border-slate-100 pl-4">
-                                <div className="text-xl font-black text-slate-900">{Math.round(p.admission_chance)}%</div>
-                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{p.fit}</span>
+                                <div className="text-xl font-bold text-slate-900">{Math.round(p.admission_chance)}%</div>
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{p.fit}</span>
                             </div>
                         </div>
                     )) : (
                         <div className="py-20 text-center bg-white border border-slate-200 rounded-2xl">
-                            <p className="text-slate-300 text-xs font-black uppercase">{predictions.length === 0 ? "Analyzing Datasets..." : "No Predictions available"}</p>
+                            <p className="text-slate-400 text-xs font-bold uppercase">{predictions.length === 0 ? "Analyzing Datasets..." : "No Predictions available"}</p>
                         </div>
                     )}
                 </motion.div>
@@ -326,7 +347,7 @@ export default function ProfileView() {
                 <motion.div key="skill" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {skills.length > 0 ? skills.map((s, i) => (
                         <div key={i} className="bg-white p-4 border border-slate-200 rounded-xl">
-                            <div className="flex justify-between mb-3 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                            <div className="flex justify-between mb-3 text-[9px] font-bold uppercase tracking-widest text-slate-500">
                                 <span>{s.skill_name}</span>
                                 <span>{s.proficiency_level}%</span>
                             </div>
@@ -334,7 +355,7 @@ export default function ProfileView() {
                                 <div className="h-full bg-slate-400 rounded-full" style={{ width: `${s.proficiency_level}%` }} />
                             </div>
                         </div>
-                    )) : <p className="col-span-2 text-center py-10 text-slate-300 text-xs uppercase font-black">Recordset empty</p>}
+                    )) : <p className="col-span-2 text-center py-10 text-slate-400 text-xs uppercase font-bold">Recordset empty</p>}
                 </motion.div>
             )}
 
@@ -342,7 +363,12 @@ export default function ProfileView() {
                 <motion.div key="ach" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {achievements.map((a, i) => (
                         <div key={i} className={`p-6 bg-white border border-slate-200 rounded-2xl ${a.is_unlocked ? "" : "opacity-30 grayscale"}`}>
-                            <h4 className="font-extrabold text-sm text-slate-900 uppercase mb-1">{a.achievement_name}</h4>
+                            <h4 
+                                className="font-bold text-sm text-[rgb(51,51,51)] uppercase mb-1"
+                                style={{ fontFamily: '"Playfair Display", serif' }}
+                            >
+                                {a.achievement_name}
+                            </h4>
                             <p className="text-[10px] text-slate-400 font-bold leading-normal">{a.achievement_description}</p>
                         </div>
                     ))}
@@ -364,9 +390,14 @@ export default function ProfileView() {
                 <motion.div key="sch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {scholarships.map((s, i) => (
                         <div key={i} className="bg-white border border-slate-200 p-6 rounded-2xl">
-                            <h4 className="text-xs font-black text-slate-900 uppercase mb-3">{s.scholarship_name}</h4>
+                            <h4 
+                                className="text-xs font-bold text-[rgb(51,51,51)] uppercase mb-3"
+                                style={{ fontFamily: '"Playfair Display", serif' }}
+                            >
+                                {s.scholarship_name}
+                            </h4>
                             <p className="text-2xl font-black text-slate-800">₹{s.estimated_amount.toLocaleString()}</p>
-                            <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between text-[9px] font-black text-slate-400 uppercase">
+                            <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between text-[9px] font-black text-slate-600 uppercase">
                                 <span>Eligibility Match</span>
                                 <span>{s.eligibility_score}%</span>
                             </div>
@@ -383,32 +414,46 @@ export default function ProfileView() {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-white rounded-2xl w-full max-w-sm shadow-xl border border-slate-200 overflow-hidden">
                         <div className="p-8 border-b border-slate-50 text-center">
                             <button onClick={() => setIsAuthenticating(false)} className="absolute top-6 right-6 text-slate-300 hover:text-slate-900 transition-all font-black">X</button>
-                            <h3 className="text-sm font-black uppercase text-slate-900 tracking-widest">Document Vault</h3>
+                            <h3 className="text-sm font-bold uppercase text-slate-900 tracking-widest">Document Vault</h3>
                         </div>
                         <div className="p-8">
                             {authStep === 0 && (
                                 <div className="text-center">
-                                    <p className="text-slate-400 text-[10px] mb-8 font-bold leading-relaxed px-4 text-center">Verification required via DigiLocker servers.</p>
-                                    <button onClick={() => {
+                                    <p className="text-slate-500 text-[10px] mb-8 font-bold leading-relaxed px-4 text-center">Verification required via DigiLocker servers.</p>
+                                    <button onClick={async () => {
                                         setAuthStep(1);
-                                        setTimeout(() => setAuthStep(2), 2000);
-                                        setTimeout(() => {
-                                            setIsDigilockerVerified(true);
-                                            localStorage.setItem("digilockerVerified", "true");
-                                            setAuthStep(3);
-                                            setTimeout(() => setIsAuthenticating(false), 2000);
-                                        }, 4000);
-                                    }} className="w-full bg-slate-900 text-white py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Authorize</button>
+                                        // Dynamic Verification Simulation
+                                        await new Promise(r => setTimeout(r, 1500));
+                                        setAuthStep(2);
+                                        
+                                        const { data: { session } } = await supabase.auth.getSession();
+                                        if (session) {
+                                            const { error } = await supabase
+                                                .from('users')
+                                                .update({ digilocker_verified: true })
+                                                .eq('id', session.user.id);
+                                            
+                                            if (!error) {
+                                                setIsDigilockerVerified(true);
+                                                setAuthStep(3);
+                                                setTimeout(() => setIsAuthenticating(false), 2000);
+                                            } else {
+                                                console.error("Verification failed:", error);
+                                                setAuthStep(0);
+                                                setIsAuthenticating(false);
+                                            }
+                                        }
+                                    }} className="w-full bg-slate-900 text-white py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all">Authorize Access</button>
                                 </div>
                             )}
                             {authStep > 0 && authStep < 3 && (
                                 <div className="text-center py-6">
                                     <div className="w-8 h-8 border-2 border-slate-100 border-t-slate-900 rounded-full animate-spin mx-auto mb-4"></div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase animate-pulse">Establishing Link</p>
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase animate-pulse">Establishing Link</p>
                                 </div>
                             )}
                             {authStep === 3 && (
-                                <div className="text-center py-6 text-slate-900 text-xs font-black uppercase">Success</div>
+                                <div className="text-center py-6 text-slate-900 text-xs font-bold uppercase">Success</div>
                             )}
                         </div>
                     </motion.div>

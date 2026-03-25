@@ -17,7 +17,7 @@ const Footer: React.FC = React.memo(() => {
   };
 
   return (
-    <footer className="bg-slate-900 text-slate-300 pt-16 pb-8 mt-auto w-full border-t border-slate-800" role="contentinfo" aria-label="Site footer">
+    <footer className="bg-[#080808] text-slate-300 pt-16 pb-8 mt-auto w-full border-t border-white/5" role="contentinfo" aria-label="Site footer">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-12">
           {/* Brand & Mission */}
@@ -78,7 +78,7 @@ const Footer: React.FC = React.memo(() => {
           </div>
 
           {/* Contact Section */}
-          <div className="lg:col-span-4 space-y-6 bg-slate-800/40 p-6 rounded-2xl border border-slate-800">
+          <div className="lg:col-span-4 space-y-6 bg-white/5 p-6 rounded-2xl border border-white/10">
             <div className="space-y-2">
               <h4 className="text-white font-bold">Stay Updated</h4>
               <p className="text-xs text-slate-400 leading-relaxed">Join our mailing list to receive the latest admission news and campus updates.</p>
@@ -88,7 +88,7 @@ const Footer: React.FC = React.memo(() => {
               <input
                 type="email"
                 placeholder="Email address"
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg py-2.5 pl-4 pr-10 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
+                className="w-full bg-black border border-white/10 rounded-lg py-2.5 pl-4 pr-10 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
               />
               <button className="absolute right-2 top-2 bottom-2 w-7 bg-indigo-600 text-white rounded-md flex items-center justify-center hover:bg-indigo-500 transition-colors">
                 <ArrowRight className="w-4 h-4" />

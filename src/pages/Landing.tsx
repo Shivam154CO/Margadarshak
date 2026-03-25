@@ -93,18 +93,14 @@ export default function Landing() {
 
     // Detect dark sections to toggle navbar theme
     const darkObserver = new IntersectionObserver((entries) => {
-      // Find the entry that's currently intersecting the navbar area
-      // Since navbar is at the top, we care about what's in the viewport top
       const topIntersecting = entries.find(entry => entry.isIntersecting);
       if (topIntersecting) {
         setIsNavDark(topIntersecting.target.getAttribute('data-theme') === 'dark');
-      } else if (window.scrollY === 0) {
-        // Fallback for top of the page
-        const firstSection = document.querySelector('section');
-        setIsNavDark(firstSection?.getAttribute('data-theme') === 'dark');
+      } else {
+        setIsNavDark(false);
       }
     }, {
-      rootMargin: '-80px 0px -90% 0px', // Navbar height approx 80px
+      rootMargin: '-0px 0px -95% 0px',
       threshold: 0
     });
 
@@ -251,7 +247,7 @@ export default function Landing() {
       </nav>
 
       {/* Hero Section - Premium Split-3D Impact (High Overlap) */}
-      <section id="predictor" className="relative min-h-screen flex flex-col items-center pt-24 pb-12 md:pt-28 md:pb-20 overflow-hidden bg-[#fafafa]">
+      <section id="predictor" data-theme="light" className="relative min-h-screen flex flex-col items-center pt-24 pb-12 md:pt-28 md:pb-20 overflow-hidden bg-[#fafafa]">
         <div className="w-full flex-1 flex flex-col lg:flex-row items-center justify-between">
           {/* Dynamic Background Elements */}
           <div className="absolute top-20 left-1 w-96 h-96 bg-slate-200/40 blur-3xl rounded-full pointer-events-none" />
@@ -325,7 +321,7 @@ export default function Landing() {
       </section>
 
       {/* Stats Ribbon */}
-      <section id="colleges" className="relative z-50 -mt-10 mb-12 md:mb-20 px-4 md:px-6">
+      <section id="colleges" data-theme="light" className="relative z-50 -mt-10 mb-12 md:mb-20 px-4 md:px-6">
         <div className="max-w-7xl mx-auto bg-gray-900 rounded-[40px] md:rounded-[60px] p-6 md:p-10 shadow-3xl border border-white/5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
             <div className="space-y-1">
@@ -490,7 +486,7 @@ export default function Landing() {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="py-20 md:py-40 px-4 bg-white">
+      <section id="features" data-theme="light" className="py-20 md:py-40 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <ScrollAnimationWrapper animation="slideUp">
             <div className="text-center mb-16 md:mb-24">
@@ -534,7 +530,7 @@ export default function Landing() {
       </section>
 
       {/* Journey Section */}
-      <section id="how-it-works" className="relative bg-slate-950 py-32 md:py-48 overflow-hidden contain-content" data-theme="dark">
+      <section id="how-it-works" className="relative bg-black py-32 md:py-48 overflow-hidden contain-content" data-theme="dark">
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <ScrollAnimationWrapper animation="slideUp" className="text-center mb-32">
             <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none">
@@ -620,7 +616,7 @@ export default function Landing() {
       </section>
 
       {/* Dome Gallery Section */}
-      <section className="pt-24 pb-0 w-full relative bg-slate-950 flex flex-col">
+      <section data-theme="dark" className="pt-24 pb-0 w-full relative bg-[#080808] flex flex-col">
         <div className="text-center relative z-20 mb-12 px-4">
           <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
             Explore Your <span className="text-rose-600 italic">Future Campus</span>
@@ -638,7 +634,7 @@ export default function Landing() {
               grayscale={false}
               openedImageWidth="min(98vw, 1200px)"
               openedImageHeight="min(90vh, 850px)"
-              overlayBlurColor="#020617"
+              overlayBlurColor="#080808"
             />
           </Suspense>
         </div>
