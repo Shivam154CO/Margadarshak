@@ -55,54 +55,12 @@ const ScrollToTopOnRoute = () => {
   return null;
 };
 
-// Loading spinner - Premium Boot Experience
+// Minimal Loading Spinner
 const PageLoader = () => (
-  <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-slate-900 overflow-hidden" role="status" aria-label="Initialising SmartCF">
-    <div className="absolute inset-0 bg-[#020617] opacity-50">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-500/10 blur-[120px] rounded-full animate-pulse" />
-    </div>
-    
-    <div className="relative z-10 flex flex-col items-center gap-12">
-      <div className="relative">
-        <div className="absolute -inset-8 bg-indigo-500/20 blur-2xl rounded-full animate-pulse" />
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="relative"
-        >
-          <div className="h-20 w-20 flex items-center justify-center rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl">
-            <div className="h-10 w-10 border-t-2 border-r-2 border-rose-500 rounded-full animate-spin" />
-          </div>
-        </motion.div>
-      </div>
-
-      <div className="flex flex-col items-center gap-3">
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="text-white font-black text-2xl tracking-[0.2em] uppercase"
-        >
-          Smart<span className="text-rose-500">CF</span>
-        </motion.div>
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8, duration: 1 }}
-          className="flex items-center gap-2"
-        >
-          <div className="h-1 w-24 bg-white/10 rounded-full overflow-hidden">
-            <motion.div 
-              initial={{ x: "-100%" }}
-              animate={{ x: "100%" }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-              className="h-full w-1/2 bg-rose-500 shadow-[0_0_10px_rgba(225,29,72,0.8)]"
-            />
-          </div>
-          <span className="text-[10px] font-black tracking-[0.3em] text-white/30 uppercase">Initialising System</span>
-        </motion.div>
-      </div>
+  <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950" role="status">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+      <span className="text-[10px] font-bold tracking-[0.2em] text-white/40 uppercase">Loading...</span>
     </div>
   </div>
 );

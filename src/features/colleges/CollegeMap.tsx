@@ -10,7 +10,7 @@ import {
 import axios from "axios";
 import { supabase } from "@/lib/supabase";
 import { GoogleMap, useLoadScript, Marker, Circle } from "@react-google-maps/api";
-import { MapContainer, TileLayer, Marker as LeafletMarker, Popup as LeafletPopup, Circle as LeafletCircle } from "react-leaflet";
+import { MapContainer, TileLayer, Marker as LeafletMarker, Popup as LeafletPopup, Circle as LeafletCircle, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Navbar from "@/components/Navbar";
@@ -44,31 +44,47 @@ const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
   e.currentTarget.onerror = null;
 };
 
-// Custom marker icons for Leaflet
-const createLeafletIcon = (chance: number, pulse = false) => {
+// Custom marker icons for Leaflet - Replicating Startup Arena Style
+// Memoized icon creator to prevent expensive re-renders
+const iconCache = new Map<string, L.DivIcon>();
+
+const getLeafletIcon = (college: MapMarker, isSelected: boolean) => {
+  const cacheKey = `${college.id}-${isSelected}-${college.admission_chance}`;
+  if (iconCache.has(cacheKey)) return iconCache.get(cacheKey)!;
+
+  const chance = college.admission_chance;
   let color = "#EF4444";
   if (chance >= 80) color = "#10B981";
   else if (chance >= 60) color = "#3B82F6";
   else if (chance >= 40) color = "#8B5CF6";
 
-  return L.divIcon({
-    className: `custom-marker ${pulse ? 'marker-pulse' : ''}`,
-    html: `<div style="background-color: ${color}; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3); position: relative;">
-      ${pulse ? `<div style="position: absolute; inset: -4px; border-radius: 50%; background: ${color}; opacity: 0.3; animation: pulse 2s infinite;"></div>` : ''}
-      <span style="color: white; font-size: 10px; font-weight: bold; position: relative; z-index: 10;">${chance.toFixed(1)}%</span>
-    </div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32]
+  const logoUrl = getCollegeImage(college.id);
+
+  const icon = L.divIcon({
+    className: `custom-marker-container ${isSelected ? 'active-marker' : ''}`,
+    html: `
+      <div class="map-marker-box ${isSelected ? 'glow' : ''}" style="border-color: ${isSelected ? color : 'rgba(255,255,255,0.1)'};">
+        <img src="${logoUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(college.name)}&background=18181b&color=fff&bold=true&rounded=0&format=svg'" class="marker-logo" />
+        <div class="chance-badge" style="background: ${color};"></div>
+      </div>
+    `,
+    iconSize: [42, 42],
+    iconAnchor: [21, 21],
   });
+
+  iconCache.set(cacheKey, icon);
+  return icon;
 };
 
-const createNeighborIcon = (type: string) => {
+const neighborIconCache = new Map<string, L.DivIcon>();
+const getNeighborIcon = (type: string) => {
+  if (neighborIconCache.has(type)) return neighborIconCache.get(type)!;
+
   let color = "#6366f1";
   if (type === "pg") color = "#f59e0b";
   if (type === "transit") color = "#10b981";
 
-  return L.divIcon({
+  const icon = L.divIcon({
     className: "neighbor-marker",
     html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 6px; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
       <div style="color: white; transform: scale(0.7);">
@@ -80,6 +96,9 @@ const createNeighborIcon = (type: string) => {
     iconSize: [24, 24],
     iconAnchor: [12, 12]
   });
+
+  neighborIconCache.set(type, icon);
+  return icon;
 };
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
@@ -353,20 +372,100 @@ export default function InteractiveCollegeMap() {
   return (
     <>
       <style>{`
-        @keyframes pulse {
-          0% { transform: scale(1); opacity: 0.3; }
-          50% { transform: scale(1.5); opacity: 0; }
-          100% { transform: scale(1); opacity: 0.3; }
+        @keyframes marker-glow {
+          0% { box-shadow: 0 0 5px currentColor; }
+          50% { box-shadow: 0 0 20px currentColor; }
+          100% { box-shadow: 0 0 5px currentColor; }
         }
-        .marker-pulse {
-          z-index: 1000 !important;
+        
+        .custom-marker-container {
+          background: transparent !important;
+          border: none !important;
         }
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
+
+        .map-marker-box {
+          width: 42px;
+          height: 42px;
+          background: #18181b;
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
         }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+
+        .map-marker-box:hover {
+          transform: translateY(-4px) scale(1.1);
+          border-color: rgba(255, 255, 255, 0.4);
+          z-index: 1000;
+        }
+
+        .active-marker .map-marker-box {
+          transform: translateY(-4px) scale(1.15);
+          z-index: 1000;
+        }
+
+        .glow {
+          animation: marker-glow 2s infinite ease-in-out;
+          color: inherit;
+        }
+
+        .marker-logo {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0.9;
+        }
+
+        .chance-badge {
+          position: absolute;
+          top: -2px;
+          right: -2px;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          border: 2px solid #18181b;
+          z-index: 2;
+        }
+
+        /* Sleek custom scrollbar for better visibility/scrolling */
+        .premium-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .premium-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+        }
+        .premium-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+        }
+        .premium-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+
+        .leaflet-container {
+          background: #09090b !important;
+        }
+
+        .city-label-container {
+          background: transparent !important;
+          border: none !important;
+        }
+        
+        .city-label {
+          color: rgba(255, 255, 255, 0.7);
+          font-weight: 800;
+          font-size: 15px;
+          text-transform: uppercase;
+          letter-spacing: 0.15em;
+          text-shadow: 0 0 10px rgba(0,0,0,0.8);
+          pointer-events: none;
+          white-space: nowrap;
+          text-align: center;
         }
       `}</style>
       <CollegeMapContent />
@@ -558,6 +657,18 @@ function CollegeMapContent() {
     loadColleges();
   }, [profile]);
 
+  // Major cities to label on the map for orientation
+  const majorCities = useMemo(() => [
+    { name: "Mumbai", lat: 19.0760, lng: 72.8777 },
+    { name: "Pune", lat: 18.5204, lng: 73.8567 },
+    { name: "Nagpur", lat: 21.1458, lng: 79.0882 },
+    { name: "Nashik", lat: 20.0059, lng: 73.7920 },
+    { name: "Aurangabad", lat: 19.8762, lng: 75.3213 },
+    { name: "Kolhapur", lat: 16.7050, lng: 74.2439 },
+    { name: "Amravati", lat: 20.9333, lng: 77.7500 },
+    { name: "Nanded", lat: 18.9544, lng: 77.3301 },
+  ], []);
+
   const filteredMarkers = useMemo(() => {
     return mapMarkers.filter(m => {
       const college = colleges.find(c => c.college_code === m.id);
@@ -598,13 +709,12 @@ function CollegeMapContent() {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen bg-slate-50 overflow-hidden">
+      <div className="flex flex-col h-screen bg-slate-950 overflow-hidden">
         <Navbar activeTab="map" userProfile={profile} />
         <main className="flex-1 relative w-full overflow-hidden flex flex-col items-center justify-center">
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <h3 className="text-xl font-semibold text-slate-900">Loading Map</h3>
-            <p className="text-slate-500 text-sm">Fetching college data...</p>
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
+            <span className="text-[10px] font-bold tracking-[0.2em] text-white/40 uppercase">Loading Map...</span>
           </div>
         </main>
       </div>
@@ -612,7 +722,20 @@ function CollegeMapContent() {
   }
 
 
-  // Render OpenStreetMap (Leaflet)
+// Smooth Map Recenter Controller
+function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; zoom: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView([center.lat, center.lng], zoom, {
+      animate: true,
+      duration: 1.5,
+      easeLinearity: 0.25
+    });
+  }, [center, zoom, map]);
+  return null;
+}
+
+// Render OpenStreetMap (Leaflet)
   const renderOpenStreetMap = () => {
 
     return (
@@ -622,10 +745,30 @@ function CollegeMapContent() {
         style={{ width: '100%', height: '100%' }}
         className="z-0"
         zoomControl={false}
+        preferCanvas={true}
       >
+        <MapRecenter center={mapCenter} zoom={zoomLevel} />
+        
+        {/* City Labels Overlay */}
+        {majorCities.map(city => (
+          <LeafletMarker
+            key={`city-${city.name}`}
+            position={[city.lat, city.lng]}
+            icon={L.divIcon({
+              className: 'city-label-container',
+              html: `<div class="city-label">${city.name}</div>`,
+              iconSize: [100, 20],
+              iconAnchor: [50, 10]
+            })}
+            interactive={false}
+          />
+        ))}
+
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          updateWhenIdle={true}
+          updateWhenZooming={false}
         />
 
         {/* Heatmap Layer */}
@@ -677,7 +820,7 @@ function CollegeMapContent() {
           <LeafletMarker
             key={neighbor.id}
             position={[neighbor.lat, neighbor.lng]}
-            icon={createNeighborIcon(neighbor.type)}
+            icon={getNeighborIcon(neighbor.type)}
           >
             <LeafletPopup>
               <div className="p-1">
@@ -691,16 +834,19 @@ function CollegeMapContent() {
 
         {/* Colleges */}
         {activeLayers.has('colleges') && filteredMarkers.map(marker => {
-          const isHighPlacement = marker.placement_rate >= 90;
+          const isSelected = selectedCollege?.college_code === marker.id;
           return (
             <LeafletMarker
               key={marker.id}
               position={[marker.lat, marker.lng]}
-              icon={createLeafletIcon((marker as any).simulated_chance, isHighPlacement && activeLayers.has('pulse'))}
+              icon={getLeafletIcon(marker, isSelected)}
               eventHandlers={{
                 click: () => {
                   const college = colleges.find(c => c.college_code === marker.id);
-                  if (college) setSelectedCollege(college);
+                  if (college) {
+                    setSelectedCollege(college);
+                    setMapCenter({ lat: marker.lat, lng: marker.lng });
+                  }
                 },
               }}
             />
@@ -866,7 +1012,7 @@ function CollegeMapContent() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="absolute top-0 right-0 h-full w-full sm:w-[460px] bg-white shadow-2xl z-[100] flex flex-col border-l border-gray-200"
+              className="absolute top-0 right-0 h-full w-full sm:w-[460px] bg-slate-950/80 backdrop-blur-xl z-[100] flex flex-col border-l border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]"
             >
               {/* Header Image */}
               <div className="relative h-52 w-full flex-shrink-0">
@@ -876,8 +1022,8 @@ function CollegeMapContent() {
                   <X className="w-4 h-4" />
                 </button>
                 {selectedCollege.is_predicted && (
-                  <div className="absolute top-4 left-4 bg-amber-400 text-amber-900 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3" /> AI Recommended
+                  <div className="absolute top-4 left-4 bg-amber-400 text-amber-900 text-xs font-bold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-sm">
+                    <Sparkles className="w-3.5 h-3.5" /> Predicted Suggestion
                   </div>
                 )}
                 <div className="absolute bottom-4 left-5 right-5">
@@ -890,15 +1036,15 @@ function CollegeMapContent() {
               </div>
 
               {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto bg-white">
+              <div className="flex-1 overflow-y-auto bg-transparent premium-scrollbar touch-pan-y">
                 {/* Quick Action Buttons */}
-                <div className="px-5 py-4 flex gap-2 border-b border-gray-100">
+                <div className="px-5 py-4 flex gap-2 border-b border-white/5">
                   <button
                     onClick={() => {
                       if (!selectedCollege) return;
                       window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${selectedCollege.latitude},${selectedCollege.longitude}&heading=0&pitch=0`, '_blank');
                     }}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-medium hover:bg-indigo-100 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/5 text-white/70 rounded-xl text-[11px] font-bold hover:bg-white/10 transition-colors border border-white/5"
                   >
                     <Eye className="w-3.5 h-3.5" /> Street View
                   </button>
@@ -907,7 +1053,7 @@ function CollegeMapContent() {
                       if (!selectedCollege) return;
                       window.open(`https://www.openstreetmap.org/?mlat=${selectedCollege.latitude}&mlon=${selectedCollege.longitude}#map=18/${selectedCollege.latitude}/${selectedCollege.longitude}`, '_blank');
                     }}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/5 text-white/70 rounded-xl text-[11px] font-bold hover:bg-white/10 transition-colors border border-white/5"
                   >
                     <Compass className="w-3.5 h-3.5" /> View Map
                   </button>
@@ -916,7 +1062,7 @@ function CollegeMapContent() {
                       if (!selectedCollege) return;
                       window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedCollege.latitude},${selectedCollege.longitude}&travelmode=transit`, '_blank');
                     }}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-sm font-medium hover:bg-emerald-100 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-500/10 text-emerald-400 rounded-xl text-[11px] font-bold hover:bg-emerald-500/20 transition-colors border border-emerald-500/10"
                   >
                     <Train className="w-3.5 h-3.5" /> Directions
                   </button>
@@ -925,37 +1071,37 @@ function CollegeMapContent() {
                 <div className="p-5 space-y-5">
                   {/* Stats Grid */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-emerald-50 rounded-2xl p-4">
-                      <p className="text-xs text-emerald-700 font-medium mb-1">Admission Chance</p>
-                      <p className="text-2xl font-bold text-emerald-800">
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                      <p className="text-xs text-white/50 font-medium mb-1">Admission Chance</p>
+                      <p className="text-2xl font-bold text-emerald-400">
                         {selectedCollege.branches.length > 0 ? Math.min(100, Math.max(...selectedCollege.branches.map(b => b.admission_chance)) + whatIfScore).toFixed(1) : "—"}%
                       </p>
                       {whatIfScore > 0 && (
-                        <p className="text-[11px] text-emerald-600 mt-0.5">+{whatIfScore}% simulated</p>
+                        <p className="text-[11px] text-emerald-500/70 mt-0.5">+{whatIfScore}% simulation</p>
                       )}
                     </div>
-                    <div className="bg-blue-50 rounded-2xl p-4">
-                      <p className="text-xs text-blue-700 font-medium mb-1">Avg. Package</p>
-                      <p className="text-2xl font-bold text-blue-800">
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                      <p className="text-xs text-white/50 font-medium mb-1">Avg. Package</p>
+                      <p className="text-2xl font-bold text-blue-400">
                         {selectedCollege.average_package_lpa > 0 ? `₹${selectedCollege.average_package_lpa}L` : '—'}
                       </p>
                     </div>
-                    <div className="bg-violet-50 rounded-2xl p-4">
-                      <p className="text-xs text-violet-700 font-medium mb-1">Branches</p>
-                      <p className="text-2xl font-bold text-violet-800">{selectedCollege.branches.length}</p>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                      <p className="text-xs text-white/50 font-medium mb-1">Branches</p>
+                      <p className="text-2xl font-bold text-violet-400">{selectedCollege.branches.length}</p>
                     </div>
-                    <div className="bg-orange-50 rounded-2xl p-4">
-                      <p className="text-xs text-orange-700 font-medium mb-1">Placement</p>
-                      <p className="text-2xl font-bold text-orange-800">
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                      <p className="text-xs text-white/50 font-medium mb-1">Placement</p>
+                      <p className="text-2xl font-bold text-orange-400">
                         {selectedCollege.placement_rate > 0 ? `${selectedCollege.placement_rate}%` : '—'}
                       </p>
                     </div>
                   </div>
 
                   {/* Transit & Neighborhood */}
-                  <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
-                    <p className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                      <Train className="w-4 h-4 text-indigo-500" /> Nearby Locations
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
+                    <p className="text-sm font-semibold text-white/90 flex items-center gap-2">
+                      <Train className="w-4 h-4 text-indigo-400" /> Nearby Locations
                     </p>
                     <div className="grid grid-cols-2 gap-3">
                       {(() => {
@@ -964,22 +1110,22 @@ function CollegeMapContent() {
                         return (
                           <>
                             <div>
-                              <p className="text-xs text-gray-500">Nearest Transit</p>
-                              <p className="text-sm font-semibold text-gray-800">{transit ? `${transit.distance} km` : '—'}</p>
+                              <p className="text-xs text-white/50">Nearest Transit</p>
+                              <p className="text-sm font-semibold text-white/80">{transit ? `${transit.distance} km` : '—'}</p>
                             </div>
                             <div>
-                              <p className="text-xs text-gray-500">Nearest PG</p>
-                              <p className="text-sm font-semibold text-gray-800">{pg ? `${pg.distance} km` : '—'}</p>
+                              <p className="text-xs text-white/50">Nearest PG</p>
+                              <p className="text-sm font-semibold text-white/80">{pg ? `${pg.distance} km` : '—'}</p>
                             </div>
                           </>
                         );
                       })()}
                     </div>
-                    <div className="flex items-center justify-between pt-1 border-t border-gray-200">
-                      <p className="text-xs text-gray-500 flex items-center gap-1"><Shield className="w-3 h-3 text-emerald-500" /> {neighborhoodMarkers.length} nearby places</p>
+                    <div className="flex items-center justify-between pt-1 border-t border-white/10">
+                      <p className="text-xs text-white/40 flex items-center gap-1"><Shield className="w-3 h-3 text-emerald-500" /> {neighborhoodMarkers.length} nearby places</p>
                       <div className="flex gap-0.5">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <div key={i} className={`w-2.5 h-1 rounded-full ${i < Math.min(5, neighborhoodMarkers.length) ? 'bg-emerald-500' : 'bg-gray-200'}`} />
+                          <div key={i} className={`w-2.5 h-1 rounded-full ${i < Math.min(5, neighborhoodMarkers.length) ? 'bg-emerald-500' : 'bg-white/10'}`} />
                         ))}
                       </div>
                     </div>
@@ -988,44 +1134,40 @@ function CollegeMapContent() {
                   {/* Branches List */}
                   {selectedCollege.branches.length > 0 && (
                     <div>
-                      <p className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                        <Layers className="w-4 h-4 text-indigo-500" /> Branches & Admission Chances
+                      <p className="text-sm font-bold text-white/90 mb-4 flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-indigo-400" /> Admission Odds
                       </p>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {selectedCollege.branches.sort((a, b) => b.admission_chance - a.admission_chance).map((b, i) => {
                           const finalChance = Math.min(100, Math.max(0, b.admission_chance + whatIfScore));
                           return (
-                            <div key={i} className="bg-white border border-gray-100 rounded-xl p-4 hover:border-indigo-200 transition-colors">
+                            <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-white/20 transition-all hover:bg-white/[0.08]">
                               <div className="flex justify-between items-start mb-2">
                                 <div className="flex-1 pr-3">
-                                  <p className="text-sm font-semibold text-gray-900 leading-snug">{b.branch}</p>
+                                  <p className="text-sm font-bold text-white/90 leading-snug">{b.branch}</p>
                                   {b.branch_code && (
-                                    <span className="text-xs text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded mt-1 inline-block">{b.branch_code}</span>
+                                    <span className="text-[10px] text-white/40 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded mt-1.5 inline-block font-mono uppercase tracking-tighter">{b.branch_code}</span>
                                   )}
                                 </div>
                                 <div className="text-right flex-shrink-0">
-                                  <p className="text-xs text-gray-400 mb-0.5">Chance</p>
-                                  <p className={`text-lg font-bold ${finalChance >= 80 ? 'text-emerald-600' : finalChance >= 50 ? 'text-blue-600' : 'text-red-500'}`}>
+                                  <p className="text-[10px] text-white/30 font-bold mb-0.5">Chance</p>
+                                  <p className={`text-lg font-bold ${finalChance >= 80 ? 'text-emerald-400' : finalChance >= 50 ? 'text-blue-400' : 'text-rose-500'}`}>
                                     {finalChance.toFixed(1)}%
                                   </p>
                                 </div>
                               </div>
 
-                              <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden my-4 relative">
+                              <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden my-4 relative">
                                 <motion.div
                                   initial={{ width: 0 }}
                                   animate={{ width: `${finalChance}%` }}
-                                  className={`absolute left-0 top-0 h-full ${finalChance >= 80 ? 'bg-emerald-500' : finalChance >= 50 ? 'bg-blue-500' : 'bg-red-500'}`}
+                                  className={`absolute left-0 top-0 h-full ${finalChance >= 80 ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]' : finalChance >= 50 ? 'bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.5)]' : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]'}`}
                                 />
-                                {/* What if original vs new indicator */}
-                                {whatIfScore > 0 && b.admission_chance > 0 && (
-                                  <div className="absolute h-full w-0.5 bg-gray-900 opacity-50 z-10" style={{ left: `${b.admission_chance}%` }} title="Original Chance" />
-                                )}
                               </div>
 
-                              <div className="grid grid-cols-2 gap-4 text-sm font-bold text-gray-700 pt-2">
-                                <span className="flex items-center gap-2"><IndianRupee className="w-4 h-4 text-gray-400" /> ₹{b.fees?.toLocaleString() || 'N/A'}</span>
-                                <span className="flex items-center gap-2 justify-end"><GraduationCap className="w-4 h-4 text-gray-400" /> {b.seats} Seats</span>
+                              <div className="grid grid-cols-2 gap-4 text-xs font-black text-white/60 pt-2 uppercase tracking-widest">
+                                <span className="flex items-center gap-2"><IndianRupee className="w-3.5 h-3.5 text-white/20" /> ₹{b.fees?.toLocaleString() || 'N/A'}</span>
+                                <span className="flex items-center gap-2 justify-end"><GraduationCap className="w-3.5 h-3.5 text-white/20" /> {b.seats} Seats</span>
                               </div>
                             </div>
                           )
@@ -1038,11 +1180,11 @@ function CollegeMapContent() {
               </div>
 
               {/* Action Footer */}
-              <div className="px-5 py-4 bg-white border-t border-gray-100 flex-shrink-0 space-y-2">
+              <div className="px-5 py-4 bg-slate-900/50 backdrop-blur-md border-t border-white/5 flex-shrink-0 space-y-2">
                 <button
-                  className={`w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all border ${visitList.some(c => c.college_code === selectedCollege.college_code)
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-50'
+                  className={`w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border ${visitList.some(c => c.college_code === selectedCollege.college_code)
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10'
                     }`}
                   onClick={() => {
                     if (visitList.some(c => c.college_code === selectedCollege.college_code)) {
@@ -1056,7 +1198,7 @@ function CollegeMapContent() {
                   {visitList.some(c => c.college_code === selectedCollege.college_code) ? 'Added to Visit List' : 'Add to Visit List'}
                 </button>
                 <button
-                  className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors"
+                  className="w-full py-3 bg-white text-black rounded-xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
                   onClick={() => {
                     if (selectedCollege?.college_code) {
                       navigate(ROUTES.COLLEGE_BY_CODE.replace(':code', selectedCollege.college_code));
@@ -1071,8 +1213,8 @@ function CollegeMapContent() {
         </AnimatePresence>
 
         {/* Floating Filters Dock */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[40]">
-          <div className="bg-white/95 backdrop-blur-xl border border-gray-200 shadow-[0_10px_50px_-15px_rgba(0,0,0,0.2)] rounded-[1.5rem] p-2 flex flex-col items-center max-w-[90vw]">
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[40]">
+          <div className="bg-slate-950/80 backdrop-blur-2xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-[2rem] p-1.5 flex flex-col items-center max-w-[90vw]">
 
             <AnimatePresence>
               {filtersOpen && (
@@ -1082,46 +1224,54 @@ function CollegeMapContent() {
                   exit={{ height: 0, opacity: 0 }}
                   className="w-[320px] sm:w-[400px] overflow-hidden rounded-t-[1.5rem]"
                 >
-                  <div className="p-6 space-y-8 pb-8 border-b border-gray-100 w-full bg-white">
+                  <div className="p-6 space-y-8 pb-8 border-b border-white/5 w-full bg-transparent">
                     {/* What-If Simulation */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-semibold text-gray-800">What-If Simulation</span>
-                        <span className="text-sm font-medium text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">+{whatIfScore}%</span>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-end">
+                        <div className="space-y-1">
+                          <p className="text-sm font-bold text-white">Score Simulator</p>
+                          <p className="text-[10px] text-white/50 uppercase tracking-widest">Adjust potential rank boost</p>
+                        </div>
+                        <span className="text-xs font-bold text-indigo-400 underline decoration-indigo-500/30 underline-offset-4">+{whatIfScore}%</span>
                       </div>
                       <input
                         type="range" min="0" max="30" value={whatIfScore}
                         onChange={(e) => setWhatIfScore(parseInt(e.target.value))}
-                        className="w-full accent-indigo-600 h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer"
+                        className="w-full accent-indigo-500 h-1 bg-white/5 rounded-lg appearance-none cursor-pointer"
                       />
-                      <p className="text-xs text-gray-400">Simulate your chances if you scored higher in MHT-CET / JEE</p>
                     </div>
 
                     {/* Minimum Placement */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-semibold text-gray-800">Min. Placement Rate</span>
-                        <span className="text-sm font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">{filters.minPlacement}%+</span>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-end">
+                        <div className="space-y-1">
+                          <p className="text-sm font-bold text-white">Min. Placement</p>
+                          <p className="text-[10px] text-white/50 uppercase tracking-widest">Filter by campus placements</p>
+                        </div>
+                        <span className="text-xs font-bold text-emerald-400 underline decoration-emerald-500/30 underline-offset-4">{filters.minPlacement}%+</span>
                       </div>
                       <input
                         type="range" min="0" max="100" step="5" value={filters.minPlacement}
                         onChange={(e) => setFilters(p => ({ ...p, minPlacement: parseInt(e.target.value) }))}
-                        className="w-full accent-emerald-600 h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer"
+                        className="w-full accent-emerald-500 h-1 bg-white/5 rounded-lg appearance-none cursor-pointer"
                       />
                     </div>
 
                     {/* Max Budget */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-semibold text-gray-800">Max Yearly Fees</span>
-                        <span className="text-sm font-medium text-orange-700 bg-orange-50 px-2.5 py-1 rounded-lg">
-                          {filters.maxFees >= 500000 ? "No Limit" : `₹${(filters.maxFees / 1000).toFixed(0)}k`}
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-end">
+                        <div className="space-y-1">
+                          <p className="text-sm font-bold text-white">Max. Fees</p>
+                          <p className="text-[10px] text-white/50 uppercase tracking-widest">Yearly tuition budget</p>
+                        </div>
+                        <span className="text-xs font-bold text-amber-500 underline decoration-amber-500/30 underline-offset-4">
+                          {filters.maxFees >= 500000 ? "Any" : `₹${(filters.maxFees / 1000).toFixed(0)}k`}
                         </span>
                       </div>
                       <input
                         type="range" min="50000" max="500000" step="10000" value={filters.maxFees}
                         onChange={(e) => setFilters(p => ({ ...p, maxFees: parseInt(e.target.value) }))}
-                        className="w-full accent-orange-500 h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer"
+                        className="w-full accent-amber-500 h-1 bg-white/5 rounded-lg appearance-none cursor-pointer"
                       />
                     </div>
                   </div>
@@ -1129,27 +1279,27 @@ function CollegeMapContent() {
               )}
             </AnimatePresence>
 
-            <div className="flex items-center justify-between w-full p-1.5 gap-2 bg-white rounded-xl">
+            <div className="flex items-center justify-between w-full p-1 gap-1 bg-transparent rounded-full">
               <button
                 onClick={() => { setFiltersOpen(!filtersOpen); setLayersOpen(false); }}
-                className={`px-5 py-3 rounded-xl text-sm font-medium transition-all ${filtersOpen ? 'bg-gray-900 text-white' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'}`}
+                className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all ${filtersOpen ? 'bg-white text-black' : 'bg-white/5 border border-white/10 text-white/70 hover:bg-white/10'}`}
               >
                 Filters
               </button>
 
               <button
                 onClick={() => { setLayersOpen(!layersOpen); setFiltersOpen(false); }}
-                className={`px-5 py-3 rounded-xl text-sm font-medium transition-all ${layersOpen ? 'bg-gray-900 text-white' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'}`}
+                className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all ${layersOpen ? 'bg-white text-black' : 'bg-white/5 border border-white/10 text-white/70 hover:bg-white/10'}`}
               >
-                Map Layers
+                Layers
               </button>
 
               {visitList.length > 0 && (
                 <button
                   onClick={() => setShowVisitPlanner(true)}
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-all"
+                  className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-[0_0_15px_rgba(225,29,72,0.4)]"
                 >
-                  <Navigation className="w-4 h-4" /> Plan ({visitList.length})
+                  <Navigation className="w-3 h-3" /> Plan ({visitList.length})
                 </button>
               )}
             </div>
@@ -1163,21 +1313,21 @@ function CollegeMapContent() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 20, opacity: 0 }}
-              className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[40] w-[320px] sm:w-[450px]"
+              className="absolute bottom-28 left-1/2 -translate-x-1/2 z-[40] w-[320px] sm:w-[450px]"
             >
-              <div className="bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl rounded-[1.5rem] p-6 space-y-6">
-                <div className="flex justify-between items-center mb-1">
-                  <h3 className="text-sm font-semibold text-gray-900">Map Layers</h3>
-                  <button onClick={() => setLayersOpen(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"><X className="w-4 h-4" /></button>
+              <div className="bg-slate-950/80 border border-white/10 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-[2rem] p-8 space-y-8">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">Map Configuration</h3>
+                  <button onClick={() => setLayersOpen(false)} className="text-white/20 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-all"><X className="w-5 h-5" /></button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   {[
-                    { id: 'colleges', label: 'Colleges', icon: Building2, color: 'text-blue-600' },
-                    { id: 'essentials', label: 'Nearby Essentials', icon: Home, color: 'text-orange-500' },
-                    { id: 'pulse', label: 'Placement Pulse', icon: Activity, color: 'text-emerald-500' },
-                    { id: 'alumni', label: 'Alumni Pings', icon: Users, color: 'text-indigo-500' },
-                    { id: 'range', label: 'Travel Radius', icon: Target, color: 'text-purple-500' },
+                    { id: 'colleges', label: 'Colleges', icon: Building2 },
+                    { id: 'essentials', label: 'Nearby Essentials', icon: Home },
+                    { id: 'pulse', label: 'Placement Pulse', icon: Activity },
+                    { id: 'alumni', label: 'Alumni Pings', icon: Users },
+                    { id: 'range', label: 'Travel Radius', icon: Target },
                   ].map(layer => (
                     <button
                       key={layer.id}
@@ -1187,18 +1337,18 @@ function CollegeMapContent() {
                         else newLayers.add(layer.id);
                         setActiveLayers(newLayers);
                       }}
-                      className={`flex items-center gap-2 p-3 rounded-xl border text-sm transition-all ${activeLayers.has(layer.id)
-                        ? 'bg-indigo-50 border-indigo-200 text-indigo-800'
-                        : 'bg-gray-50 border-gray-100 text-gray-600 hover:border-gray-200'
+                      className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${activeLayers.has(layer.id)
+                        ? 'bg-white text-black border-white shadow-[0_10px_20px_-5px_rgba(255,255,255,0.2)]'
+                        : 'bg-white/5 border-white/5 text-white/40 hover:border-white/20 hover:text-white/70'
                         }`}
                     >
-                      <span className="text-xs font-medium">{layer.label}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">{layer.label}</span>
                     </button>
                   ))}
                 </div>
 
-                <div className="space-y-3 pt-3 border-t border-gray-100">
-                  <p className="text-xs font-semibold text-gray-500">Map Provider</p>
+                <div className="space-y-4 pt-4 border-t border-white/5">
+                  <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Map Provider</p>
                   <div className="flex gap-2">
                     {[
                       { id: 'osm', label: 'OpenStreetMap' },
@@ -1207,9 +1357,9 @@ function CollegeMapContent() {
                       <button
                         key={provider.id}
                         onClick={() => setMapProvider(provider.id as any)}
-                        className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all border ${mapProvider === provider.id
-                          ? 'bg-gray-900 text-white border-gray-900'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${mapProvider === provider.id
+                          ? 'bg-white text-black border-white'
+                          : 'bg-white/5 text-white/40 border-white/5 hover:border-white/20'
                           }`}
                       >
                         {provider.label}
@@ -1218,8 +1368,8 @@ function CollegeMapContent() {
                   </div>
                 </div>
 
-                <div className="space-y-3 pt-3 border-t border-gray-100">
-                  <p className="text-xs font-semibold text-gray-500">Heatmap Overlay</p>
+                <div className="space-y-4 pt-4 border-t border-white/5">
+                  <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Heatmap Overlay</p>
                   <div className="flex gap-2 flex-wrap">
                     {[
                       { id: 'none', label: 'None' },
@@ -1230,9 +1380,9 @@ function CollegeMapContent() {
                       <button
                         key={type.id}
                         onClick={() => setHeatmapType(type.id as any)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${heatmapType === type.id
-                          ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                        className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${heatmapType === type.id
+                          ? 'bg-indigo-500 text-white border-indigo-500 shadow-[0_10px_20px_-5px_rgba(99,102,241,0.4)]'
+                          : 'bg-white/5 text-white/40 border-white/5 hover:border-white/20'
                           }`}
                       >
                         {type.label}
@@ -1242,15 +1392,15 @@ function CollegeMapContent() {
                 </div>
 
                 {activeLayers.has('range') && (
-                  <div className="space-y-2 pt-3">
-                    <div className="flex justify-between text-xs text-gray-500">
+                  <div className="space-y-4 pt-4 border-t border-white/5">
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/30">
                       <span>Travel Radius</span>
-                      <span className="font-semibold text-indigo-600">{rangeRadius} km</span>
+                      <span className="text-white">{rangeRadius} km</span>
                     </div>
                     <input
                       type="range" min="5" max="50" step="5" value={rangeRadius}
                       onChange={(e) => setRangeRadius(parseInt(e.target.value))}
-                      className="w-full accent-indigo-600 h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer"
+                      className="w-full accent-white h-1 bg-white/5 rounded-lg appearance-none cursor-pointer"
                     />
                   </div>
                 )}
@@ -1262,28 +1412,28 @@ function CollegeMapContent() {
         {/* Visit Planner Modal */}
         <AnimatePresence>
           {showVisitPlanner && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+                className="bg-slate-950/90 border border-white/10 backdrop-blur-xl rounded-[2rem] w-full max-w-lg overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col max-h-[90vh]"
               >
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+                <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between flex-shrink-0">
                   <div>
-                    <h2 className="text-base font-bold text-gray-900">Route Planner</h2>
-                    <p className="text-xs text-gray-400">{visitList.length} college{visitList.length !== 1 ? 's' : ''} in your route</p>
+                    <h2 className="text-xs font-black text-white/30 uppercase tracking-[0.3em]">Route Planner</h2>
+                    <p className="text-lg font-black text-white mt-1">{visitList.length} college{visitList.length !== 1 ? 's' : ''} in your route</p>
                   </div>
-                  <button onClick={() => setShowVisitPlanner(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-400 hover:text-gray-600">
-                    <X className="w-4 h-4" />
+                  <button onClick={() => setShowVisitPlanner(false)} className="p-2.5 hover:bg-white/10 rounded-xl transition-colors text-white/30 hover:text-white">
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
 
                 {/* Route legs */}
-                <div className="flex-1 overflow-y-auto p-5 space-y-1">
+                <div className="flex-1 overflow-y-auto p-6 space-y-2 no-scrollbar">
                   {visitList.length === 0 ? (
-                    <p className="text-center text-sm text-gray-400 py-8">Add colleges from the map to plan your route.</p>
+                    <p className="text-center text-[10px] font-black uppercase tracking-widest text-white/20 py-12">Add colleges from the map to plan your route.</p>
                   ) : (
                     visitList.map((col, idx) => {
                       const next = visitList[idx + 1];
@@ -1296,40 +1446,40 @@ function CollegeMapContent() {
                       return (
                         <div key={col.college_code}>
                           {/* College stop card */}
-                          <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-xl p-3 hover:border-indigo-100 transition-colors">
-                            <div className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-indigo-600 text-white'
-                              : idx === visitList.length - 1 ? 'bg-emerald-600 text-white'
-                                : 'bg-gray-100 text-gray-600'
+                          <div className="flex items-center gap-4 bg-white/5 border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-all hover:bg-white/[0.08]">
+                            <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black border ${idx === 0 ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                              : idx === visitList.length - 1 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                : 'bg-white/5 text-white/40 border-white/10'
                               }`}>
                               {idx === 0 ? 'S' : idx === visitList.length - 1 ? 'E' : idx}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-gray-900 truncate">{col.college_name}</p>
-                              <p className="text-xs text-gray-400">{col.city}</p>
+                              <p className="text-sm font-black text-white/90 truncate">{col.college_name}</p>
+                              <p className="text-[10px] text-white/30 uppercase tracking-widest font-black mt-0.5">{col.city}</p>
                             </div>
                             <button
                               onClick={() => setVisitList(prev => prev.filter(c => c.college_code !== col.college_code))}
-                              className="p-1 text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+                              className="p-1.5 text-white/20 hover:text-rose-400 transition-colors flex-shrink-0"
                             >
-                              <X className="w-3.5 h-3.5" />
+                              <X className="w-4 h-4" />
                             </button>
                           </div>
 
                           {/* Leg connector — distance + time */}
                           {next && (
-                            <div className="flex items-center gap-3 px-4 py-2">
-                              <div className="w-0.5 h-5 bg-gray-200 ml-3 flex-shrink-0" />
+                            <div className="flex items-center gap-4 px-6 py-3">
+                              <div className="w-0.5 h-6 bg-white/5 ml-3.5 flex-shrink-0" />
                               {legDist !== null ? (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-[10px] font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-md">
                                     {legDist.toFixed(1)} km
                                   </span>
-                                  <span className="text-xs text-gray-400">
+                                  <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">
                                     ~{legH > 0 ? `${legH}h ` : ''}{legM} min drive
                                   </span>
                                 </div>
                               ) : (
-                                <span className="text-xs text-gray-300">No coordinates</span>
+                                <span className="text-[10px] font-black text-white/10 uppercase tracking-widest">No coordinates</span>
                               )}
                             </div>
                           )}
@@ -1351,26 +1501,25 @@ function CollegeMapContent() {
                   const h = Math.floor(totalMins / 60);
                   const m = totalMins % 60;
                   return (
-                    <div className="border-t border-gray-100 p-5 bg-gray-50 flex-shrink-0 space-y-4">
+                    <div className="border-t border-white/5 p-8 bg-white/[0.02] flex-shrink-0 space-y-6">
                       <div className="flex items-center justify-around">
                         <div className="text-center">
-                          <p className="text-xs text-gray-500 mb-0.5">Total Distance</p>
-                          <p className="text-xl font-bold text-gray-900">{totalDist.toFixed(1)} <span className="text-sm font-normal text-gray-500">km</span></p>
+                          <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1.5">Total Distance</p>
+                          <p className="text-2xl font-black text-white">{totalDist.toFixed(1)} <span className="text-xs font-normal text-white/20">km</span></p>
                         </div>
-                        <div className="w-px h-10 bg-gray-200" />
+                        <div className="w-px h-10 bg-white/5" />
                         <div className="text-center">
-                          <p className="text-xs text-gray-500 mb-0.5">Drive Time</p>
-                          <p className="text-xl font-bold text-gray-900">{h > 0 ? `${h}h ` : ''}{m} <span className="text-sm font-normal text-gray-500">min</span></p>
+                          <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1.5">Drive Time</p>
+                          <p className="text-2xl font-black text-white">{h > 0 ? `${h}h ` : ''}{m} <span className="text-xs font-normal text-white/20">min</span></p>
                         </div>
-                        <div className="w-px h-10 bg-gray-200" />
+                        <div className="w-px h-10 bg-white/5" />
                         <div className="text-center">
-                          <p className="text-xs text-gray-500 mb-0.5">Stops</p>
-                          <p className="text-xl font-bold text-gray-900">{visitList.length}</p>
+                          <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1.5">Stops</p>
+                          <p className="text-2xl font-black text-white">{visitList.length}</p>
                         </div>
                       </div>
-                      <p className="text-[11px] text-gray-400 text-center">Distances are straight-line (Haversine) · actual road distance will be higher</p>
                       <button
-                        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors"
+                        className="w-full py-4 bg-white text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-gray-200 transition-all shadow-[0_20px_40px_-10px_rgba(255,255,255,0.2)]"
                         onClick={() => {
                           const origin = visitList[0];
                           const destination = visitList[visitList.length - 1];
@@ -1379,7 +1528,7 @@ function CollegeMapContent() {
                           window.open(url, '_blank');
                         }}
                       >
-                        Get turn-by-turn in Google Maps <Share2 className="w-4 h-4" />
+                        Launch Navigation <Navigation className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   );
@@ -1389,31 +1538,31 @@ function CollegeMapContent() {
           )}
         </AnimatePresence>
 
-        {/* Action Controls - Right Side */}
-        <div className="absolute right-6 top-24 z-[40] flex flex-col gap-3">
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setZoomLevel(prev => Math.min(prev + 1, 18))} className="p-3.5 bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200 text-gray-700 hover:text-indigo-600 hover:border-indigo-200 shadow-xl transition-colors">
+        {/* Action Controls - Bottom Left (Replicating Startup Arena) */}
+        <div className="absolute left-6 bottom-10 z-[40] flex flex-col gap-2">
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setZoomLevel(prev => Math.min(prev + 1, 18))} className="p-3 bg-slate-900/90 backdrop-blur-xl rounded-xl border border-white/10 text-white/70 hover:text-white hover:border-white/30 shadow-2xl transition-all">
             <ZoomIn className="w-5 h-5" />
           </motion.button>
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setZoomLevel(prev => Math.max(prev - 1, 4))} className="p-3.5 bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200 text-gray-700 hover:text-indigo-600 hover:border-indigo-200 shadow-xl transition-colors">
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setZoomLevel(prev => Math.max(prev - 1, 4))} className="p-3 bg-slate-900/90 backdrop-blur-xl rounded-xl border border-white/10 text-white/70 hover:text-white hover:border-white/30 shadow-2xl transition-all">
             <ZoomOut className="w-5 h-5" />
           </motion.button>
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { setZoomLevel(8); setMapCenter({ lat: 19.75, lng: 75.75 }); }} className="p-3.5 bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200 text-gray-700 hover:text-indigo-600 hover:border-indigo-200 shadow-xl transition-colors mt-2">
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { setZoomLevel(8); setMapCenter({ lat: 19.75, lng: 75.75 }); }} className="p-3 bg-slate-900/90 backdrop-blur-xl rounded-xl border border-white/10 text-white/70 hover:text-white hover:border-white/30 shadow-2xl transition-all mt-2">
             <RotateCw className="w-5 h-5" />
           </motion.button>
         </div>
 
         {/* Legend - Top Left */}
         <div className="absolute top-24 left-6 z-[40] hidden sm:block">
-          <div className="bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200 p-5 shadow-xl">
-            <h4 className="text-xs font-semibold text-gray-500 mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+          <div className="bg-slate-950/80 backdrop-blur-xl rounded-2xl border border-white/10 p-5 shadow-2xl">
+            <h4 className="text-[10px] font-black text-white/30 mb-4 flex items-center gap-2 uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
               Admission Chance
             </h4>
             <div className="flex flex-col gap-3">
               {[{ label: ">80% chance", color: "#10B981" }, { label: "60–80%", color: "#3B82F6" }, { label: "40–60%", color: "#8B5CF6" }, { label: "<40%", color: "#EF4444" }].map(item => (
-                <div key={item.label} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="text-xs text-gray-600">{item.label}</span>
+                <div key={item.label} className="flex items-center gap-3">
+                  <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
+                  <span className="text-[10px] text-white/60 font-black uppercase tracking-widest">{item.label}</span>
                 </div>
               ))}
             </div>
