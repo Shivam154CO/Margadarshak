@@ -44,11 +44,11 @@ export default function Landing() {
 
   const domeImages = useMemo(() => {
     const colleges = allColleges || [];
-    
+
     // Instead of eager globbing 300+ images (which crashes Vite/memory),
     // we use the established convention: /src/assets/{code}/campus.png
     // In build, Vite handles these dynamic URLs if we use new URL(...)
-    
+
     // If we have no backend colleges yet, just show a few placeholders or empty
     if (colleges.length === 0) {
       return [];
@@ -59,7 +59,7 @@ export default function Landing() {
       const code = String(college.college_code).trim();
       const name = college.college_name || `Institute ${code}`;
       const src = new URL(`../assets/${code}/campus.png`, import.meta.url).href;
-      
+
       return {
         src,
         alt: `${name} | ${code}`
