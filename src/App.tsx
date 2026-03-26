@@ -16,6 +16,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import NetworkStatus from "./components/NetworkStatus";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Loader from "./components/Loader";
 
 // Constants
 import { ROUTES } from "./constants/routes";
@@ -57,10 +58,10 @@ const ScrollToTopOnRoute = () => {
 
 // Minimal Loading Spinner
 const PageLoader = () => (
-  <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950" role="status">
-    <div className="flex flex-col items-center gap-4">
-      <div className="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin" />
-      <span className="text-[10px] font-bold tracking-[0.2em] text-white/40 uppercase">Loading...</span>
+  <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-slate-900/40 backdrop-blur-md" role="status">
+    <div className="flex flex-col items-center gap-12">
+      <Loader />
+      <span className="text-xs font-bold tracking-[0.3em] text-white uppercase drop-shadow-sm">Loading System...</span>
     </div>
   </div>
 );

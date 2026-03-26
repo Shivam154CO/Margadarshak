@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
+import Loader from './Loader';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -32,8 +33,9 @@ export default function ProtectedRoute({ children, redirectTo = '/login' }: Prot
 
   if (session === 'loading') {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 gap-8">
+        <Loader />
+        <span className="text-xs font-bold tracking-[0.2em] text-indigo-600/60 uppercase">Verifying Session...</span>
       </div>
     );
   }

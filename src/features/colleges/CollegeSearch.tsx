@@ -11,6 +11,7 @@ import {
   Mail, Briefcase
 } from "lucide-react";
 import SEO from "@/components/SEO";
+import Loader from "@/components/Loader";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { CollegeCardImage } from "@/features/colleges/components/CollegeCardImage";
@@ -131,11 +132,9 @@ export default function CollegeSearch() {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col">
         <Navbar activeTab="search" userProfile={userProfile} />
-        <div className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600 font-medium text-lg">Loading college intelligence...</p>
-          </div>
+        <div className="flex-grow flex flex-col items-center justify-center gap-12">
+          <Loader />
+          <p className="text-slate-600 font-bold tracking-tight text-lg">Loading college intelligence...</p>
         </div>
         <Footer />
       </div>

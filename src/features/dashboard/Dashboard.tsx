@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import Loader from "@/components/Loader";
 
 // Services & Hooks
 import { supabase } from "@/lib/supabase";
@@ -289,9 +289,9 @@ export default function Dashboard() {
   if (!profile || predictionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-slate-600 font-medium">Crunching probability for your rank...</p>
+        <div className="text-center flex flex-col items-center gap-12">
+          <Loader />
+          <p className="text-slate-600 font-bold tracking-tight">Crunching probability for your rank...</p>
         </div>
       </div>
     );
