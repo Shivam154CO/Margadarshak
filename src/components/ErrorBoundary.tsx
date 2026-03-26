@@ -27,45 +27,47 @@ class ErrorBoundary extends Component<Props, State> {
     public render() {
         if (this.state.hasError) {
             return (
-                <div className="min-h-[400px] w-full flex items-center justify-center p-6 bg-slate-50/50 backdrop-blur-sm">
-                    <div className="max-w-md w-full bg-white rounded-[32px] p-8 shadow-2xl border border-rose-100 text-center relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1.5 bg-rose-500" />
+                <div className="fixed inset-0 z-[10000] w-full flex items-center justify-center p-8 bg-white text-center animate-in fade-in duration-500">
+                    <div className="max-w-xl w-full relative">
+                        <div className="absolute -top-10 left-0 w-full h-1.5 bg-rose-500 rounded-full" />
 
-                        <img src={NetworkErrorImg} alt="Network Error" className="w-40 h-40 mx-auto mb-6 opacity-90" />
+                        <img src={NetworkErrorImg} alt="Network Error" className="w-56 h-56 mx-auto mb-10 opacity-90" />
 
-                        <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">
+                        <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter">
                             System Failure
                         </h2>
 
-                        <p className="text-slate-500 font-medium mb-8 leading-relaxed">
+                        <p className="text-slate-500 font-medium text-lg mb-12 leading-relaxed max-w-lg mx-auto">
                             There is something wrong with our system. Please try again later.
                         </p>
 
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col sm:flex-row gap-4">
                             <button
                                 onClick={() => window.location.reload()}
-                                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-black transition-all active:scale-95"
+                                className="flex-1 py-5 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-black transition-all active:scale-95 shadow-xl shadow-slate-200"
                             >
-                                <RefreshCcw className="w-5 h-5" />
+                                <RefreshCcw className="w-6 h-6" />
                                 Retry
                             </button>
 
                             <button
                                 onClick={() => window.location.href = '/'}
-                                className="w-full py-4 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-slate-50 transition-all"
+                                className="flex-1 py-5 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-slate-50 transition-all active:scale-95"
                             >
-                                <Home className="w-5 h-5" />
+                                <Home className="w-6 h-6" />
                                 Return to Core
                             </button>
                         </div>
 
                         {import.meta.env.DEV && (
-                            <details className="mt-8 text-left bg-slate-50 p-4 rounded-xl border border-slate-200 overflow-auto max-h-40">
-                                <summary className="text-xs font-black text-slate-400 uppercase cursor-pointer">Terminal Log</summary>
-                                <code className="text-[10px] text-rose-600 block mt-2 whitespace-pre-wrap">
-                                    {this.state.error?.toString()}
-                                </code>
-                            </details>
+                            <div className="mt-12 text-left bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Terminal Error Log</span>
+                                <div className="max-h-40 overflow-auto custom-scrollbar">
+                                    <code className="text-[11px] text-rose-600 font-mono block leading-relaxed">
+                                        {this.state.error?.toString()}
+                                    </code>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>

@@ -58,10 +58,10 @@ const ScrollToTopOnRoute = () => {
 
 // Minimal Loading Spinner
 const PageLoader = () => (
-  <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-slate-900/40 backdrop-blur-md" role="status">
+  <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-white" role="status">
     <div className="flex flex-col items-center gap-12">
       <Loader />
-      <span className="text-xs font-bold tracking-[0.3em] text-white uppercase drop-shadow-sm">Loading System...</span>
+      <span className="text-xs font-black tracking-[0.4em] text-slate-400 uppercase">Loading System...</span>
     </div>
   </div>
 );

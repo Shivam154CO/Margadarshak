@@ -26,34 +26,30 @@ export default function NetworkStatus() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 text-center"
+                    className="fixed inset-0 z-[9999] bg-white flex items-center justify-center p-6 text-center"
                 >
-                    <motion.div
-                        initial={{ scale: 0.9, y: 20 }}
-                        animate={{ scale: 1, y: 0 }}
-                        className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl relative overflow-hidden"
-                    >
+                    <div className="max-w-md w-full relative">
                         {/* Animated background pulse */}
-                        <div className="absolute top-0 left-0 w-full h-2 bg-red-500 animate-pulse" />
+                        <div className="absolute -top-10 left-0 w-full h-1.5 bg-red-500 animate-pulse rounded-full" />
 
-                        <img src={ConnectionLostImg} alt="Connection lost" className="w-32 h-32 mx-auto mb-6 opacity-90 animate-pulse" />
+                        <img src={ConnectionLostImg} alt="Connection lost" className="w-48 h-48 mx-auto mb-8 opacity-90 animate-pulse" />
 
-                        <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">
+                        <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter">
                             Network Lost
                         </h2>
 
-                        <p className="text-slate-500 font-medium mb-8">
+                        <p className="text-slate-500 font-medium text-lg mb-10 leading-relaxed">
                             It looks like you've been disconnected from the internet. Please check your connection to continue browsing.
                         </p>
 
                         <button
                             onClick={() => window.location.reload()}
-                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-black transition-colors"
+                            className="w-full py-5 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-black transition-all active:scale-95 shadow-xl shadow-slate-200"
                         >
-                            <RefreshCcw className="w-5 h-5" />
+                            <RefreshCcw className="w-6 h-6" />
                             Try Reconnecting
                         </button>
-                    </motion.div>
+                    </div>
                 </motion.div>
             )}
         </AnimatePresence>
