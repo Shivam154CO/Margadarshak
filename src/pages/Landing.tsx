@@ -39,7 +39,6 @@ export default function Landing() {
   const domeImages = useMemo(() => {
     if (!allColleges || allColleges.length === 0) return [];
 
-    // Map and filter in one pass to avoid double iteration on 340+ items
     const items = [];
     const len = allColleges.length;
     for (let i = 0; i < len; i++) {
@@ -48,8 +47,11 @@ export default function Landing() {
         if (!code) continue;
         
         const name = college.college_name || `Institute ${code}`;
-        // Optimization: Don't create new URL objects for every render if possible
-        const src = `/src/assets/${code}/campus.png`; // Vite handles this if structured correctly or via public
+        
+        // Priority: Use database image URL if available, otherwise local asset
+        const src = (college.image && !college.image.includes('N/A')) 
+          ? college.image 
+          : `/src/assets/${code}/campus.png`;
 
         items.push({
             src,

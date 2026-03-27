@@ -186,6 +186,8 @@ export default function CollegeDetails() {
             isGettingLocation={isGettingLocation}
             onGetLocation={handleGetLocation}
             error={locationError}
+            collegeCity={college.city}
+            collegeCoords={college.latitude ? { lat: college.latitude, lng: college.longitude! } : undefined}
           />
 
           <div className="bg-indigo-50 border-2 border-indigo-100 rounded-3xl p-6 relative overflow-hidden">
@@ -241,7 +243,7 @@ export default function CollegeDetails() {
         <div className="bg-white rounded-[32px] p-6 sm:p-10 shadow-sm border border-gray-200 mb-8">
           <div className="flex flex-col md:flex-row gap-8 items-center md:items-start text-center md:text-left">
             <div className="w-32 h-32 bg-gray-50 rounded-3xl flex-shrink-0 shadow-xl overflow-hidden border border-gray-100 relative">
-              <CollegeImage collegeCode={college.college_code || ""} type="logo" className="absolute inset-0 w-full h-full object-fill" alt="Logo" />
+              <CollegeImage collegeCode={college.college_code || ""} type="logo" imageOverride={college.logo_url} className="absolute inset-0 w-full h-full object-fill" alt="Logo" />
             </div>
             <div className="w-full md:flex-1 md:min-w-0 overflow-hidden">
               <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2 break-words whitespace-normal leading-tight">{college.college_name}</h1>
@@ -259,14 +261,14 @@ export default function CollegeDetails() {
         </div>
 
         {/* Tabs Navigation */}
-        <div className="sticky top-4 z-40 bg-white/80 backdrop-blur-md rounded-2xl border border-gray-200 p-1 mb-8 flex overflow-x-auto scrollbar-hide shadow-lg shadow-gray-200/50">
+        <div className="sticky top-4 z-30 bg-white/80 backdrop-blur-md rounded-2xl border border-gray-200 p-1 mb-8 flex overflow-x-auto scrollbar-hide shadow-lg shadow-gray-200/50">
           {[
             { id: "overview", label: "Overview", icon: Eye },
             { id: "seats", label: "Seat Matrix", icon: Layers },
             { id: "fees", label: "Fee Structure", icon: CreditCard },
             { id: "infrastructure", label: "Infrastructure", icon: Building },
             { id: "placement", label: "Placements", icon: Trophy },
-            { id: "ai_analysis", label: "Strategic AI", icon: Sparkles },
+            { id: "ai_analysis", label: "AI Insights", icon: Sparkles },
             { id: "automation", label: "Automation", icon: Bot },
             { id: "info", label: "More Info", icon: Newspaper },
           ].map(tab => (
@@ -331,11 +333,11 @@ export default function CollegeDetails() {
               <div className="bg-white rounded-[32px] overflow-hidden border border-gray-200 shadow-xl">
                 {/* Visual Header */}
                 <div className="relative h-64 w-full">
-                  <CollegeImage collegeCode={college.college_code || ""} type="campus" className="w-full h-full object-cover" alt="Campus Banner" />
+                  <CollegeImage collegeCode={college.college_code || ""} type="campus" imageOverride={college.image} className="w-full h-full object-cover" alt="Campus Banner" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
                   <div className="absolute bottom-6 left-8 right-8 flex flex-col md:flex-row items-center md:items-end gap-6 text-white">
                     <div className="w-24 h-24 bg-white rounded-2xl p-2 shadow-2xl flex-shrink-0">
-                      <CollegeImage collegeCode={college.college_code || ""} type="logo" className="w-full h-full object-contain" alt="Logo" />
+                      <CollegeImage collegeCode={college.college_code || ""} type="logo" imageOverride={college.logo_url} className="w-full h-full object-contain" alt="Logo" />
                     </div>
                     <div className="flex-1 text-center md:text-left">
                       <h2 className="text-2xl md:text-4xl font-black mb-2">{college.college_name}</h2>
@@ -468,7 +470,7 @@ export default function CollegeDetails() {
                 <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm overflow-hidden relative">
                   <h3 className="text-2xl font-bold mb-6">College Campus</h3>
                   <div className="aspect-video rounded-2xl overflow-hidden cursor-pointer" onClick={() => setShowImageModal(true)}>
-                    <CollegeImage collegeCode={college.college_code || ""} type="campus" className="w-full h-full object-cover" alt="Campus" />
+                    <CollegeImage collegeCode={college.college_code || ""} type="campus" imageOverride={college.image} className="w-full h-full object-cover" alt="Campus" />
                   </div>
                 </div>
                 <ContactInfo email={college.contact_email} phone={college.contact_phone} city={college.city} district={college.district} website={college.website_url} />
@@ -505,7 +507,7 @@ export default function CollegeDetails() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] bg-black/95 flex flex-col items-center justify-center p-6" onClick={() => setShowImageModal(false)}>
             <button className="absolute top-6 right-6 text-white p-2 hover:bg-white/10 rounded-fulltransition-colors"><X className="w-8 h-8" /></button>
             <div className="max-w-6xl w-full" onClick={e => e.stopPropagation()}>
-              <CollegeImage collegeCode={college.college_code || ""} type="campus" className="w-full h-auto rounded-3xl" alt="Gallery" />
+              <CollegeImage collegeCode={college.college_code || ""} type="campus" imageOverride={college.image} className="w-full h-auto rounded-3xl" alt="Gallery" />
               <div className="mt-6 text-white text-center">
                 <h3 className="text-2xl font-bold">{college.college_name}</h3>
                 <p className="opacity-60">{college.city}, Maharashtra</p>

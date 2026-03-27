@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useQuery } from '@tanstack/react-query';
-import { normalizeCollegeData } from '@/utils/collegeHelpers';
+import { normalizeCollegeData, getCityCoordinates, calculateDistance } from '@/utils/collegeHelpers';
 import type { College } from '@/types/college';
 import { useFavorites } from '../../../hooks/useFavorites';
 import seatMatrixMap from '@/assets/seat_matrix_map.json';
@@ -373,15 +373,44 @@ export function useCollegeDetails() {
 
   const handleGetLocation = () => {
     setIsGettingLocation(true);
+    setLocationError(null);
+    
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser");
+      setIsGettingLocation(false);
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
-      () => {
-        setDistance(15.5); // Mocked for now
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        // Use college lat/lng if available, otherwise fallback to city coordinates
+        const collegeLat = college.latitude || college.location_data?.lat;
+        const collegeLng = college.longitude || college.location_data?.lng;
+        
+        let targetLat = collegeLat;
+        let targetLng = collegeLng;
+
+        if (!targetLat || !targetLng) {
+          const cityCoords = getCityCoordinates(college.city);
+          targetLat = cityCoords.lat;
+          targetLng = cityCoords.lng;
+        }
+
+        if (targetLat && targetLng) {
+          const calculatedDistance = calculateDistance(latitude, longitude, targetLat, targetLng);
+          setDistance(calculatedDistance);
+        } else {
+          setLocationError("College coordinates not found");
+        }
         setIsGettingLocation(false);
       },
-      () => {
-        setLocationError("Failed to get location");
+      (err) => {
+        console.error("Geolocation error:", err);
+        setLocationError(`Failed to get location: ${err.message}`);
         setIsGettingLocation(false);
-      }
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
   };
 
