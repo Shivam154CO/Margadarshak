@@ -14,19 +14,19 @@ interface CollegeCardProps {
 }
 
 const CollegeImage: React.FC<{ collegeCode: string; className?: string; alt?: string; priority?: boolean }> = ({ collegeCode, className, alt, priority }) => {
-    // Local getCollegeImage logic if needed, but we pass it as prop or import it
-    const imagePath = `/src/assets/${collegeCode}/campus.png`;
-    return (
-        <img 
-            src={imagePath} 
-            alt={alt} 
-            className={className} 
-            loading={priority ? "eager" : "lazy"} 
-            onError={(e) => {
-                (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=2064&q=80";
-            }}
-        />
-    );
+  // Local getCollegeImage logic if needed, but we pass it as prop or import it
+  const imagePath = `/src/assets/${collegeCode}/campus.png`;
+  return (
+    <img
+      src={imagePath}
+      alt={alt}
+      className={className}
+      loading={priority ? "eager" : "lazy"}
+      onError={(e) => {
+        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=2064&q=80";
+      }}
+    />
+  );
 };
 
 const CollegeCardComponent: React.FC<CollegeCardProps> = ({

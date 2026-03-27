@@ -4,9 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Bookmark, Share2, MapPin, BookOpen, Tag, Award,
   Eye, Layers, CreditCard, Building, Trophy, Bot, Newspaper,
-  X, AlertCircle, Users, ClipboardList, TrendingUp, Sparkles,
-  FileText, BarChart3, Clock, Calendar, Globe, ExternalLink, RefreshCw,
-  Building2, Info, ShieldCheck
+  X, AlertCircle, Users, ClipboardList, Sparkles,
+  FileText, Globe
 } from 'lucide-react';
 
 // Components
@@ -468,106 +467,124 @@ export default function CollegeDetails() {
             {activeTab === "intelligence" && (
               <div className="space-y-8">
                 <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-12 shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none -rotate-12 translate-x-1/4 -translate-y-1/4">
-                    <Globe className="w-64 h-64" />
-                  </div>
                   <div className="relative z-10">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
                       <div>
-                        <h3 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-3">
-                          <span className="relative flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                          </span>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2">
                           Live Intelligence Feed
                         </h3>
                         <p className="text-slate-500 font-medium text-sm">Real-time blogs, news, and official announcements aggregated from across the web.</p>
                       </div>
-                      <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl">
+                      <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Scraped via Ikigai Crawler v2.4</span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {[
-                        {
-                          title: "Expansion of AI Intake (2025-2026)",
-                          source: "HT Education News",
-                          date: "2 days ago",
-                          type: "NEWS",
-                          desc: "University Senate approves doubling of seats in Computer and AI branches for upcoming session.",
-                          url: "https://www.hindustantimes.com/education"
-                        },
-                        {
-                          title: "Ranking Pulse: NIRF 2025 Ranking Insights",
-                          source: "Career360 Blog",
-                          date: "4 days ago",
-                          type: "ARTICAL",
-                          desc: "In-depth analysis of institutional growth trajectories and placement statistics improvements.",
-                          url: "https://www.careers360.com/colleges"
-                        },
-                        {
-                          title: "Campus Spot Round: Vacancies Announcement",
-                          source: "Official DTE Web Portal",
-                          date: "Real-Time",
-                          type: "URGENT",
-                          desc: "Crucial update for vacant seats in second-year direct diploma admissions for various branches.",
-                          url: "https://fe2024.mahacet.org"
-                        },
-                        {
-                          title: "Industry Tie-ups: New Tech Hub Inauguration",
-                          source: "Pune Mirror: Tech",
-                          date: "1 week ago",
-                          type: "BLOG",
-                          desc: "The institution inaugurates a state-of-the-art incubation center for emerging technologies in the region.",
-                          url: "https://punemirror.com"
-                        },
-                        {
-                          title: "Research Horizon: Major Patent Published",
-                          source: "Medium (Education Hub)",
-                          date: "2 weeks ago",
-                          type: "INSIGHT",
-                          desc: " Faculty from the Mechanical Department publishes a landmark patent on sustainable EV propulsion systems.",
-                          url: "https://medium.com"
-                        },
-                        {
-                          title: "Student Experience: The Real Vibe of Campus",
-                          source: "Student Community Blog",
-                          date: "3 weeks ago",
-                          type: "BLOG",
-                          desc: "An unfiltered look at life on campus, hostel facilities, and the upcoming cultural festival preparations.",
-                          url: "https://studentblog.org"
-                        }
-                      ].map((item, i) => (
-                        <div key={i} className="group bg-white border border-slate-100 rounded-2xl p-6 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/50 transition-all cursor-pointer relative flex flex-col justify-between h-full" onClick={() => window.open(item.url, '_blank')}>
-                          <div>
-                            <div className="flex justify-between items-start mb-4">
-                              <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${item.type === 'URGENT' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-slate-50 text-slate-500 border border-slate-100'
-                                }`}>
-                                {item.type}
-                              </span>
-                              <span className="text-[10px] font-bold text-slate-400">{item.date}</span>
-                            </div>
-                            <h4 className="font-bold text-slate-900 mb-3 group-hover:text-amber-600 transition-colors leading-tight">
-                              {item.title}
-                            </h4>
-                            <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed font-medium mb-6">
-                              {item.desc}
-                            </p>
-                          </div>
-                          <div className="flex items-center justify-between border-t border-slate-50 pt-4">
-                            <span className="text-[10px] font-bold text-slate-400 italic">via {item.source}</span>
-                            <div className="w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                            </div>
-                          </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                      {/* Left Side: Campus Specific */}
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] border-b border-slate-900 pb-1">Campus Specific Insights</h4>
                         </div>
-                      ))}
+                        <div className="space-y-4">
+                          {[
+                            {
+                              title: `Expansion of AI Intake at ${college.college_name.split(' ')[0]}`,
+                              source: "HT Education News",
+                              date: "2 days ago",
+                              type: "NEWS",
+                              desc: "University Senate approves doubling of seats in Computer and AI branches for upcoming session.",
+                              url: "https://www.hindustantimes.com/education"
+                            },
+                            {
+                              title: "Industry Tie-ups: New Tech Hub Inauguration",
+                              source: "Pune Mirror: Tech",
+                              date: "1 week ago",
+                              type: "BLOG",
+                              desc: "The institution inaugurates a state-of-the-art incubation center for emerging technologies in the region.",
+                              url: "https://punemirror.com"
+                            },
+                            {
+                              title: "Student Experience: The Real Vibe of Campus",
+                              source: "Student Community Blog",
+                              date: "3 weeks ago",
+                              type: "BLOG",
+                              desc: "An unfiltered look at life on campus, hostel facilities, and the upcoming cultural festival preparations.",
+                              url: "https://studentblog.org"
+                            }
+                          ].map((item, i) => (
+                            <div key={i} className="group bg-slate-50 border border-slate-100 rounded-2xl p-5 hover:bg-white hover:border-slate-300 transition-all cursor-pointer relative" onClick={() => window.open(item.url, '_blank')}>
+                              <div className="flex justify-between items-start mb-3">
+                                <span className="text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-widest bg-slate-200 text-slate-600 border border-slate-200">
+                                  {item.type}
+                                </span>
+                                <span className="text-[9px] font-bold text-slate-400">{item.date}</span>
+                              </div>
+                              <h5 className="font-bold text-slate-900 group-hover:text-slate-600 mb-2 leading-tight text-sm transition-colors">
+                                {item.title}
+                              </h5>
+                              <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                                {item.desc}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Right Side: DSE Overall */}
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] border-b border-slate-900 pb-1">DSE Central Intelligence</h4>
+                        </div>
+                        <div className="space-y-4">
+                          {[
+                            {
+                              title: "DSE 2024-25: Revised Final Merit List Released",
+                              source: "CET Cell Portal",
+                              date: "Real-Time",
+                              type: "URGENT",
+                              desc: "The State Common Entrance Test Cell has published the updated final merit list for Direct Second Year Engineering.",
+                              url: "https://fe2024.mahacet.org"
+                            },
+                            {
+                              title: "Bridge Course Notification for Diploma Students",
+                              source: "MSBTE / DTE",
+                              date: "4 days ago",
+                              type: "ACADEMIC",
+                              desc: "New guidelines for mandatory bridge courses in Mathematics and Applied Sciences for DSE admissions.",
+                              url: "https://dte.maharashtra.gov.in"
+                            },
+                            {
+                              title: "DSE Fee Waiver: EWS/EBC Eligibility Update",
+                              source: "MahaDBT Support",
+                              date: "1 week ago",
+                              type: "SCHOLARSHIP",
+                              desc: "Important clarification on fee reimbursement for diploma candidates moving into third-year degree programs.",
+                              url: "https://mahadbt.maharashtra.gov.in"
+                            }
+                          ].map((item, i) => (
+                            <div key={i} className="group bg-slate-50 border border-slate-100 rounded-2xl p-5 hover:bg-white hover:border-slate-300 transition-all cursor-pointer relative" onClick={() => window.open(item.url, '_blank')}>
+                              <div className="flex justify-between items-start mb-3">
+                                <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${item.type === 'URGENT' ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600 border border-slate-200'
+                                  }`}>
+                                  {item.type}
+                                </span>
+                                <span className="text-[9px] font-bold text-slate-400">{item.date}</span>
+                              </div>
+                              <h5 className="font-bold text-slate-900 group-hover:text-slate-600 mb-2 leading-tight text-sm transition-colors">
+                                {item.title}
+                              </h5>
+                              <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                                {item.desc}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
 
                     <div className="mt-12 flex justify-center">
-                      <button className="px-8 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 transition-colors uppercase tracking-[0.2em] flex items-center gap-3">
-                        <RefreshCw className="w-3 h-3" />
+                      <button className="px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black hover:bg-black transition-colors uppercase tracking-[0.2em]">
                         Reprocess Web Crawl
                       </button>
                     </div>
