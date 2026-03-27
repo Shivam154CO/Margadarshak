@@ -96,20 +96,27 @@ export const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2
 
 export const normalizeCollegeData = (collegeData: any): College => {
     if (!collegeData) {
-        return { college_name: "Unknown College", city: "N/A", autonomy_status: "N/A" } as College;
+        return {
+            college_code: '',
+            college_name: "Unknown College",
+            city: "N/A",
+            autonomy_status: "N/A",
+            branches: [],
+            seat_matrix: []
+        } as unknown as College;
     }
 
     const safeParse = (value: any, defaultValue: any = '') => {
-        if (value === null || value === undefined || value === '') return defaultValue;
+        if (value === null || value === undefined) return defaultValue;
         if (typeof value === 'number') return value;
-        if (typeof value === 'string') {
-            if (!isNaN(Number(value)) && value.trim() !== '') return Number(value);
-            return value.trim();
-        }
-        return String(value);
+        if (typeof value === 'string' && value.trim() === '') return defaultValue;
+        return value;
     };
 
+    // Spread original data to ensure all database fields (established_year, etc.) are preserved
+    // and then override with safe parsed versions of common display fields.
     return {
+        ...collegeData,
         college_code: safeParse(collegeData.college_code || collegeData.collegeCode, ''),
         college_name: safeParse(collegeData.college_name || collegeData.collegeName || collegeData.name, 'Unknown College'),
         city: safeParse(collegeData.city, 'N/A'),
@@ -121,7 +128,8 @@ export const normalizeCollegeData = (collegeData: any): College => {
         contact_email: safeParse(collegeData.contact_email || collegeData.contactEmail, ''),
         phone: safeParse(collegeData.contact_phone || collegeData.contactPhone, ''),
         hostel_available: safeParse(collegeData.hostel_available || collegeData.hostelAvailable, 'N/A'),
-        branches: Array.isArray(collegeData.branches) ? collegeData.branches : [],
+        branches: Array.isArray(collegeData.branches) ? collegeData.branches : (collegeData.branches ? [collegeData.branches] : []),
+        seat_matrix: Array.isArray(collegeData.seat_matrix) ? collegeData.seat_matrix : [],
         admission_process: Array.isArray(collegeData.admission_process) ? collegeData.admission_process : [],
         scholarships: Array.isArray(collegeData.scholarships) ? collegeData.scholarships : [],
         image: safeParse(collegeData.image || collegeData.image_url, ''),

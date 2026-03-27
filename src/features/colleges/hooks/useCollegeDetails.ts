@@ -145,42 +145,45 @@ export function useCollegeDetails() {
           const branchMap = new Map<string, any>();
 
           rows.forEach(row => {
-            const bName = row.branch_name || 'N/A';
+            // Robust field access for branching
+            const bName = row.branch_name || row.Branch_Name || 'N/A';
             const bKey = bName.toLowerCase().trim();
             if (!branchMap.has(bKey)) {
               branchMap.set(bKey, {
                 branch_name: bName,
-                branch_code: row.branch_code,
-                total_intake: 0, // We'll sum it up
+                branch_code: row.branch_code || row.Branch_Code,
+                total_intake: 0,
                 categories: []
               });
             }
 
             const b = branchMap.get(bKey);
-            const rowSeats = typeof row.seats === 'number' ? row.seats : (parseInt(row.seats) || 0);
-            const rowCategory = (row.category || '').toUpperCase().trim();
+            // Universal seat and category mapping (case-insensitive)
+            const rawSeats = row.seats ?? row.Seats ?? row.SEATS ?? 0;
+            const rowSeats = typeof rawSeats === 'number' ? rawSeats : (parseInt(rawSeats as any) || 0);
+            const rawCategory = row.category || row.Category || row.CATEGORY || '';
+            const rowCategory = String(rawCategory).toUpperCase().trim();
 
-            // Prioritize the minimum non-zero total_intake if available in any row for this branch
-            // This avoids inflated numbers from supernumerary seats (like EWS/TFWS)
-            const rowIntake = row.total_intake || row.Total_Intake || 0;
-            if (rowIntake > 0) {
-              if (b.total_intake === 0 || rowIntake < b.total_intake) {
-                b.total_intake = rowIntake;
+            const rawIntake = row.total_intake || row.Total_Intake || row.TOTAL_INTAKE || 0;
+            const rowIntakeVal = typeof rawIntake === 'number' ? rawIntake : (parseInt(rawIntake as any) || 0);
+            
+            if (rowIntakeVal > 0) {
+              if (b.total_intake === 0 || rowIntakeVal < b.total_intake) {
+                b.total_intake = rowIntakeVal;
               }
-            } else if (b.total_intake === 0 || !row.total_intake) {
+            } else if (b.total_intake === 0) {
               // Only sum seats if total_intake is missing
-              // CRITICAL: Excluding supernumerary seats (EWS/TFWS) from official intake sum
               if (rowCategory !== 'EWS' && rowCategory !== 'TFWS' && !rowCategory.includes('ORPHAN')) {
                 b.total_intake += rowSeats;
               }
             }
 
             // Add category to this branch's seat matrix
-            if (row.category && rowSeats > 0) {
+            if (rowCategory && rowSeats > 0) {
               b.categories.push({
-                category: row.category,
+                category: rowCategory,
                 seats: rowSeats,
-                color: getCategoryColor(row.category)
+                color: getCategoryColor(rowCategory)
               });
             }
           });

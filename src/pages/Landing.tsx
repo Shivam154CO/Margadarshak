@@ -5,10 +5,10 @@ import ScrollAnimationWrapper from "../components/ScrollAnimationWrapper";
 import LiveFeatureIcon from "../components/LiveFeatureIcon";
 import IkigaiLogo from "../components/IkigaiLogo";
 import { useCollegeData } from "@/features/colleges/hooks/useCollegeData";
-import { useColleges } from "../context/CollegesContext";
 import SEO from "../components/SEO";
 import { LiveCastePreview, LiveMatchSimulator, LiveTrendPulse, LiveAIAssistant, LiveDistanceTracker, LiveScholarshipGuide } from "../components/LiveFeatureShowcase";
 import Magnetic from "../components/Magnetic";
+import Loader from "../components/Loader";
 
 // Import custom illustrations
 import clgImg from "../assets/illustrations/clg.png";
@@ -20,8 +20,8 @@ const Footer = lazy(() => import("../components/Footer"));
 
 // Loading fallback component
 const SectionLoader = () => (
-  <div className="w-full h-96 flex items-center justify-center bg-slate-50/50 rounded-[40px] animate-pulse">
-    <div className="w-12 h-12 rounded-full border-4 border-rose-500 border-t-transparent animate-spin" />
+  <div className="w-full h-96 flex items-center justify-center bg-slate-50/50 rounded-[40px]">
+    <Loader />
   </div>
 );
 
@@ -32,39 +32,31 @@ export default function Landing() {
   const [isScrolled, setIsScrolled] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
-  // Prefetch college data for DomeGallery and other components
+  // Prefetch college data from cache or network
   const { allColleges } = useCollegeData();
-  const { setColleges } = useColleges();
-
-  useEffect(() => {
-    if (allColleges.length > 0) {
-      setColleges(allColleges);
-    }
-  }, [allColleges, setColleges]);
+  // CollegesContext will automatically react to allColleges via React Query
 
   const domeImages = useMemo(() => {
-    const colleges = allColleges || [];
+    if (!allColleges || allColleges.length === 0) return [];
 
-    // Instead of eager globbing 300+ images (which crashes Vite/memory),
-    // we use the established convention: /src/assets/{code}/campus.png
-    // In build, Vite handles these dynamic URLs if we use new URL(...)
+    // Map and filter in one pass to avoid double iteration on 340+ items
+    const items = [];
+    const len = allColleges.length;
+    for (let i = 0; i < len; i++) {
+        const college = allColleges[i];
+        const code = String(college.college_code).trim();
+        if (!code) continue;
+        
+        const name = college.college_name || `Institute ${code}`;
+        // Optimization: Don't create new URL objects for every render if possible
+        const src = `/src/assets/${code}/campus.png`; // Vite handles this if structured correctly or via public
 
-    // If we have no backend colleges yet, just show a few placeholders or empty
-    if (colleges.length === 0) {
-      return [];
+        items.push({
+            src,
+            alt: `${name} | ${code}`
+        });
     }
-
-    // Map all colleges to their resolved image paths
-    return colleges.map(college => {
-      const code = String(college.college_code).trim();
-      const name = college.college_name || `Institute ${code}`;
-      const src = new URL(`../assets/${code}/campus.png`, import.meta.url).href;
-
-      return {
-        src,
-        alt: `${name} | ${code}`
-      };
-    }).filter(item => item.src);
+    return items;
   }, [allColleges]);
 
   const scrollToSection = (id: string) => {
