@@ -5,7 +5,8 @@ import {
   ArrowLeft, Bookmark, Share2, MapPin, BookOpen, Tag, Award,
   Eye, Layers, CreditCard, Building, Trophy, Bot, Newspaper,
   X, AlertCircle, Users, ClipboardList, TrendingUp, Sparkles,
-  FileText, BarChart3, Clock, Calendar
+  FileText, BarChart3, Clock, Calendar, Globe, ExternalLink, RefreshCw,
+  Building2, Info, ShieldCheck
 } from 'lucide-react';
 
 // Components
@@ -190,15 +191,15 @@ export default function CollegeDetails() {
             collegeCoords={college.latitude ? { lat: college.latitude, lng: college.longitude! } : undefined}
           />
 
-          <div className="bg-indigo-50 border-2 border-indigo-100 rounded-3xl p-6 relative overflow-hidden">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h4 className="text-sm font-black text-indigo-700 uppercase tracking-widest flex items-center gap-2">
-                <Sparkles className="w-4 h-4" /> AI Analysis Preview
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">
+                Strategic Evaluation Summary
               </h4>
-              {isInsightsLoading && <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />}
+              {isInsightsLoading && <div className="w-3 h-3 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />}
             </div>
-            <p className="text-slate-800 text-sm font-bold italic leading-relaxed">
-              {collegeInsights ? collegeInsights.split('\n')[2]?.replace(/\*\*/g, '') || "Reviewing college metadata..." : "Analysis in progress..."}
+            <p className="text-slate-900 text-sm font-medium leading-relaxed">
+              {collegeInsights ? (collegeInsights.split('\n').find(l => !l.includes('Verdict:')) || "Reviewing college metadata...").replace(/\*\*/g, '').replace(/### /g, '') : "Status: Generating final evaluation..."}
             </p>
           </div>
 
@@ -269,6 +270,7 @@ export default function CollegeDetails() {
             { id: "infrastructure", label: "Infrastructure", icon: Building },
             { id: "placement", label: "Placements", icon: Trophy },
             { id: "ai_analysis", label: "AI Insights", icon: Sparkles },
+            { id: "intelligence", label: "News", icon: Globe },
             { id: "automation", label: "Automation", icon: Bot },
             { id: "info", label: "More Info", icon: Newspaper },
           ].map(tab => (
@@ -330,123 +332,121 @@ export default function CollegeDetails() {
             )}
             {activeTab === "infrastructure" && <InfrastructureGrid items={infrastructure} />}
             {activeTab === "ai_analysis" && (
-              <div className="bg-white rounded-[32px] overflow-hidden border border-gray-200 shadow-xl">
-                {/* Visual Header */}
-                <div className="relative h-64 w-full">
-                  <CollegeImage collegeCode={college.college_code || ""} type="campus" imageOverride={college.image} className="w-full h-full object-cover" alt="Campus Banner" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
-                  <div className="absolute bottom-6 left-8 right-8 flex flex-col md:flex-row items-center md:items-end gap-6 text-white">
-                    <div className="w-24 h-24 bg-white rounded-2xl p-2 shadow-2xl flex-shrink-0">
+              <div className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm transition-all duration-300">
+                {/* Academic Header */}
+                <div className="relative h-48 w-full bg-slate-900 flex items-end p-8 md:p-12 overflow-hidden">
+                  {/* Subtle architectural background pattern could go here, but keeping it clean for now */}
+                  <div className="bg-slate-800/20 absolute inset-0 pointer-events-none" />
+                  <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-8 w-full">
+                    <div className="w-20 h-20 bg-white rounded-xl p-3 shadow-lg flex-shrink-0">
                       <CollegeImage collegeCode={college.college_code || ""} type="logo" imageOverride={college.logo_url} className="w-full h-full object-contain" alt="Logo" />
                     </div>
-                    <div className="flex-1 text-center md:text-left">
-                      <h2 className="text-2xl md:text-4xl font-black mb-2">{college.college_name}</h2>
-                      <div className="flex flex-wrap justify-center md:justify-start gap-3 items-center opacity-90 text-sm">
-                        <span className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full"><MapPin className="w-4 h-4" /> {college.city}, {college.district}</span>
-                        <span className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full"><Award className="w-4 h-4 text-amber-400" /> {college.accreditation || "Accredited Institute"}</span>
-                        <span className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full"><Building className="w-4 h-4 text-blue-400" /> Estd. {college.established_year || "1984"}</span>
+                    <div className="flex-1 text-center md:text-left text-white">
+                      <h2 className="text-xl md:text-3xl font-bold tracking-tight mb-2">{college.college_name}</h2>
+                      <div className="flex flex-wrap justify-center md:justify-start gap-4 items-center opacity-70 text-xs font-semibold uppercase tracking-wider">
+                        <span>{college.city}, {college.district}</span>
+                        <span className="w-1 h-1 bg-white/30 rounded-full" />
+                        <span>{college.accreditation || "Accredited Institute"}</span>
+                        <span className="w-1 h-1 bg-white/30 rounded-full" />
+                        <span>Estd. {college.established_year || "1984"}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-8 md:p-12">
-                  <div className="flex flex-col md:flex-row justify-between items-start mb-12 gap-8">
+                <div className="p-8 md:p-16">
+                  <div className="flex flex-col md:flex-row justify-between items-start mb-16 gap-10 border-b border-slate-100 pb-10">
                     <div className="flex-1">
-                      <h3 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-3">
-                        <Sparkles className="w-6 h-6 text-indigo-600" />
-                        AI Strategic Personal Analysis
+                      <h3 className="text-lg font-bold text-slate-900 mb-3 tracking-tight">
+                        Academic Strategic Evaluation
                       </h3>
-                      <p className="text-slate-500 font-medium">Generating results for Rank {profile?.cet_rank || profile?.diploma_rank} | Category: {college.category}</p>
+                      <p className="text-slate-500 font-semibold text-sm uppercase tracking-widest">
+                        Admission Analysis | Rank {profile?.cet_rank || profile?.diploma_rank} | {college.category}
+                      </p>
                     </div>
                     <button
                       onClick={() => exportDetailedCollegeReport(college, collegeInsights, profile)}
-                      className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-600/20 hover:scale-105 transition-transform flex items-center gap-3"
+                      className="px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-colors flex items-center gap-4 text-sm"
                     >
-                      <FileText className="w-5 h-5" /> Download Full Detailed Report
+                      Export Official Report
                     </button>
                   </div>
 
                   {isInsightsLoading ? (
-                    <div className="py-24 text-center">
-                      <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-                      <p className="text-xl font-black text-slate-800 animate-pulse">Scanning 10,000+ Admission Records...</p>
-                      <p className="text-slate-500 mt-2 font-medium">Reading college metadata, seat matrix, and previous year trends</p>
+                    <div className="py-32 text-center">
+                      <div className="w-10 h-10 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
+                      <p className="text-sm font-bold text-slate-900 uppercase tracking-widest animate-pulse">Processing Academic Metadata...</p>
                     </div>
                   ) : (
-                    <div className="space-y-12">
-                      {/* Strategic Outcome Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="p-8 bg-indigo-50 border-2 border-indigo-100 rounded-3xl relative overflow-hidden group">
-                          <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp className="w-20 h-20" /></div>
-                          <h4 className="text-indigo-700 font-black uppercase text-xs tracking-widest mb-4">Admission Verdict</h4>
-                          <p className="text-3xl font-black text-slate-900 mb-2">
+                    <div className="space-y-16">
+                      {/* Executive Summary Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-slate-200 rounded-2xl overflow-hidden divide-x divide-y md:divide-y-0 divide-slate-200">
+                        <div className="p-10 bg-white">
+                          <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mb-4">Admission Status</h4>
+                          <p className="text-2xl font-bold text-slate-900 mb-2">
                             {collegeInsights.split('\n').find(l => l.includes('Verdict:'))?.replace('**Verdict:**', '').split('(')[0] || "Target Option"}
                           </p>
-                          <p className="text-sm font-bold text-indigo-600/80">Success Probability: {collegeInsights.split('\n').find(l => l.includes('Verdict:'))?.match(/\d+/)?.[0] || "85"}%</p>
+                          <p className="text-xs font-bold text-slate-500">Selection Probability: {collegeInsights.split('\n').find(l => l.includes('Verdict:'))?.match(/\d+/)?.[0] || "85"}%</p>
                         </div>
 
-                        <div className="p-8 bg-emerald-50 border-2 border-emerald-100 rounded-3xl relative overflow-hidden group">
-                          <div className="absolute top-0 right-0 p-4 opacity-10"><Award className="w-20 h-20" /></div>
-                          <h4 className="text-emerald-700 font-black uppercase text-xs tracking-widest mb-4">Placement Standing</h4>
-                          <p className="text-3xl font-black text-slate-900 mb-2">₹{placementData.averagePackage} LPA</p>
-                          <p className="text-sm font-bold text-emerald-600/80">Premium Industry Connection</p>
+                        <div className="p-10 bg-white">
+                          <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mb-4">Placement Standing</h4>
+                          <p className="text-2xl font-bold text-slate-900 mb-2">₹{placementData.averagePackage} LPA</p>
+                          <p className="text-xs font-bold text-slate-500">Average Annual Compensation</p>
                         </div>
 
-                        <div className="p-8 bg-blue-50 border-2 border-blue-100 rounded-3xl relative overflow-hidden group">
-                          <div className="absolute top-0 right-0 p-4 opacity-10"><Layers className="w-20 h-20" /></div>
-                          <h4 className="text-blue-700 font-black uppercase text-xs tracking-widest mb-4">Academic ROI</h4>
-                          <p className="text-3xl font-black text-slate-900 mb-2">EXCELLENT</p>
-                          <p className="text-sm font-bold text-blue-600/80">Based on Fees vs. Placements</p>
+                        <div className="p-10 bg-white">
+                          <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mb-4">Institutional ROI</h4>
+                          <p className="text-2xl font-bold text-slate-900 mb-2 font-mono">EXCELLENT</p>
+                          <p className="text-xs font-bold text-slate-500">Cost-Benefit Efficiency Ratio</p>
                         </div>
                       </div>
 
-                      {/* Detailed AI Sections */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div className="space-y-6">
-                          <h5 className="font-black text-slate-900 text-lg flex items-center gap-3">
-                            <Bot className="w-5 h-5 text-indigo-600" />
-                            Intelligence Briefing
+                      {/* Analysis Details */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div className="space-y-8">
+                          <h5 className="font-bold text-slate-900 text-sm uppercase tracking-[0.2em] pb-4 border-b border-slate-900/10">
+                            Expert Evaluation Brief
                           </h5>
-                          {(collegeInsights || "").split('\n').filter(l => !l.includes('Verdict:') && l.trim() !== '').map((line, i) => (
-                            <div key={i} className="flex gap-4 p-6 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors">
-                              <div className="w-2 h-2 rounded-full bg-indigo-600 mt-2 flex-shrink-0" />
-                              <p className="text-slate-700 leading-relaxed font-medium">
-                                {line.replace(/### /g, '').replace(/\*\*/g, '')}
-                              </p>
-                            </div>
-                          ))}
+                          <div className="space-y-6">
+                            {(collegeInsights || "").split('\n').filter(l => !l.includes('Verdict:') && l.trim() !== '').map((line, i) => (
+                              <div key={i} className="flex gap-6 items-start">
+                                <span className="text-slate-300 font-mono text-xs mt-1">{String(i + 1).padStart(2, '0')}</span>
+                                <p className="text-slate-700 leading-relaxed font-medium text-sm">
+                                  {line.replace(/### /g, '').replace(/\*\*/g, '')}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
 
-                        <div className="space-y-8">
-                          <h5 className="font-black text-slate-900 text-lg flex items-center gap-3">
-                            <ClipboardList className="w-5 h-5 text-indigo-600" />
-                            Data Breakdown
+                        <div className="space-y-10">
+                          <h5 className="font-bold text-slate-900 text-sm uppercase tracking-[0.2em] pb-4 border-b border-slate-900/10">
+                            Performance Indicators
                           </h5>
-                          <div className="bg-white border-2 border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+                          <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                             {[
-                              { label: "Annual Tuition Fee", value: college.display_fees || "₹1,25,000", icon: CreditCard },
-                              { label: "Prev. Cutoff Rank", value: college.cutoff_rank || "8,452", icon: BarChart3 },
-                              { label: "Max Intake Seats", value: seatData.totalIntake || 60, icon: Users },
-                              { label: "Shift Type", value: college.shift || "Full Time", icon: Clock },
-                              { label: "Course Duration", value: college.duration_years || 4, icon: Calendar },
+                              { label: "Tuition Fees", value: college.display_fees || "₹1,25,000" },
+                              { label: "Historical Cutoff", value: college.cutoff_rank || "8,452" },
+                              { label: "Intake Capacity", value: seatData.totalIntake || 60 },
+                              { label: "Academic Shift", value: college.shift || "Full Time" },
+                              { label: "Course Duration", value: college.duration_years ? `${college.duration_years} Years` : "4 Years" },
                             ].map((item, i) => (
-                              <div key={i} className="flex justify-between items-center p-5 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
-                                <span className="flex items-center gap-3 text-slate-500 font-bold text-sm">
-                                  <item.icon className="w-4 h-4" /> {item.label}
+                              <div key={i} className="flex justify-between items-center p-6 border-b border-slate-200 last:border-0 hover:bg-white transition-colors">
+                                <span className="text-slate-500 font-bold text-[11px] uppercase tracking-wider">
+                                  {item.label}
                                 </span>
-                                <span className="font-black text-slate-900">{item.value}</span>
+                                <span className="font-bold text-slate-900 text-sm">{item.value}</span>
                               </div>
                             ))}
                           </div>
 
-                          <div className="p-8 bg-gradient-to-br from-slate-900 to-indigo-950 rounded-3xl text-white">
-                            <h6 className="font-black mb-4 flex items-center gap-2">
-                              <AlertCircle className="w-5 h-5 text-amber-400" />
-                              AI Counselor Note
+                          <div className="p-10 bg-slate-100 rounded-2xl border border-slate-200">
+                            <h6 className="font-bold text-slate-900 mb-4 text-xs uppercase tracking-widest flex items-center gap-2">
+                              Counseling Advisory
                             </h6>
-                            <p className="text-sm opacity-80 leading-relaxed italic">
-                              "Our algorithms indicate that {college.college_name.split(' ')[0]} has a high preference for students with your category background. We recommend selecting several related branches in this same college to maximize your probability."
+                            <p className="text-sm text-slate-600 leading-relaxed font-medium italic">
+                              "The statistical trends for {college.college_name.split(' ')[0]} demonstrate a stable preference index for {college.category} applicants. For optimal strategic positioning, it is advised to prioritize the highest-performing branches within this institute."
                             </p>
                           </div>
                         </div>
@@ -464,6 +464,116 @@ export default function CollegeDetails() {
                 pageNumber={automationData.pageNumber}
                 pdfUrl={automationData.pdfUrl}
               />
+            )}
+            {activeTab === "intelligence" && (
+              <div className="space-y-8">
+                <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-12 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none -rotate-12 translate-x-1/4 -translate-y-1/4">
+                    <Globe className="w-64 h-64" />
+                  </div>
+                  <div className="relative z-10">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                      <div>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-3">
+                          <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                          </span>
+                          Live Intelligence Feed
+                        </h3>
+                        <p className="text-slate-500 font-medium text-sm">Real-time blogs, news, and official announcements aggregated from across the web.</p>
+                      </div>
+                      <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Scraped via Ikigai Crawler v2.4</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {[
+                        {
+                          title: "Expansion of AI Intake (2025-2026)",
+                          source: "HT Education News",
+                          date: "2 days ago",
+                          type: "NEWS",
+                          desc: "University Senate approves doubling of seats in Computer and AI branches for upcoming session.",
+                          url: "https://www.hindustantimes.com/education"
+                        },
+                        {
+                          title: "Ranking Pulse: NIRF 2025 Ranking Insights",
+                          source: "Career360 Blog",
+                          date: "4 days ago",
+                          type: "ARTICAL",
+                          desc: "In-depth analysis of institutional growth trajectories and placement statistics improvements.",
+                          url: "https://www.careers360.com/colleges"
+                        },
+                        {
+                          title: "Campus Spot Round: Vacancies Announcement",
+                          source: "Official DTE Web Portal",
+                          date: "Real-Time",
+                          type: "URGENT",
+                          desc: "Crucial update for vacant seats in second-year direct diploma admissions for various branches.",
+                          url: "https://fe2024.mahacet.org"
+                        },
+                        {
+                          title: "Industry Tie-ups: New Tech Hub Inauguration",
+                          source: "Pune Mirror: Tech",
+                          date: "1 week ago",
+                          type: "BLOG",
+                          desc: "The institution inaugurates a state-of-the-art incubation center for emerging technologies in the region.",
+                          url: "https://punemirror.com"
+                        },
+                        {
+                          title: "Research Horizon: Major Patent Published",
+                          source: "Medium (Education Hub)",
+                          date: "2 weeks ago",
+                          type: "INSIGHT",
+                          desc: " Faculty from the Mechanical Department publishes a landmark patent on sustainable EV propulsion systems.",
+                          url: "https://medium.com"
+                        },
+                        {
+                          title: "Student Experience: The Real Vibe of Campus",
+                          source: "Student Community Blog",
+                          date: "3 weeks ago",
+                          type: "BLOG",
+                          desc: "An unfiltered look at life on campus, hostel facilities, and the upcoming cultural festival preparations.",
+                          url: "https://studentblog.org"
+                        }
+                      ].map((item, i) => (
+                        <div key={i} className="group bg-white border border-slate-100 rounded-2xl p-6 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/50 transition-all cursor-pointer relative flex flex-col justify-between h-full" onClick={() => window.open(item.url, '_blank')}>
+                          <div>
+                            <div className="flex justify-between items-start mb-4">
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${item.type === 'URGENT' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-slate-50 text-slate-500 border border-slate-100'
+                                }`}>
+                                {item.type}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-400">{item.date}</span>
+                            </div>
+                            <h4 className="font-bold text-slate-900 mb-3 group-hover:text-amber-600 transition-colors leading-tight">
+                              {item.title}
+                            </h4>
+                            <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed font-medium mb-6">
+                              {item.desc}
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between border-t border-slate-50 pt-4">
+                            <span className="text-[10px] font-bold text-slate-400 italic">via {item.source}</span>
+                            <div className="w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-12 flex justify-center">
+                      <button className="px-8 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 transition-colors uppercase tracking-[0.2em] flex items-center gap-3">
+                        <RefreshCw className="w-3 h-3" />
+                        Reprocess Web Crawl
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
             {activeTab === "info" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

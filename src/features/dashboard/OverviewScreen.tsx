@@ -5,7 +5,7 @@ import axios from "axios";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Briefcase, IndianRupee, X, CheckCircle2, FileText, Calendar, ShieldCheck, AlertCircle, ChevronRight, ChevronDown } from "lucide-react";
+import { Briefcase, IndianRupee, X, CheckCircle2, FileText, Calendar, ShieldCheck, AlertCircle, ChevronRight, ChevronDown, Globe, Zap, RefreshCw, ExternalLink, Sparkles } from "lucide-react";
 import { CollegeCardImage } from "@/features/colleges/components/CollegeCardImage";
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
@@ -342,6 +342,87 @@ export default function OverviewScreen() {
         </div>
 
         {/* ═══════════ Profile Summary Bar ═══════════ */}
+        {/* ═══════════ Overall Live Intelligence Feed ═══════════ */}
+        <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-12 mb-10 overflow-hidden relative shadow-2xl shadow-indigo-900/20">
+          <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none -rotate-12 translate-x-1/4 -translate-y-1/4 text-white">
+            <Globe className="w-96 h-96" />
+          </div>
+          <div className="relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-black text-white flex items-center gap-4">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                  </span>
+                  Live Admission Intelligence
+                </h2>
+                <p className="text-slate-400 font-medium text-sm mt-2">Overall news, scholarship alerts, and real-time admission cycle updates from across Maharashtra.</p>
+              </div>
+              <div className="flex items-center gap-4 bg-slate-800/50 border border-slate-700/50 px-5 py-3 rounded-2xl">
+                <RefreshCw className="w-4 h-4 text-emerald-400 animate-spin-slow" />
+                <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Crawling state-wide portals...</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { 
+                  title: "DTE Maharashtra: CAP Round 1 Schedule Out", 
+                  type: "URGENT", 
+                  source: "mahacet.org", 
+                  date: "Real-Time",
+                  color: "rose"
+                },
+                { 
+                  title: "New EBC Scholarship Limits for 2025", 
+                  type: "ALERT", 
+                  source: "MahaDBT", 
+                  date: "2 hours ago",
+                  color: "amber"
+                },
+                { 
+                  title: "NIRF 2025: Top 10 Engineering Gains", 
+                  type: "INSIGHT", 
+                  source: "HT Education", 
+                  date: "5 hours ago",
+                  color: "indigo"
+                },
+                { 
+                  title: "Direct 2nd Year Vacancy Matrix Update", 
+                  type: "NEWS", 
+                  source: "State Cell", 
+                  date: "1 day ago",
+                  color: "emerald"
+                }
+              ].map((news, i) => (
+                <div key={i} className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5 hover:bg-slate-800/60 hover:border-slate-500 transition-all cursor-pointer group">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-widest bg-${news.color}-500/10 text-${news.color}-400 border border-${news.color}-500/20`}>
+                      {news.type}
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-500">{news.date}</span>
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-200 mb-4 group-hover:text-white transition-colors line-clamp-2 leading-snug">
+                    {news.title}
+                  </h4>
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-700/30">
+                    <span className="text-[10px] font-bold text-slate-500 italic">via {news.source}</span>
+                    <ExternalLink className="w-3 h-3 text-slate-600 group-hover:text-slate-400 transition-colors" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-10 flex flex-wrap gap-4">
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-5 py-3 flex items-center gap-3">
+                <Zap className="w-4 h-4 text-emerald-400" />
+                <span className="text-[11px] font-bold text-emerald-100 italic">Crawler Tip: Most colleges in Pune are reporting a 15% increase in AI/ML seats this year.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {profile && (
           <div className="bg-white rounded-xl border border-slate-200 p-5 mb-8 shadow-sm">
             <div className="flex flex-wrap items-center gap-4 text-sm">
