@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { supabase } from "@/lib/supabase";
-import { GoogleMap, useLoadScript, Marker, Circle, Polyline as GooglePolyline } from "@react-google-maps/api";
+import { GoogleMap, useLoadScript, Marker, Circle, Polyline as GooglePolyline, DirectionsRenderer } from "@react-google-maps/api";
 import { MapContainer, TileLayer, Marker as LeafletMarker, Popup as LeafletPopup, Circle as LeafletCircle, Polyline as LeafletPolyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -714,6 +714,57 @@ function CollegeMapContent() {
       .map(c => ({ lat: c.latitude as number, lng: c.longitude as number }));
   }, [visitList]);
 
+  const [osmRouteCoords, setOsmRouteCoords] = useState<{lat: number, lng: number}[]>([]);
+  const [googleRouteResponse, setGoogleRouteResponse] = useState<google.maps.DirectionsResult | null>(null);
+
+  // Fetch OSRM Route for OpenStreetMap
+  useEffect(() => {
+    if (mapProvider === 'osm' && visitRouteCoords.length > 1) {
+      const fetchOsmRoute = async () => {
+        try {
+          const coordinatesString = visitRouteCoords.map(c => `${c.lng},${c.lat}`).join(';');
+          const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordinatesString}?overview=full&geometries=geojson`);
+          const data = await response.json();
+          if (data.routes && data.routes.length > 0) {
+            const coords = data.routes[0].geometry.coordinates;
+            setOsmRouteCoords(coords.map((c: any) => ({ lat: c[1], lng: c[0] })));
+          }
+        } catch (error) {
+          console.error("OSRM route fetch failed", error);
+        }
+      };
+      fetchOsmRoute();
+    } else {
+      setOsmRouteCoords([]);
+    }
+  }, [visitRouteCoords, mapProvider]);
+
+  // Fetch Google Directions for Google Map
+  useEffect(() => {
+    if (mapProvider === 'google' && visitRouteCoords.length > 1 && isLoaded) {
+      const directionsService = new window.google.maps.DirectionsService();
+      const origin = visitRouteCoords[0];
+      const destination = visitRouteCoords[visitRouteCoords.length - 1];
+      const waypoints = visitRouteCoords.slice(1, -1).map(coord => ({
+        location: coord,
+        stopover: true
+      }));
+
+      directionsService.route({
+        origin: origin,
+        destination: destination,
+        waypoints: waypoints,
+        travelMode: window.google.maps.TravelMode.DRIVING
+      }).then(result => {
+        setGoogleRouteResponse(result);
+      }).catch(err => {
+        console.error("Error fetching google directions", err);
+      });
+    } else {
+      setGoogleRouteResponse(null);
+    }
+  }, [visitRouteCoords, mapProvider, isLoaded]);
+
   if (loading) {
     return (
       <div className="flex flex-col h-screen bg-slate-950 overflow-hidden">
@@ -781,10 +832,15 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
         />
 
         {/* Visit Route Polyline */}
-        {visitRouteCoords.length > 1 && (
+        {osmRouteCoords.length > 1 ? (
+          <LeafletPolyline
+            positions={osmRouteCoords}
+            pathOptions={{ color: '#4f46e5', weight: 5, opacity: 0.8 }}
+          />
+        ) : visitRouteCoords.length > 1 && (
           <LeafletPolyline
             positions={visitRouteCoords}
-            pathOptions={{ color: '#4f46e5', weight: 4, opacity: 0.8 }}
+            pathOptions={{ color: '#4f46e5', weight: 4, opacity: 0.5, dashArray: '5, 10' }}
           />
         )}
 
@@ -927,17 +983,29 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
           );
         })}
 
-        {/* Visit Route Polyline */}
-        {visitRouteCoords.length > 1 && (
+        {/* Visit Route Polyline / Directions */}
+        {googleRouteResponse ? (
+          <DirectionsRenderer
+            directions={googleRouteResponse}
+            options={{
+              suppressMarkers: true,
+              polylineOptions: {
+                strokeColor: '#4f46e5',
+                strokeOpacity: 0.8,
+                strokeWeight: 5,
+              }
+            }}
+          />
+        ) : visitRouteCoords.length > 1 ? (
           <GooglePolyline
             path={visitRouteCoords}
             options={{
               strokeColor: '#4f46e5',
-              strokeOpacity: 0.8,
+              strokeOpacity: 0.5,
               strokeWeight: 4,
             }}
           />
-        )}
+        ) : null}
 
         {/* Dynamic Range Ring */}
         {activeLayers.has('range') && (
