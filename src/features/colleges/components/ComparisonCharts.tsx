@@ -1,63 +1,93 @@
-import React from "react";
-import { Radar } from "react-chartjs-2";
-import {
-    Chart as ChartJS, RadialLinearScale, PointElement, LineElement,
-    Filler, Tooltip, Legend, CategoryScale, LinearScale, BarElement,
-    ArcElement, Title
-} from "chart.js";
-
-ChartJS.register(
-    RadialLinearScale, PointElement, LineElement, Filler, Tooltip,
-    Legend, CategoryScale, LinearScale, BarElement, ArcElement, Title
-);
+import React from 'react';
+import { Radar, Bar } from 'react-chartjs-2';
+import type { College, ComparisonMetric } from '../types/comparison';
+import { COMPARISON_METRICS } from '../types/comparison';
 
 interface ComparisonChartsProps {
-    radarData: any;
-    barData: any;
+  selectedColleges: College[];
+  view: 'radar' | 'bar';
 }
 
-export const ComparisonCharts: React.FC<ComparisonChartsProps> = ({ radarData }) => {
-    return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-            <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-2xl">
-                <h3 className="text-xl font-black text-slate-900 mb-8 uppercase tracking-widest">Core Attribute Map</h3>
-                <div className="h-[400px] flex items-center justify-center">
-                    <Radar
-                        data={radarData}
-                        options={{
-                            scales: {
-                                r: {
-                                    angleLines: { color: 'rgba(0,0,0,0.05)' },
-                                    grid: { color: 'rgba(0,0,0,0.05)' },
-                                    pointLabels: { font: { size: 10, weight: 'bold' as const }, color: '#64748b' },
-                                    ticks: { display: false }
-                                }
-                            },
-                            plugins: {
-                                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { weight: 'bold' } } }
-                            }
-                        }}
-                    />
-                </div>
-            </div>
+export const ComparisonCharts: React.FC<ComparisonChartsProps> = ({ selectedColleges, view }) => {
+  // Generate radar chart data
+  const getRadarChartData = () => {
+    const labels = COMPARISON_METRICS.map(m => m.label);
+    const datasets = selectedColleges.map((college, index) => {
+      const colors = [
+        'rgba(99, 102, 241, 0.6)',
+        'rgba(236, 72, 153, 0.6)',
+        'rgba(34, 197, 94, 0.6)',
+        'rgba(234, 179, 8, 0.6)',
+      ];
+      const borderColors = [
+        'rgb(99, 102, 241)',
+        'rgb(236, 72, 153)',
+        'rgb(34, 197, 94)',
+        'rgb(234, 179, 8)',
+      ];
 
-            <div className="bg-slate-900 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden">
-                <div className="relative z-10">
-                    <h3 className="text-xl font-black mb-8 uppercase tracking-widest text-indigo-400">AI Side-by-Side Analysis</h3>
-                    <div className="space-y-6">
-                        <div className="p-6 bg-white/5 rounded-2xl border border-white/10">
-                            <p className="text-sm font-medium text-slate-300 leading-relaxed">
-                                Based on your 2024 merit profile, <span className="text-white font-bold">College A</span> offers a significantly better ROI due to lower fees and equivalent placement outcomes.
-                            </p>
-                        </div>
-                        <div className="p-6 bg-white/5 rounded-2xl border border-white/10">
-                            <p className="text-sm font-medium text-slate-300 leading-relaxed">
-                                <span className="text-indigo-400 font-bold">College B</span> however has a 40% stronger alumni network in your preferred "Information Technology" domain.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      return {
+        label: college.college_name,
+        data: COMPARISON_METRICS.map(metric => {
+          const value = Number(college[metric.key]) || 0;
+          if (metric.key === 'fees') {
+            return Math.max(0, 100 - value / 10000);
+          } else if (metric.key === 'nirf_ranking') {
+            return Math.max(0, 100 - value);
+          } else {
+            return Math.min(100, value);
+          }
+        }),
+        backgroundColor: colors[index % colors.length],
+        borderColor: borderColors[index % borderColors.length],
+        borderWidth: 2,
+        pointBackgroundColor: borderColors[index % borderColors.length],
+      };
+    });
+
+    return { labels, datasets };
+  };
+
+  // Generate bar chart data for specific metric
+  const getBarChartData = (metric: ComparisonMetric) => {
+    const labels = selectedColleges.map(c => c.college_name);
+    const data = selectedColleges.map(c => Number(c[metric.key]) || 0);
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: metric.label,
+          data,
+          backgroundColor: selectedColleges.map((_, index) =>
+            `hsl(${index * 90}, 70%, 60%)`
+          ),
+          borderColor: selectedColleges.map((_, index) =>
+            `hsl(${index * 90}, 70%, 40%)`
+          ),
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+
+  if (view === 'radar') {
+    return (
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-6 border border-gray-200">
+        <h3 className="text-xl font-bold text-gray-900 mb-4">Radar Comparison</h3>
+        <div className="max-w-2xl mx-auto h-[400px]">
+          <Radar data={getRadarChartData()} options={{ maintainAspectRatio: false }} />
         </div>
+      </div>
     );
+  }
+
+  return (
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-6 border border-gray-200">
+      <h3 className="text-xl font-bold text-gray-900 mb-4">Bar Comparison</h3>
+      <div className="h-[400px]">
+        <Bar data={getBarChartData(COMPARISON_METRICS[0])} options={{ maintainAspectRatio: false }} />
+      </div>
+    </div>
+  );
 };
