@@ -5,12 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Target, Sparkles, RotateCw, ZoomIn, ZoomOut,
   X, Building2, MapPin, IndianRupee, GraduationCap, ArrowRight, Activity, Layers,
-  Home, Train, Shield, Eye, Compass, Users, Share2, Navigation, Globe
+  Home, Train, Shield, Eye, Compass, Users, Navigation, Globe
 } from "lucide-react";
 import axios from "axios";
 import { supabase } from "@/lib/supabase";
-import { GoogleMap, useLoadScript, Marker, Circle } from "@react-google-maps/api";
-import { MapContainer, TileLayer, Marker as LeafletMarker, Popup as LeafletPopup, Circle as LeafletCircle, useMap } from "react-leaflet";
+import { GoogleMap, useLoadScript, Marker, Circle, Polyline as GooglePolyline } from "@react-google-maps/api";
+import { MapContainer, TileLayer, Marker as LeafletMarker, Popup as LeafletPopup, Circle as LeafletCircle, Polyline as LeafletPolyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Navbar from "@/components/Navbar";
@@ -707,6 +707,13 @@ function CollegeMapContent() {
     return generateAlumniPings();
   }, [activeLayers]);
 
+  // Derived coordinates for Route Polyline
+  const visitRouteCoords = useMemo(() => {
+    return visitList
+      .filter(c => c.latitude != null && c.longitude != null)
+      .map(c => ({ lat: c.latitude as number, lng: c.longitude as number }));
+  }, [visitList]);
+
   if (loading) {
     return (
       <div className="flex flex-col h-screen bg-slate-950 overflow-hidden">
@@ -734,6 +741,8 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
   }, [center, zoom, map]);
   return null;
 }
+
+
 
 // Render OpenStreetMap (Leaflet)
   const renderOpenStreetMap = () => {
@@ -770,6 +779,14 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
           updateWhenIdle={true}
           updateWhenZooming={false}
         />
+
+        {/* Visit Route Polyline */}
+        {visitRouteCoords.length > 1 && (
+          <LeafletPolyline
+            positions={visitRouteCoords}
+            pathOptions={{ color: '#4f46e5', weight: 4, opacity: 0.8 }}
+          />
+        )}
 
         {/* Heatmap Layer */}
         {heatmapType !== "none" && filteredMarkers.map(marker => {
@@ -909,6 +926,18 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
             />
           );
         })}
+
+        {/* Visit Route Polyline */}
+        {visitRouteCoords.length > 1 && (
+          <GooglePolyline
+            path={visitRouteCoords}
+            options={{
+              strokeColor: '#4f46e5',
+              strokeOpacity: 0.8,
+              strokeWeight: 4,
+            }}
+          />
+        )}
 
         {/* Dynamic Range Ring */}
         {activeLayers.has('range') && (
@@ -1516,18 +1545,37 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
                           <p className="text-lg font-bold text-slate-900">{visitList.length}</p>
                         </div>
                       </div>
-                      <button
-                        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors shadow-sm"
-                        onClick={() => {
-                          const origin = visitList[0];
-                          const destination = visitList[visitList.length - 1];
-                          const waypoints = visitList.slice(1, -1);
-                          const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}${waypoints.length ? `&waypoints=${waypoints.map(c => `${c.latitude},${c.longitude}`).join('|')}` : ''}&travelmode=driving`;
-                          window.open(url, '_blank');
-                        }}
-                      >
-                        Launch Navigation <Navigation className="w-4 h-4 ml-1" />
-                      </button>
+                      <div className="flex gap-3">
+                        <button
+                          className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors shadow-sm"
+                          onClick={() => {
+                            setShowVisitPlanner(false);
+                            // Smoothly set center to average of origin/destination
+                            if (visitList.length >= 2) {
+                              const origin = visitList[0];
+                              const dest = visitList[visitList.length - 1];
+                              const midLat = (origin.latitude! + dest.latitude!) / 2;
+                              const midLng = (origin.longitude! + dest.longitude!) / 2;
+                              setMapCenter({ lat: midLat, lng: midLng });
+                              setZoomLevel(11);
+                            }
+                          }}
+                        >
+                          <Eye className="w-4 h-4" /> View on Map
+                        </button>
+                        <button
+                          className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors shadow-sm"
+                          onClick={() => {
+                            const origin = visitList[0];
+                            const destination = visitList[visitList.length - 1];
+                            const waypoints = visitList.slice(1, -1);
+                            const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}${waypoints.length ? `&waypoints=${waypoints.map(c => `${c.latitude},${c.longitude}`).join('|')}` : ''}&travelmode=driving`;
+                            window.open(url, '_blank');
+                          }}
+                        >
+                          Navigation <Navigation className="w-4 h-4 ml-1" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })()}
