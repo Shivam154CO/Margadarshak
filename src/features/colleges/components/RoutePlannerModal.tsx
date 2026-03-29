@@ -1,6 +1,6 @@
 import React, { type Dispatch, type SetStateAction } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, Navigation } from 'lucide-react';
+import { X, Eye, Navigation, Compass } from 'lucide-react';
 import { calculateDistance } from '../utils/geoUtils';
 
 interface RoutePlannerModalProps {
@@ -13,6 +13,9 @@ interface RoutePlannerModalProps {
   setDirectionsPanel: (el: HTMLElement | null) => void;
   setMapCenter: (center: { lat: number, lng: number }) => void;
   setZoomLevel: (zoom: number) => void;
+  isNavPinned: boolean;
+  setIsNavPinned: (val: boolean) => void;
+  setIsSplitView: (val: boolean) => void;
 }
 
 export const RoutePlannerModal: React.FC<RoutePlannerModalProps> = ({
@@ -24,7 +27,10 @@ export const RoutePlannerModal: React.FC<RoutePlannerModalProps> = ({
   googleRouteResponse,
   setDirectionsPanel,
   setMapCenter,
-  setZoomLevel
+  setZoomLevel,
+  isNavPinned,
+  setIsNavPinned,
+  setIsSplitView
 }) => {
   return (
     <AnimatePresence>
@@ -41,7 +47,27 @@ export const RoutePlannerModal: React.FC<RoutePlannerModalProps> = ({
             <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Route Planner</h2>
-                <p className="text-sm text-slate-500 mt-1">{visitList.length} college{visitList.length !== 1 ? 's' : ''} in your route</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-sm text-slate-500">{visitList.length} college{visitList.length !== 1 ? 's' : ''} in your route</p>
+                  {mapProvider === 'google' && googleRouteResponse && (
+                    <>
+                      <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                      <button 
+                        onClick={() => { setIsNavPinned(!isNavPinned); setShowVisitPlanner(false); }}
+                        className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                      >
+                        <Compass className="w-3 h-3" /> Pin Directions
+                      </button>
+                      <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                      <button 
+                        onClick={() => { setIsSplitView(true); setShowVisitPlanner(false); }}
+                        className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                      >
+                        <Eye className="w-3 h-3" /> 3D View
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
               <button onClick={() => setShowVisitPlanner(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500">
                 <X className="w-5 h-5" />

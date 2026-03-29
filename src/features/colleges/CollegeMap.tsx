@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { supabase } from "@/lib/supabase";
-import { GoogleMap, useLoadScript, Marker, Circle, Polyline as GooglePolyline, DirectionsRenderer, TrafficLayer } from "@react-google-maps/api";
+import { GoogleMap, useLoadScript, Marker, Circle, Polyline as GooglePolyline, DirectionsRenderer, TrafficLayer, StreetViewPanorama } from "@react-google-maps/api";
 import { MapContainer, TileLayer, Marker as LeafletMarker, Popup as LeafletPopup, Circle as LeafletCircle, Polyline as LeafletPolyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -708,6 +708,9 @@ function CollegeMapContent() {
   const [osmRouteCoords, setOsmRouteCoords] = useState<{lat: number, lng: number}[]>([]);
   const [googleRouteResponse, setGoogleRouteResponse] = useState<google.maps.DirectionsResult | null>(null);
   const [directionsPanel, setDirectionsPanel] = useState<HTMLElement | null>(null);
+  const [isNavPinned, setIsNavPinned] = useState(false);
+  const [streetViewPos, setStreetViewPos] = useState<{lat: number, lng: number} | null>(null);
+  const [isSplitView, setIsSplitView] = useState(false);
 
   // Fetch OSRM Route for OpenStreetMap
   useEffect(() => {
@@ -938,155 +941,199 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
     const googleAlumniMarkers = alumniMarkers;
 
     return (
-      <GoogleMap
-        mapContainerStyle={{ width: '100%', height: '100%' }}
-        center={mapCenter}
-        zoom={zoomLevel}
-        options={{
-          zoomControl: false,
-          streetViewControl: true,
-          mapTypeControl: true,
-          fullscreenControl: true,
-          minZoom: 4,
-          maxZoom: 18,
-          styles: [
-            { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-            { featureType: "transit", elementType: "labels.icon", stylers: [{ visibility: "off" }] }
-          ]
-        }}
-      >
-        {/* Real-time Traffic Layer */}
-        {activeLayers.has('traffic') && <TrafficLayer />}
-
-        {/* Heatmap Layer */}
-        {heatmapType !== "none" && filteredMarkers.map(marker => {
-          let color = "#3b82f6";
-          if (heatmapType === "cutoff") color = marker.admission_chance > 70 ? "#10b981" : "#ef4444";
-          if (heatmapType === "safety") color = "#8b5cf6";
-          if (heatmapType === "popularity") color = "#f59e0b";
-          return (
-            <Circle
-              key={`heat-g-${marker.id}`}
-              center={{ lat: marker.lat, lng: marker.lng }}
-              radius={2000}
-              options={{
-                fillColor: color,
-                fillOpacity: 0.2,
-                strokeWeight: 0,
-                clickable: false
-              }}
-            />
-          );
-        })}
-
-        {/* Visit Route Polyline / Directions */}
-        {googleRouteResponse ? (
-          <DirectionsRenderer
-            directions={googleRouteResponse}
-            options={{
-              suppressMarkers: true,
-              polylineOptions: {
-                strokeColor: '#4f46e5',
-                strokeOpacity: 0.8,
-                strokeWeight: 5,
-              }
-            }}
-            panel={directionsPanel as any}
-          />
-        ) : visitRouteCoords.length > 1 ? (
-          <GooglePolyline
-            path={visitRouteCoords}
-            options={{
-              strokeColor: '#4f46e5',
-              strokeOpacity: 0.5,
-              strokeWeight: 4,
-            }}
-          />
-        ) : null}
-
-        {/* Dynamic Range Ring */}
-        {activeLayers.has('range') && (
-          <Circle
+      <div className="relative w-full h-full flex flex-col md:flex-row overflow-hidden">
+        {/* Main Map Container */}
+        <div className={`relative transition-all duration-500 ease-in-out ${isSplitView ? 'w-full md:w-1/2 h-1/2 md:h-full' : 'w-full h-full'}`}>
+          <GoogleMap
+            mapContainerStyle={{ width: '100%', height: '100%' }}
             center={mapCenter}
-            radius={rangeRadius * 1000}
+            zoom={zoomLevel}
             options={{
-              strokeColor: '#6366f1',
-              strokeOpacity: 0.8,
-              strokeWeight: 1,
-              fillColor: '#6366f1',
-              fillOpacity: 0.05,
-              clickable: false
+              zoomControl: false,
+              streetViewControl: true,
+              mapTypeControl: true,
+              fullscreenControl: true,
+              minZoom: 4,
+              maxZoom: 18,
+              styles: [
+                { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+                { featureType: "transit", elementType: "labels.icon", stylers: [{ visibility: "off" }] }
+              ]
             }}
-          />
-        )}
+          >
+            {/* Real-time Traffic Layer */}
+            {activeLayers.has('traffic') && <TrafficLayer />}
 
-        {/* Neighborhood Overlays */}
-        {selectedCollege && activeLayers.has('essentials') && googleNeighborhoodMarkers.map(neighbor => {
-          let color = "#6366f1";
-          if (neighbor.type === "pg") color = "#f59e0b";
-          if (neighbor.type === "transit") color = "#10b981";
-          return (
-            <Marker
-              key={neighbor.id}
-              position={{ lat: neighbor.lat, lng: neighbor.lng }}
-              icon={{
-                url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="${color}" stroke="white" stroke-width="2"/><path d="M12 6l-6 6h12z" fill="white"/></svg>`)}`,
-                scaledSize: { width: 24, height: 24 } as any,
-                anchor: { x: 12, y: 12 } as any
-              }}
-              title={neighbor.name}
-            />
-          );
-        })}
-
-        {/* Alumni Pings */}
-        {activeLayers.has('alumni') && googleAlumniMarkers.map(ping => (
-          <Marker
-            key={ping.id}
-            position={{ lat: ping.lat, lng: ping.lng }}
-            icon={{
-              url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#6366f1" stroke="white" stroke-width="2"/><path d="M12 7l-1.5 1.5 1.5 1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5 1.5" stroke="white" fill="none"/></svg>`)}`,
-              scaledSize: { width: 18, height: 18 } as any,
-              anchor: { x: 9, y: 9 } as any
-            }}
-            title={`${ping.count}+ Alumni at ${ping.name}`}
-            onClick={() => alert(`Connect with ${ping.count} alumni at ${ping.name} through our LinkedIn integration!`)}
-          />
-        ))}
-
-        {/* Colleges & Placement Pulse */}
-        {activeLayers.has('colleges') && filteredMarkers.map(marker => {
-          const simChance = (marker as any).simulated_chance;
-          const color = getMarkerColor(simChance);
-          const isHighPlacement = marker.placement_rate >= 90;
-          return (
-            <React.Fragment key={marker.id}>
-              {isHighPlacement && activeLayers.has('pulse') && (
+            {/* Heatmap Layer */}
+            {heatmapType !== "none" && filteredMarkers.map(marker => {
+              let color = "#3b82f6";
+              if (heatmapType === "cutoff") color = marker.admission_chance > 70 ? "#10b981" : "#ef4444";
+              if (heatmapType === "safety") color = "#8b5cf6";
+              if (heatmapType === "popularity") color = "#f59e0b";
+              return (
                 <Circle
+                  key={`heat-g-${marker.id}`}
                   center={{ lat: marker.lat, lng: marker.lng }}
-                  radius={500}
+                  radius={2000}
                   options={{
-                    fillColor: '#10b981',
-                    fillOpacity: 0.1,
-                    strokeColor: '#10b981',
-                    strokeWeight: 1,
+                    fillColor: color,
+                    fillOpacity: 0.2,
+                    strokeWeight: 0,
                     clickable: false
                   }}
                 />
-              )}
-              <Marker
-                position={{ lat: marker.lat, lng: marker.lng }}
-                onClick={() => { const college = colleges.find(c => c.college_code === marker.id); if (college) setSelectedCollege(college); }}
-                icon={{
-                  url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="14" fill="${color}" stroke="white" stroke-width="3"/><circle cx="16" cy="16" r="8" fill="white"/><text x="16" y="20" text-anchor="middle" fill="${color}" font-size="10" font-weight="bold">${Math.round(simChance)}%</text></svg>`)}`,
-                  scaledSize: { width: 32, height: 32 } as any,
-                  anchor: { x: 16, y: 32 } as any
+              );
+            })}
+
+            {/* Visit Route Polyline / Directions */}
+            {googleRouteResponse ? (
+              <DirectionsRenderer
+                directions={googleRouteResponse}
+                options={{
+                  suppressMarkers: true,
+                  polylineOptions: {
+                    strokeColor: '#4f46e5',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 5,
+                  }
+                }}
+                panel={(!isNavPinned ? directionsPanel : null) as any}
+              />
+            ) : visitRouteCoords.length > 1 ? (
+              <GooglePolyline
+                path={visitRouteCoords}
+                options={{
+                  strokeColor: '#4f46e5',
+                  strokeOpacity: 0.5,
+                  strokeWeight: 4,
                 }}
               />
-            </React.Fragment>
-          );
-        })}
-      </GoogleMap>
+            ) : null}
+
+            {/* Dynamic Range Ring */}
+            {activeLayers.has('range') && (
+              <Circle
+                center={mapCenter}
+                radius={rangeRadius * 1000}
+                options={{
+                  strokeColor: '#6366f1',
+                  strokeOpacity: 0.8,
+                  strokeWeight: 1,
+                  fillColor: '#6366f1',
+                  fillOpacity: 0.05,
+                  clickable: false
+                }}
+              />
+            )}
+
+            {/* Neighborhood Markers (Filtered/Essentials) */}
+            {activeLayers.has('essentials') && googleNeighborhoodMarkers.map(marker => (
+              <Marker
+                key={marker.id}
+                position={{ lat: marker.lat, lng: marker.lng }}
+                icon={{
+                  url: `https://maps.google.com/mapfiles/ms/icons/${marker.type === 'pg' ? 'orange' : marker.type === 'transit' ? 'green' : 'blue'}-dot.png`,
+                  scaledSize: new google.maps.Size(32, 32)
+                }}
+                title={marker.name}
+              />
+            ))}
+
+            {/* Alumni Pings */}
+            {activeLayers.has('alumni') && googleAlumniMarkers.map(marker => (
+              <Marker
+                key={marker.id}
+                position={{ lat: marker.lat, lng: marker.lng }}
+                icon={{
+                  url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#6366f1" stroke="white" stroke-width="2"/></svg>`)}`,
+                  scaledSize: new google.maps.Size(18, 18),
+                  anchor: new google.maps.Point(9, 9)
+                }}
+                title={`${marker.count}+ Alumni`}
+              />
+            ))}
+
+            {/* College Markers (Google) */}
+            {filteredMarkers.map(marker => (
+              <Marker
+                key={`g-${marker.id}`}
+                position={{ lat: marker.lat, lng: marker.lng }}
+                onClick={() => {
+                  const college = filteredMarkers.find(c => c.id === marker.id);
+                  if (college) {
+                     // Find full college data if needed
+                     setSelectedCollege(marker as any); 
+                     setMapCenter({ lat: marker.lat, lng: marker.lng });
+                     setZoomLevel(15);
+                     setStreetViewPos({ lat: marker.lat, lng: marker.lng });
+                  }
+                }}
+                icon={{
+                  url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="40" height="40" rx="10" fill="#18181b" stroke="${marker.admission_chance > 80 ? '#10b981' : marker.admission_chance > 50 ? '#3b82f6' : '#ef4444'}" stroke-width="2"/>
+                      <circle cx="20" cy="20" r="14" fill="white" fill-opacity="0.1"/>
+                    </svg>
+                  `),
+                  scaledSize: new google.maps.Size(40, 40),
+                  anchor: new google.maps.Point(20, 20)
+                }}
+              />
+            ))}
+          </GoogleMap>
+
+          {/* Floating Navigation Pinned Panel */}
+          {isNavPinned && googleRouteResponse && (
+            <div className="absolute top-6 left-6 z-[45] w-[300px] h-[400px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200">
+               <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white/90 backdrop-blur-sm">
+                  <h3 className="text-sm font-bold text-slate-900">Live Directions</h3>
+                  <button onClick={() => setIsNavPinned(false)} className="p-1 hover:bg-slate-100 rounded-md">
+                    <X className="w-4 h-4 text-slate-500" />
+                  </button>
+               </div>
+               <div className="flex-1 overflow-y-auto premium-scrollbar bg-slate-50" ref={setDirectionsPanel} />
+            </div>
+          )}
+        </div>
+
+        {/* Street View / 3D Module Panel */}
+        {isSplitView && (
+          <div className="w-full md:w-1/2 h-1/2 md:h-full relative bg-slate-900 border-l border-white/10 shadow-2xl">
+            <StreetViewPanorama
+              options={{
+                position: streetViewPos || mapCenter,
+                visible: true,
+                addressControl: true,
+                showRoadLabels: true,
+                motionTracking: true,
+                zoomControl: true,
+                panControl: true,
+                enableCloseButton: false
+              }}
+            />
+            <button
+              onClick={() => setIsSplitView(false)}
+              className="absolute top-6 right-6 z-[60] p-3 bg-white/10 hover:bg-white/20 backdrop-blur-xl rounded-xl border border-white/20 text-white transition-all shadow-2xl"
+            >
+              <Globe className="w-5 h-5 mr-1 inline" /> Switch to 2D
+            </button>
+          </div>
+        )}
+
+        {/* Split View Toggle Controls (Bottom Right) */}
+        {!isSplitView && googleRouteResponse && (
+           <div className="absolute right-6 bottom-32 z-[40]">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsSplitView(true)}
+                className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-2xl transition-all border border-indigo-500/20"
+              >
+                <Compass className="w-5 h-5" /> 3D Explorer
+              </motion.button>
+           </div>
+        )}
+      </div>
     );
   };
 
@@ -1135,8 +1182,9 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
                 <div className="px-5 py-4 flex gap-2 border-b border-white/5">
                   <button
                     onClick={() => {
-                      if (!selectedCollege) return;
-                      window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${selectedCollege.latitude},${selectedCollege.longitude}&heading=0&pitch=0`, '_blank');
+                      if (!selectedCollege || !selectedCollege.latitude || !selectedCollege.longitude) return;
+                      setStreetViewPos({ lat: selectedCollege.latitude, lng: selectedCollege.longitude });
+                      setIsSplitView(true);
                     }}
                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/5 text-white/70 rounded-xl text-[11px] font-bold hover:bg-white/10 transition-colors border border-white/5"
                   >
@@ -1144,8 +1192,9 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
                   </button>
                   <button
                     onClick={() => {
-                      if (!selectedCollege) return;
-                      window.open(`https://www.openstreetmap.org/?mlat=${selectedCollege.latitude}&mlon=${selectedCollege.longitude}#map=18/${selectedCollege.latitude}/${selectedCollege.longitude}`, '_blank');
+                      if (!selectedCollege || !selectedCollege.latitude || !selectedCollege.longitude) return;
+                      setMapCenter({ lat: selectedCollege.latitude, lng: selectedCollege.longitude });
+                      setZoomLevel(18);
                     }}
                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white/5 text-white/70 rounded-xl text-[11px] font-bold hover:bg-white/10 transition-colors border border-white/5"
                   >
@@ -1154,6 +1203,7 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
                   <button
                     onClick={() => {
                       if (!selectedCollege) return;
+                      // Fallback to external for full transit directions if route not planned yet
                       window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedCollege.latitude},${selectedCollege.longitude}&travelmode=transit`, '_blank');
                     }}
                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-500/10 text-emerald-400 rounded-xl text-[11px] font-bold hover:bg-emerald-500/20 transition-colors border border-emerald-500/10"
@@ -1515,6 +1565,9 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
           setDirectionsPanel={setDirectionsPanel}
           setMapCenter={setMapCenter}
           setZoomLevel={setZoomLevel}
+          isNavPinned={isNavPinned}
+          setIsNavPinned={setIsNavPinned}
+          setIsSplitView={setIsSplitView}
         />
 
         {/* Action Controls - Bottom Left (Replicating Startup Arena) */}
