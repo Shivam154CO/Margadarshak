@@ -139,6 +139,18 @@ export default function OverviewScreen() {
   const [mlBranch, setMlBranch] = useState<string>("Any Branch");
   const [mlFee, setMlFee] = useState<string>("Any Fee");
 
+  // Dynamic Intelligence Feed State
+  const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [newsLoading, setNewsLoading] = useState(true);
+
+  // Fetch Central Intelligence
+  useEffect(() => {
+    axios.post(`${ML_API_URL}/college_intelligence`, { college_name: "General", exam_type: "DSE" })
+      .then(res => setNewsItems(res.data.central || []))
+      .catch((err) => console.error("News fetch error:", err))
+      .finally(() => setNewsLoading(false));
+  }, []);
+
   const mlCities = useMemo(() => ["Any City", ...Array.from(new Set(colleges.map(c => c.city))).sort()], [colleges]);
   const mlBranches = useMemo(() => ["Any Branch", ...Array.from(new Set(colleges.map(c => c.branch))).sort()], [colleges]);
 
@@ -357,50 +369,34 @@ export default function OverviewScreen() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                {
-                  title: "DTE Maharashtra: CAP Round 1 Schedule Out",
-                  type: "URGENT",
-                  source: "mahacet.org",
-                  date: "Real-Time"
-                },
-                {
-                  title: "New EBC Scholarship Limits for 2025",
-                  type: "ALERT",
-                  source: "MahaDBT",
-                  date: "2 hours ago"
-                },
-                {
-                  title: "NIRF 2025: Top 10 Engineering Gains",
-                  type: "INSIGHT",
-                  source: "HT Education",
-                  date: "5 hours ago"
-                },
-                {
-                  title: "Direct 2nd Year Vacancy Matrix Update",
-                  type: "NEWS",
-                  source: "State Cell",
-                  date: "1 day ago"
-                }
-              ].map((news, i) => (
-                <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 hover:border-slate-500 transition-all cursor-pointer group">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest ${news.type === 'URGENT' ? 'bg-white text-slate-900 uppercase font-black' : 'bg-slate-800 text-slate-300 border border-slate-700'
-                      }`}>
-                      {news.type}
-                    </span>
-                    <span className="text-[9px] font-bold text-slate-500">{news.date}</span>
-                  </div>
-                  <h4 className="text-sm font-bold text-slate-200 mb-4 group-hover:text-white transition-colors line-clamp-2 leading-snug">
-                    {news.title}
-                  </h4>
-                  <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                    <span className="text-[10px] font-bold text-slate-500 italic">via {news.source}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                {newsLoading ? (
+                  [...Array(4)].map((_, i) => (
+                    <div key={i} className="h-32 bg-white/5 border border-white/10 rounded-2xl animate-pulse" />
+                  ))
+                ) : (
+                  (newsItems || []).map((news: any, i: number) => (
+                    <div 
+                      key={i} 
+                      onClick={() => window.open(news.url, '_blank')} 
+                      className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 hover:border-slate-500 transition-all cursor-pointer group"
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest ${
+                          news.type === 'URGENT' ? 'bg-white text-slate-900 uppercase font-black' : 'bg-slate-800 text-slate-300 border border-slate-700'
+                        }`}>
+                          {news.type}
+                        </span>
+                        <span className="text-[9px] font-bold text-slate-500">{news.date}</span>
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-200 mb-4 group-hover:text-white transition-colors line-clamp-2 leading-snug">
+                        {news.title}
+                      </h4>
+                      <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                        <span className="text-[10px] font-bold text-slate-500 italic">via {news.source}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
 
             <div className="mt-10 flex flex-wrap gap-4">
               <div className="bg-white/5 border border-white/10 rounded-xl px-5 py-3">

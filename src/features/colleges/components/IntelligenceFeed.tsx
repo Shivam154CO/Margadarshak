@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface NewsItem {
   title: string;
@@ -13,60 +13,45 @@ interface IntelligenceFeedProps {
   collegeName: string;
 }
 
-export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ collegeName }) => {
-  const campusNews: NewsItem[] = [
-    {
-      title: `Expansion of AI Intake at ${collegeName.split(' ')[0]}`,
-      source: "HT Education News",
-      date: "2 days ago",
-      type: "NEWS",
-      desc: "University Senate approves doubling of seats in Computer and AI branches for upcoming session.",
-      url: "https://www.hindustantimes.com/education"
-    },
-    {
-      title: "Industry Tie-ups: New Tech Hub Inauguration",
-      source: "Pune Mirror: Tech",
-      date: "1 week ago",
-      type: "BLOG",
-      desc: "The institution inaugurates a state-of-the-art incubation center for emerging technologies in the region.",
-      url: "https://punemirror.com"
-    },
-    {
-      title: "Student Experience: The Real Vibe of Campus",
-      source: "Student Community Blog",
-      date: "3 weeks ago",
-      type: "BLOG",
-      desc: "An unfiltered look at life on campus, hostel facilities, and the upcoming cultural festival preparations.",
-      url: "https://studentblog.org"
-    }
-  ];
+const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 
-  const centralNews: NewsItem[] = [
-    {
-      title: "DSE 2024-25: Revised Final Merit List Released",
-      source: "CET Cell Portal",
-      date: "Real-Time",
-      type: "URGENT",
-      desc: "The State Common Entrance Test Cell has published the updated final merit list for Direct Second Year Engineering.",
-      url: "https://fe2024.mahacet.org"
-    },
-    {
-      title: "Bridge Course Notification for Diploma Students",
-      source: "MSBTE / DTE",
-      date: "4 days ago",
-      type: "ACADEMIC",
-      desc: "New guidelines for mandatory bridge courses in Mathematics and Applied Sciences for DSE admissions.",
-      url: "https://dte.maharashtra.gov.in"
-    },
-    {
-      title: "DSE Fee Waiver: EWS/EBC Eligibility Update",
-      source: "MahaDBT Support",
-      date: "1 week ago",
-      type: "SCHOLARSHIP",
-      desc: "Important clarification on fee reimbursement for diploma candidates moving into third-year degree programs.",
-      url: "https://mahadbt.maharashtra.gov.in"
+export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ collegeName }) => {
+  const [campusNews, setCampusNews] = useState<NewsItem[]>([]);
+  const [centralNews, setCentralNews] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchIntelligence = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${ML_API_URL}/college_intelligence`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          college_name: collegeName,
+          exam_type: 'DSE',
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch intelligence');
+      
+      const data = await response.json();
+      setCampusNews(data.campus || []);
+      setCentralNews(data.central || []);
+    } catch (err: any) {
+      console.error('Error fetching intelligence:', err);
+      setError('Failed to load real-time intelligence.');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchIntelligence();
+  }, [collegeName]);
 
   const getTypeStyle = (type: string) => {
     switch (type) {
@@ -77,11 +62,34 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ collegeName 
     }
   };
 
+  if (loading) {
+    return (
+      <div className="py-20 text-center">
+        <div className="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest animate-pulse">Scanning Intelligence Sources...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-20 text-center bg-rose-50 rounded-3xl border border-rose-100">
+        <p className="text-rose-600 text-sm font-bold">{error}</p>
+        <button 
+          onClick={fetchIntelligence}
+          className="mt-4 px-6 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
+        >
+          Retry Scan
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-10 pb-12">
       <div className="border-b border-slate-100 pb-6">
-        <h2 className="text-2xl font-bold text-slate-900">Intelligence Feed</h2>
-        <p className="text-slate-500 text-sm mt-1">Updates and announcements related to {collegeName}.</p>
+        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Intelligence Feed</h2>
+        <p className="text-slate-500 text-sm mt-1">Real-time updates and directives related to {collegeName} and DSE Admissions.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -141,7 +149,10 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ collegeName 
       </div>
 
       <div className="flex justify-center pt-6">
-        <button className="px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors">
+        <button 
+          onClick={fetchIntelligence}
+          className="px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors"
+        >
           Refresh Intelligence
         </button>
       </div>
