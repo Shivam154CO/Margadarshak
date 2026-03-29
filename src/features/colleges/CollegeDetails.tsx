@@ -22,6 +22,7 @@ import { InfrastructureGrid, PlacementStats } from '@/features/colleges/componen
 import { ContactInfo } from '@/features/colleges/components/ContactInfo';
 import { SeatMatrixViewer } from '@/features/colleges/components/SeatMatrixViewer';
 import { DistanceCalculator } from '@/features/colleges/components/DistanceCalculator';
+import { IntelligenceFeed } from '@/features/colleges/components/IntelligenceFeed';
 import { AIChat } from '@/features/colleges/components/AIChat';
 import ReviewModal from '@/features/community/components/ReviewModal';
 
@@ -465,132 +466,7 @@ export default function CollegeDetails() {
               />
             )}
             {activeTab === "intelligence" && (
-              <div className="space-y-8">
-                <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-12 shadow-sm relative overflow-hidden">
-                  <div className="relative z-10">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                      <div>
-                        <h3 className="text-2xl font-bold text-slate-900 mb-2">
-                          Live Intelligence Feed
-                        </h3>
-                        <p className="text-slate-500 font-medium text-sm">Real-time blogs, news, and official announcements aggregated from across the web.</p>
-                      </div>
-                      <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Scraped via Ikigai Crawler v2.4</span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                      {/* Left Side: Campus Specific */}
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] border-b border-slate-900 pb-1">Campus Specific Insights</h4>
-                        </div>
-                        <div className="space-y-4">
-                          {[
-                            {
-                              title: `Expansion of AI Intake at ${college.college_name.split(' ')[0]}`,
-                              source: "HT Education News",
-                              date: "2 days ago",
-                              type: "NEWS",
-                              desc: "University Senate approves doubling of seats in Computer and AI branches for upcoming session.",
-                              url: "https://www.hindustantimes.com/education"
-                            },
-                            {
-                              title: "Industry Tie-ups: New Tech Hub Inauguration",
-                              source: "Pune Mirror: Tech",
-                              date: "1 week ago",
-                              type: "BLOG",
-                              desc: "The institution inaugurates a state-of-the-art incubation center for emerging technologies in the region.",
-                              url: "https://punemirror.com"
-                            },
-                            {
-                              title: "Student Experience: The Real Vibe of Campus",
-                              source: "Student Community Blog",
-                              date: "3 weeks ago",
-                              type: "BLOG",
-                              desc: "An unfiltered look at life on campus, hostel facilities, and the upcoming cultural festival preparations.",
-                              url: "https://studentblog.org"
-                            }
-                          ].map((item, i) => (
-                            <div key={i} className="group bg-slate-50 border border-slate-100 rounded-2xl p-5 hover:bg-white hover:border-slate-300 transition-all cursor-pointer relative" onClick={() => window.open(item.url, '_blank')}>
-                              <div className="flex justify-between items-start mb-3">
-                                <span className="text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-widest bg-slate-200 text-slate-600 border border-slate-200">
-                                  {item.type}
-                                </span>
-                                <span className="text-[9px] font-bold text-slate-400">{item.date}</span>
-                              </div>
-                              <h5 className="font-bold text-slate-900 group-hover:text-slate-600 mb-2 leading-tight text-sm transition-colors">
-                                {item.title}
-                              </h5>
-                              <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
-                                {item.desc}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Right Side: DSE Overall */}
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] border-b border-slate-900 pb-1">DSE Central Intelligence</h4>
-                        </div>
-                        <div className="space-y-4">
-                          {[
-                            {
-                              title: "DSE 2024-25: Revised Final Merit List Released",
-                              source: "CET Cell Portal",
-                              date: "Real-Time",
-                              type: "URGENT",
-                              desc: "The State Common Entrance Test Cell has published the updated final merit list for Direct Second Year Engineering.",
-                              url: "https://fe2024.mahacet.org"
-                            },
-                            {
-                              title: "Bridge Course Notification for Diploma Students",
-                              source: "MSBTE / DTE",
-                              date: "4 days ago",
-                              type: "ACADEMIC",
-                              desc: "New guidelines for mandatory bridge courses in Mathematics and Applied Sciences for DSE admissions.",
-                              url: "https://dte.maharashtra.gov.in"
-                            },
-                            {
-                              title: "DSE Fee Waiver: EWS/EBC Eligibility Update",
-                              source: "MahaDBT Support",
-                              date: "1 week ago",
-                              type: "SCHOLARSHIP",
-                              desc: "Important clarification on fee reimbursement for diploma candidates moving into third-year degree programs.",
-                              url: "https://mahadbt.maharashtra.gov.in"
-                            }
-                          ].map((item, i) => (
-                            <div key={i} className="group bg-slate-50 border border-slate-100 rounded-2xl p-5 hover:bg-white hover:border-slate-300 transition-all cursor-pointer relative" onClick={() => window.open(item.url, '_blank')}>
-                              <div className="flex justify-between items-start mb-3">
-                                <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${item.type === 'URGENT' ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600 border border-slate-200'
-                                  }`}>
-                                  {item.type}
-                                </span>
-                                <span className="text-[9px] font-bold text-slate-400">{item.date}</span>
-                              </div>
-                              <h5 className="font-bold text-slate-900 group-hover:text-slate-600 mb-2 leading-tight text-sm transition-colors">
-                                {item.title}
-                              </h5>
-                              <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
-                                {item.desc}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-12 flex justify-center">
-                      <button className="px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black hover:bg-black transition-colors uppercase tracking-[0.2em]">
-                        Reprocess Web Crawl
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <IntelligenceFeed collegeName={college.college_name} />
             )}
             {activeTab === "info" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
