@@ -123,16 +123,23 @@ export function computeBI(colleges: College[], _profile: any) {
         fit: c.probability_level || c.fit
     }));
 
+    const placementIndex = Math.round(avg(pred, c => c.placement_rate || 0)) || 80;
+    const safetyScore = pred.length > 0 ? Math.round(((mp.length + bf.length) / pred.length) * 100) : 0;
+    const choiceAccuracy = Math.round(avg(pred, c => Math.max(...(c.branches?.map(b => b.admission_chance || 0) || [0]), c.admission_chance || c.match_score || 0))) || 85; 
+    const avgPkgVal = avg(pred, c => c.average_package_lpa || 0);
+    const careerGrowth = avgPkgVal > 0 ? Math.min(Math.round((avgPkgVal / 12) * 100), 98) : 75;
+
     return {
         total: pred.length, mp: mp.length, bf: bf.length, gf: gf.length, st: st.length,
         moderate: bf.length + gf.length,
         avgFeesAll: avg(pred, c => c.fees || 0) / 100000,
-        avgPkgAll: avg(pred, c => c.average_package_lpa || 0), avgPlcAll: avg(pred, c => c.placement_rate || 0),
+        avgPkgAll: avgPkgVal, avgPlcAll: avg(pred, c => c.placement_rate || 0),
         uniqueColleges: new Set(pred.map(c => c.college_code)).size, uniqueCities: Object.keys(cityMap).length,
         autonomous: pred.filter(c => c.autonomy_status?.toLowerCase().includes('auto')).length,
         affiliated: pred.length - pred.filter(c => c.autonomy_status?.toLowerCase().includes('auto')).length,
         branchRows, cityRows, distRows, feeBuckets, catTrend, gems, velocity, amenityStack, univData, mapGrid, scatter,
         safe: mp.length + bf.length, insight: `Concentrated in ${cityRows[0]?.city || 'N/A'}. ${branchRows[0]?.name || 'N/A'} is leading ROI.`,
-        donut: [{ name: 'Probable', value: mp.length, fill: '#7c3aed' }, { name: 'Others', value: pred.length - mp.length, fill: '#e2e8f0' }]
+        donut: [{ name: 'Probable', value: mp.length, fill: '#7c3aed' }, { name: 'Others', value: pred.length - mp.length, fill: '#e2e8f0' }],
+        placementIndex, safetyScore, choiceAccuracy, careerGrowth
     };
 }

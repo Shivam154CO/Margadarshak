@@ -24,6 +24,7 @@ export const ROUTES = {
   OVERVIEW: '/overview',
   CAP_ROUND_GENERATOR: '/cap-generator',
   SCORECARD_OCR: '/scorecard-ocr',
+  RANK_PREDICTOR: '/rank-predictor',
   ADMISSION_TIMELINE: '/admission-timeline',
   DOCUMENT_CHECKLIST: '/documents',
   

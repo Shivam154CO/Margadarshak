@@ -392,15 +392,26 @@ export default function Favorites() {
             <span className="font-medium">Back to Dashboard</span>
           </button>
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
             <div className="flex items-center gap-3 sm:gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Favorites</h1>
-                <p className="text-gray-600 text-sm sm:text-base">
-                  {savedColleges.length} saved colleges
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Favorites</h1>
+                <p className="text-gray-600 text-sm sm:text-base font-semibold">
+                  {savedColleges.length} pinned colleges
                 </p>
               </div>
             </div>
+            {savedColleges.length > 0 && (
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.origin + "/share/" + profile?.id);
+                  alert("Shareable link copied to clipboard!");
+                }}
+                className="px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl font-bold hover:bg-indigo-100 transition-colors shadow-sm flex items-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" /> Share My List
+              </button>
+            )}
           </div>
 
 
@@ -474,11 +485,11 @@ export default function Favorites() {
         ) : savedColleges.length === 0 ? (
           <div className="text-center py-16 bg-white/50 rounded-3xl border-2 border-dashed border-gray-300/50 shadow-sm">
             <img src={EmptyInboxImg} alt="No favorites yet" className="w-40 h-40 mx-auto mb-6 opacity-90" />
-            <h4 className="text-xl font-semibold text-gray-900 mb-2">
-              No favorites yet
+            <h4 className="text-xl font-bold text-gray-900 mb-2">
+              Your College List is Empty
             </h4>
-            <p className="text-gray-600 max-w-md mx-auto mb-6">
-              Start exploring colleges and save your favorites for quick access to your preferred matches.
+            <p className="text-gray-500 max-w-md mx-auto mb-6 font-medium">
+              You haven't pinned any colleges yet. Use the College Explorer to find and save your top matches for DSE admission.
             </p>
             <button
               onClick={() => navigate("/dashboard")}
@@ -490,11 +501,11 @@ export default function Favorites() {
         ) : sortedColleges.length === 0 ? (
           <div className="text-center py-16 bg-white/50 rounded-3xl border-2 border-dashed border-gray-300/50 shadow-sm">
             <img src={NoResultsImg} alt="No matches found" className="w-40 h-40 mx-auto mb-6 opacity-90" />
-            <h4 className="text-xl font-semibold text-gray-900 mb-2">
-              No matches found
+            <h4 className="text-xl font-bold text-gray-900 mb-2">
+              Nothing found in your list
             </h4>
-            <p className="text-gray-600 max-w-md mx-auto mb-6">
-              Try adjusting your search terms or filter criteria.
+            <p className="text-gray-500 max-w-md mx-auto mb-6 font-medium">
+              We couldn't find any saved colleges matching your current filters.
             </p>
             <button
               onClick={() => {

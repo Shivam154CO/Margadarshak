@@ -118,7 +118,7 @@ export default function Analytics() {
                 {/* 1. Header (Timeline Style) */}
                 <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">Strategic Dashboard</h1>
+                        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">Admission Strategy</h1>
                         <p className="text-sm text-slate-500 mt-1">Deep analytics across {bi.total} predictions and {bi.uniqueCities} city clusters</p>
                     </div>
                     <button onClick={handleDownload} className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 shadow-sm transition-all active:scale-95">
@@ -132,7 +132,7 @@ export default function Analytics() {
                     <Metric label="Colleges Found" value={bi.total} sub="Total Pool Size" border="border-l-indigo-500" />
                     <Metric label="Admission Safe" value={bi.safe} sub="High Probability" border="border-l-emerald-500" />
                     <Metric label="Avg Study Fees" value={`₹${bi.avgFeesAll.toFixed(1)}L`} sub="Annual Portfolio" border="border-l-rose-500" />
-                    <Metric label="Yield Package" value={`₹${bi.avgPkgAll.toFixed(1)}L`} sub="Salary Projection" border="border-l-amber-500" />
+                    <Metric label="Expected Salary" value={`₹${bi.avgPkgAll.toFixed(1)}L`} sub="Average Package" border="border-l-amber-500" />
                 </div>
 
                 {/* 3. The Feature Grid (15+ Features) */}
@@ -162,10 +162,10 @@ export default function Analytics() {
                         <Section title="Admission Health Metrics" border="border-l-emerald-500">
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-4">
                                 {[
-                                    { l: "Safety Score", v: Math.round((bi.safe / bi.total) * 100), c: "text-indigo-600" },
-                                    { l: "Placement Index", v: 88, c: "text-emerald-600" },
-                                    { l: "Choice Accuracy", v: 94, c: "text-blue-600" },
-                                    { l: "Career Growth", v: 82, c: "text-purple-600" }
+                                    { l: "Safety Score", v: bi.safetyScore, c: "text-indigo-600" },
+                                    { l: "Placement Index", v: bi.placementIndex, c: "text-emerald-600" },
+                                    { l: "Choice Accuracy", v: bi.choiceAccuracy, c: "text-blue-600" },
+                                    { l: "Career Growth", v: bi.careerGrowth, c: "text-purple-600" }
                                 ].map(s => (
                                     <div key={s.l} className="text-center">
                                         <div className={`text-4xl font-bold mb-1 tabular-nums ${s.c}`}>{s.v}%</div>
@@ -178,7 +178,7 @@ export default function Analytics() {
 
                     {/* F3: Funnel */}
                     <div className="lg:col-span-6">
-                        <Section title="Qualified Leads Funnel" border="border-l-amber-500">
+                        <Section title="Your Admission Journey" border="border-l-amber-500">
                             <div className="h-[300px]">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <FunnelChart>
@@ -214,7 +214,7 @@ export default function Analytics() {
 
                     {/* F5: Value Cloud (Scatter) */}
                     <div className="lg:col-span-8">
-                        <Section title="Strategic Value Frontier" border="border-l-indigo-500">
+                        <Section title="Fees vs Career Pay" border="border-l-indigo-500">
                             <div className="h-[300px]">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <ScatterChart margin={{ top: 20 }}>
@@ -233,7 +233,7 @@ export default function Analytics() {
 
                     {/* F6: Top Hubs */}
                     <div className="lg:col-span-4">
-                        <Section title="Top Geospatial Hubs" border="border-l-blue-500">
+                        <Section title="College Cities at a Glance" border="border-l-blue-500">
                             <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                 {bi.cityRows.map((city, i) => (
                                     <div key={i} onClick={() => openDrill('City', city.city, activeColleges.filter(c => c.city === city.city))} className="group cursor-pointer">
@@ -252,7 +252,7 @@ export default function Analytics() {
 
                     {/* F7: Hidden Gems (Strategy Picks) */}
                     <div className="lg:col-span-12">
-                        <Section title="High-Value Strategic Selections" border="border-l-emerald-600">
+                        <Section title="Top Picks For You" border="border-l-emerald-600">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                                 {bi.gems.slice(0, 5).map((g, i) => (
                                     <div key={i} onClick={() => navigate(ROUTES.COLLEGE_BY_CODE.replace(':code', g.college_code))} className="bg-white border border-slate-200 p-5 rounded-xl hover:border-indigo-500 transition-all cursor-pointer group">
@@ -304,7 +304,7 @@ export default function Analytics() {
 
                     {/* F10: AI Roadmap Review */}
                     <div className="lg:col-span-12">
-                        <Section title="Strategic Review Guidance" border="border-l-slate-900">
+                        <Section title="AI Counselor Review" border="border-l-slate-900">
                             <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
                                 <p className="text-sm font-medium text-slate-700 leading-relaxed italic border-l-4 border-indigo-500 pl-4">"{bi.insight}"</p>
                             </div>
@@ -361,7 +361,7 @@ export default function Analytics() {
                                 </div>
 
                                 <div className="p-4 border-t border-slate-200 bg-white text-center flex-shrink-0">
-                                    <button onClick={() => setDrill(null)} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-widest">Back to Strategy Dashboard</button>
+                                    <button onClick={() => setDrill(null)} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-widest">Back to Admission Strategy</button>
                                 </div>
                             </motion.div>
                         </div>

@@ -246,7 +246,7 @@ export default function OverviewScreen() {
     { title: "AI Search", desc: "Smart college finder", color: "from-indigo-500 to-blue-500", link: "/college-explorer" },
     { title: "Compare", desc: "Side-by-side analysis", color: "from-purple-500 to-pink-500", link: "/compare-college" },
     { title: "Interactive Map", desc: "Geographic explorer", color: "from-emerald-500 to-teal-500", link: "/college-map" },
-    { title: "Dashboard", desc: "Full predictions", color: "from-orange-500 to-red-500", link: "/dashboard" },
+    { title: "Rank Predictor", desc: "Estimate merit rank", color: "from-orange-500 to-red-500", link: "/rank-predictor" },
     { title: "Favorites", desc: "Saved colleges", color: "from-pink-500 to-rose-500", link: "/favorites" },
     { title: "Analytics", desc: "Trends & insights", color: "from-cyan-500 to-blue-500", link: "/analytics" },
   ];
@@ -353,6 +353,29 @@ export default function OverviewScreen() {
           </div>
         </div>
 
+        {/* ═══════════ CAP Round Countdown ═══════════ */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-[2.5rem] p-8 md:p-10 mb-10 text-white shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest mb-4 backdrop-blur-md border border-white/10">
+                <Calendar className="w-3.5 h-3.5" /> DSE Admission 2025
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">CAP Option Form Filling</h2>
+              <p className="text-indigo-100 font-semibold max-w-md">The window for Round 1 option form submission is approaching. Keep your preferences ready.</p>
+            </div>
+            <div className="flex gap-3 md:gap-4 flex-shrink-0">
+              {[ { label: "Days", val: "12" }, { label: "Hours", val: "08" }, { label: "Mins", val: "45" } ].map((t, i) => (
+                <div key={i} className="bg-black/20 backdrop-blur-md rounded-2xl p-4 md:p-5 min-w-[70px] md:min-w-[90px] text-center border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
+                  <div className="text-3xl md:text-4xl font-black tabular-nums tracking-tight">{t.val}</div>
+                  <div className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mt-1 md:mt-2">{t.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* ═══════════ Profile Summary Bar ═══════════ */}
         {/* ═══════════ Overall Live Intelligence Feed ═══════════ */}
         <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-12 mb-10 overflow-hidden relative shadow-2xl">
@@ -369,34 +392,33 @@ export default function OverviewScreen() {
               </div>
             </div>
 
-                {newsLoading ? (
-                  [...Array(4)].map((_, i) => (
-                    <div key={i} className="h-32 bg-white/5 border border-white/10 rounded-2xl animate-pulse" />
-                  ))
-                ) : (
-                  (newsItems || []).map((news: any, i: number) => (
-                    <div 
-                      key={i} 
-                      onClick={() => window.open(news.url, '_blank')} 
-                      className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 hover:border-slate-500 transition-all cursor-pointer group"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest ${
-                          news.type === 'URGENT' ? 'bg-white text-slate-900 uppercase font-black' : 'bg-slate-800 text-slate-300 border border-slate-700'
-                        }`}>
-                          {news.type}
-                        </span>
-                        <span className="text-[9px] font-bold text-slate-500">{news.date}</span>
-                      </div>
-                      <h4 className="text-sm font-bold text-slate-200 mb-4 group-hover:text-white transition-colors line-clamp-2 leading-snug">
-                        {news.title}
-                      </h4>
-                      <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                        <span className="text-[10px] font-bold text-slate-500 italic">via {news.source}</span>
-                      </div>
-                    </div>
-                  ))
-                )}
+            {newsLoading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="h-32 bg-white/5 border border-white/10 rounded-2xl animate-pulse" />
+              ))
+            ) : (
+              (newsItems || []).map((news: any, i: number) => (
+                <div
+                  key={i}
+                  onClick={() => window.open(news.url, '_blank')}
+                  className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 hover:border-slate-500 transition-all cursor-pointer group"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest ${news.type === 'URGENT' ? 'bg-white text-slate-900 uppercase font-black' : 'bg-slate-800 text-slate-300 border border-slate-700'
+                      }`}>
+                      {news.type}
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-500">{news.date}</span>
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-200 mb-4 group-hover:text-white transition-colors line-clamp-2 leading-snug">
+                    {news.title}
+                  </h4>
+                  <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                    <span className="text-[10px] font-bold text-slate-500 italic">via {news.source}</span>
+                  </div>
+                </div>
+              ))
+            )}
 
             <div className="mt-10 flex flex-wrap gap-4">
               <div className="bg-white/5 border border-white/10 rounded-xl px-5 py-3">

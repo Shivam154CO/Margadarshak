@@ -37,7 +37,7 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ collegeName 
       });
 
       if (!response.ok) throw new Error('Failed to fetch intelligence');
-      
+
       const data = await response.json();
       setCampusNews(data.campus || []);
       setCentralNews(data.central || []);
@@ -75,7 +75,7 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ collegeName 
     return (
       <div className="py-20 text-center bg-rose-50 rounded-3xl border border-rose-100">
         <p className="text-rose-600 text-sm font-bold">{error}</p>
-        <button 
+        <button
           onClick={fetchIntelligence}
           className="mt-4 px-6 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
         >
@@ -98,7 +98,7 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ collegeName 
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Campus Updates</h3>
           <div className="space-y-4">
             {campusNews.map((news, i) => (
-              <div 
+              <div
                 key={i}
                 onClick={() => window.open(news.url, '_blank')}
                 className="group cursor-pointer bg-white p-6 border border-slate-100 rounded-2xl hover:border-indigo-100 transition-all"
@@ -125,7 +125,7 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ collegeName 
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Admission Directives</h3>
           <div className="space-y-4">
             {centralNews.map((news, i) => (
-              <div 
+              <div
                 key={i}
                 onClick={() => window.open(news.url, '_blank')}
                 className="group cursor-pointer bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:bg-white hover:border-slate-200 transition-all"
@@ -149,7 +149,7 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ collegeName 
       </div>
 
       <div className="flex justify-center pt-6">
-        <button 
+        <button
           onClick={fetchIntelligence}
           className="px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors"
         >

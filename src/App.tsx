@@ -39,6 +39,7 @@ const Help = lazy(() => import("@/features/support/Help"));
 const CapRoundGenerator = lazy(() => import("@/features/admission/CapRoundGenerator"));
 const DataPipeline = lazy(() => import("@/features/tools/DataPipeline"));
 const ScorecardOcr = lazy(() => import("@/features/tools/ScorecardOcr"));
+const RankPredictor = lazy(() => import("@/features/admission/RankPredictor"));
 const Community = lazy(() => import("@/features/community/Community"));
 const AdmissionTimeline = lazy(() => import("@/features/admission/AdmissionTimeline"));
 const DocumentChecklist = lazy(() => import("@/features/admission/DocumentChecklist"));
@@ -108,6 +109,7 @@ const AnimatedRoutes = () => {
         <Route path={ROUTES.CAP_ROUND_GENERATOR} element={<Protected><CapRoundGenerator /></Protected>} />
         <Route path={ROUTES.DATA_PIPELINE} element={<Protected><DataPipeline /></Protected>} />
         <Route path={ROUTES.SCORECARD_OCR} element={<Protected><ScorecardOcr /></Protected>} />
+        <Route path={ROUTES.RANK_PREDICTOR} element={<Protected><RankPredictor /></Protected>} />
         <Route path={ROUTES.ADMISSION_TIMELINE} element={<Protected><AdmissionTimeline /></Protected>} />
         <Route path={ROUTES.DOCUMENT_CHECKLIST} element={<Protected><DocumentChecklist /></Protected>} />
         <Route path={ROUTES.SEAT_VACANCY} element={<Protected><SeatVacancy /></Protected>} />

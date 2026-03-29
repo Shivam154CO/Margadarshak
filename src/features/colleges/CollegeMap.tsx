@@ -1412,28 +1412,29 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
         {/* Visit Planner Modal */}
         <AnimatePresence>
           {showVisitPlanner && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
+                initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-slate-950/90 border border-white/10 backdrop-blur-xl rounded-[2rem] w-full max-w-lg overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col max-h-[90vh]"
+                exit={{ scale: 0.95, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
               >
                 {/* Header */}
-                <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+                <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
                   <div>
-                    <h2 className="text-xs font-black text-white/30 uppercase tracking-[0.3em]">Route Planner</h2>
-                    <p className="text-lg font-black text-white mt-1">{visitList.length} college{visitList.length !== 1 ? 's' : ''} in your route</p>
+                    <h2 className="text-lg font-bold text-slate-900">Route Planner</h2>
+                    <p className="text-sm text-slate-500 mt-1">{visitList.length} college{visitList.length !== 1 ? 's' : ''} in your route</p>
                   </div>
-                  <button onClick={() => setShowVisitPlanner(false)} className="p-2.5 hover:bg-white/10 rounded-xl transition-colors text-white/30 hover:text-white">
+                  <button onClick={() => setShowVisitPlanner(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
                 {/* Route legs */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-2 no-scrollbar">
+                <div className="flex-1 overflow-y-auto p-6 space-y-1">
                   {visitList.length === 0 ? (
-                    <p className="text-center text-[10px] font-black uppercase tracking-widest text-white/20 py-12">Add colleges from the map to plan your route.</p>
+                    <p className="text-center text-sm text-slate-500 py-12">Add colleges from the map to plan your route.</p>
                   ) : (
                     visitList.map((col, idx) => {
                       const next = visitList[idx + 1];
@@ -1446,20 +1447,17 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
                       return (
                         <div key={col.college_code}>
                           {/* College stop card */}
-                          <div className="flex items-center gap-4 bg-white/5 border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-all hover:bg-white/[0.08]">
-                            <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black border ${idx === 0 ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                              : idx === visitList.length - 1 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                                : 'bg-white/5 text-white/40 border-white/10'
-                              }`}>
+                          <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                            <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-semibold bg-slate-200 text-slate-700">
                               {idx === 0 ? 'S' : idx === visitList.length - 1 ? 'E' : idx}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-black text-white/90 truncate">{col.college_name}</p>
-                              <p className="text-[10px] text-white/30 uppercase tracking-widest font-black mt-0.5">{col.city}</p>
+                              <p className="text-sm font-semibold text-slate-900 truncate">{col.college_name}</p>
+                              <p className="text-xs text-slate-500 mt-0.5">{col.city}</p>
                             </div>
                             <button
                               onClick={() => setVisitList(prev => prev.filter(c => c.college_code !== col.college_code))}
-                              className="p-1.5 text-white/20 hover:text-rose-400 transition-colors flex-shrink-0"
+                              className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors flex-shrink-0 rounded-md hover:bg-rose-50"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -1467,19 +1465,19 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
 
                           {/* Leg connector — distance + time */}
                           {next && (
-                            <div className="flex items-center gap-4 px-6 py-3">
-                              <div className="w-0.5 h-6 bg-white/5 ml-3.5 flex-shrink-0" />
+                            <div className="flex items-center gap-4 px-6 py-2">
+                              <div className="w-0.5 h-6 bg-slate-200 ml-3.5 flex-shrink-0" />
                               {legDist !== null ? (
                                 <div className="flex items-center gap-3">
-                                  <span className="text-[10px] font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-md">
+                                  <span className="text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 px-2 py-1 rounded">
                                     {legDist.toFixed(1)} km
                                   </span>
-                                  <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">
+                                  <span className="text-[11px] font-medium text-slate-500">
                                     ~{legH > 0 ? `${legH}h ` : ''}{legM} min drive
                                   </span>
                                 </div>
                               ) : (
-                                <span className="text-[10px] font-black text-white/10 uppercase tracking-widest">No coordinates</span>
+                                <span className="text-[11px] text-slate-400">No coordinates</span>
                               )}
                             </div>
                           )}
@@ -1501,25 +1499,25 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
                   const h = Math.floor(totalMins / 60);
                   const m = totalMins % 60;
                   return (
-                    <div className="border-t border-white/5 p-8 bg-white/[0.02] flex-shrink-0 space-y-6">
+                    <div className="border-t border-slate-100 p-6 bg-slate-50 flex-shrink-0 space-y-6">
                       <div className="flex items-center justify-around">
                         <div className="text-center">
-                          <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1.5">Total Distance</p>
-                          <p className="text-2xl font-black text-white">{totalDist.toFixed(1)} <span className="text-xs font-normal text-white/20">km</span></p>
+                          <p className="text-xs text-slate-500 font-medium mb-1">Total Distance</p>
+                          <p className="text-lg font-bold text-slate-900">{totalDist.toFixed(1)} <span className="text-sm font-medium text-slate-500">km</span></p>
                         </div>
-                        <div className="w-px h-10 bg-white/5" />
+                        <div className="w-px h-8 bg-slate-200" />
                         <div className="text-center">
-                          <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1.5">Drive Time</p>
-                          <p className="text-2xl font-black text-white">{h > 0 ? `${h}h ` : ''}{m} <span className="text-xs font-normal text-white/20">min</span></p>
+                          <p className="text-xs text-slate-500 font-medium mb-1">Drive Time</p>
+                          <p className="text-lg font-bold text-slate-900">{h > 0 ? `${h}h ` : ''}{m} <span className="text-sm font-medium text-slate-500">min</span></p>
                         </div>
-                        <div className="w-px h-10 bg-white/5" />
+                        <div className="w-px h-8 bg-slate-200" />
                         <div className="text-center">
-                          <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1.5">Stops</p>
-                          <p className="text-2xl font-black text-white">{visitList.length}</p>
+                          <p className="text-xs text-slate-500 font-medium mb-1">Stops</p>
+                          <p className="text-lg font-bold text-slate-900">{visitList.length}</p>
                         </div>
                       </div>
                       <button
-                        className="w-full py-4 bg-white text-black rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-gray-200 transition-all shadow-[0_20px_40px_-10px_rgba(255,255,255,0.2)]"
+                        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors shadow-sm"
                         onClick={() => {
                           const origin = visitList[0];
                           const destination = visitList[visitList.length - 1];
@@ -1528,7 +1526,7 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
                           window.open(url, '_blank');
                         }}
                       >
-                        Launch Navigation <Navigation className="w-3.5 h-3.5" />
+                        Launch Navigation <Navigation className="w-4 h-4 ml-1" />
                       </button>
                     </div>
                   );
