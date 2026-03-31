@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
 // Function to get college image from local assets
-const getCollegeImage = (collegeCode: string): string => {
+const getCollegeImage = (collegeCode: string, type: 'logo' | 'campus' = 'campus'): string => {
   if (!collegeCode) {
-    return "/src/assets/fallback-campus.jpg";
+    return type === 'logo' ? "/src/assets/logo.png" : "/src/assets/fallback-campus.jpg";
   }
-  const imagePath = `/src/assets/${collegeCode}/campus.png`;
+  const fileName = type === 'logo' ? 'logo.png' : 'campus.png';
+  const imagePath = `/src/assets/${collegeCode}/${fileName}`;
   return imagePath;
 };
 
@@ -24,12 +25,16 @@ const getRandomFallbackImage = (): string => {
 
 interface CollegeImageProps {
   collegeCode: string;
+  type?: 'logo' | 'campus';
+  imageOverride?: string;
   className?: string;
   alt?: string;
 }
 
 export const CollegeImage: React.FC<CollegeImageProps> = ({ 
   collegeCode, 
+  type = 'campus',
+  imageOverride,
   className = "", 
   alt = "College campus" 
 }) => {
@@ -41,27 +46,51 @@ export const CollegeImage: React.FC<CollegeImageProps> = ({
     const loadImage = async () => {
       setLoading(true);
       setError(false);
-      try {
-        const localImageUrl = getCollegeImage(collegeCode);
-        const img = new Image();
-        img.onload = () => {
+
+      const localImageUrl = getCollegeImage(collegeCode, type);
+      const logoFallback = "https://placehold.co/400x400/indigo/white?text=LOGO";
+      const campusFallback = getRandomFallbackImage();
+
+      const tryLoad = (url: string): Promise<boolean> => {
+        return new Promise((resolve) => {
+          if (!url) {
+            resolve(false);
+            return;
+          }
+          const img = new Image();
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = url;
+        });
+      };
+
+      // Priority 1: Local Asset (usually more reliable for specific types)
+      if (collegeCode) {
+        const localSuccess = await tryLoad(localImageUrl);
+        if (localSuccess) {
           setImageSrc(localImageUrl);
           setLoading(false);
-        };
-        img.onerror = () => {
-          setImageSrc(getRandomFallbackImage());
-          setError(true);
-          setLoading(false);
-        };
-        img.src = localImageUrl;
-      } catch (err) {
-        setImageSrc(getRandomFallbackImage());
-        setError(true);
-        setLoading(false);
+          return;
+        }
       }
+
+      // Priority 2: Database Override
+      if (imageOverride) {
+        const overrideSuccess = await tryLoad(imageOverride);
+        if (overrideSuccess) {
+          setImageSrc(imageOverride);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Priority 3: Fallbacks
+      setImageSrc(type === 'logo' ? logoFallback : campusFallback);
+      setError(true);
+      setLoading(false);
     };
     loadImage();
-  }, [collegeCode]);
+  }, [collegeCode, type, imageOverride]);
 
   if (loading) {
     return (
@@ -77,11 +106,11 @@ export const CollegeImage: React.FC<CollegeImageProps> = ({
     <img
       src={imageSrc}
       alt={alt}
-      className={`${className} ${error ? "grayscale opacity-75" : ""}`}
+      className={`${className} ${error && type === 'campus' ? "grayscale opacity-75" : ""}`}
       loading="lazy"
       onError={(e) => {
         const target = e.target as HTMLImageElement;
-        target.src = getRandomFallbackImage();
+        target.src = type === 'logo' ? "/src/assets/logo.png" : getRandomFallbackImage();
       }}
     />
   );
