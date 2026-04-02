@@ -1,0 +1,15 @@
+# Encrypt ALL files by default
+* filter=git-crypt diff=git-crypt
+
+# EXCEPT these critical config files (MUST be readable by Git/IDE/Build system)
+.gitattributes !filter !diff
+.gitignore !filter !diff
+README.md !filter !diff
+package.json !filter !diff
+package-lock.json !filter !diff
+tsconfig.json !filter !diff
+*.config.js !filter !diff
+*.config.ts !filter !diff
+node_modules/** !filter !diff
+.git/** !filter !diff
+dist/** !filter !diff
