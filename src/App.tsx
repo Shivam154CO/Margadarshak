@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ReactLenis } from 'lenis/react';
 
@@ -125,30 +125,52 @@ const AnimatedRoutes = () => {
 };
 
 export default function App() {
+  const [isLanding, setIsLanding] = useState(window.location.pathname === '/');
+
   return (
     <ThemeProvider>
       <ToastProvider>
         <ReactLenis root>
           <CollegesProvider>
             <Router>
-              <a
-                href="#main-content"
-                className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none"
-              >
-                Skip to main content
-              </a>
-              <ScrollToTopOnRoute />
-              <NetworkStatus />
-              <ScrollToTop />
-              <Suspense fallback={<PageLoader />}>
-                <main id="main-content">
-                  <AnimatedRoutes />
-                </main>
-              </Suspense>
+              <AppContent isLanding={isLanding} setIsLanding={setIsLanding} />
             </Router>
           </CollegesProvider>
         </ReactLenis>
       </ToastProvider>
     </ThemeProvider>
+  );
+}
+
+function AppContent({ isLanding, setIsLanding }: { isLanding: boolean, setIsLanding: (v: boolean) => void }) {
+  const { pathname } = useLocation();
+  
+  useEffect(() => {
+    const landing = pathname === '/';
+    setIsLanding(landing);
+    if (landing) {
+      document.body.classList.add('landing-page');
+    } else {
+      document.body.classList.remove('landing-page');
+    }
+  }, [pathname, setIsLanding]);
+
+  return (
+    <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none"
+      >
+        Skip to main content
+      </a>
+      <ScrollToTopOnRoute />
+      <NetworkStatus />
+      <ScrollToTop />
+      <Suspense fallback={<PageLoader />}>
+        <main id="main-content" className={!isLanding ? 'font-inter-content' : ''}>
+          <AnimatedRoutes />
+        </main>
+      </Suspense>
+    </>
   );
 }

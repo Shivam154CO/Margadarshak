@@ -374,7 +374,7 @@ export default function Dashboard() {
         {/* Results Body */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg capitalize text-gray-900">
               Showing {sortedColleges.length} matches
             </h3>
           </div>

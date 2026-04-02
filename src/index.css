@@ -517,3 +517,28 @@ main {
   60% { filter: hue-rotate(-90deg); }
   80% { filter: hue-rotate(-45deg); }
 }
+
+/* ============================================
+   GLOBAL FONT OVERRIDES (NON-LANDING)
+   ============================================ */
+
+#main-content.font-inter-content {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+}
+
+#main-content.font-inter-content h1,
+#main-content.font-inter-content h2,
+#main-content.font-inter-content h3,
+#main-content.font-inter-content h4,
+#main-content.font-inter-content h5,
+#main-content.font-inter-content h6 {
+  font-family: 'Sofia Pro', sans-serif !important;
+  font-weight: 700 !important;
+}
+
+#main-content.font-inter-content .font-display,
+#main-content.font-inter-content .font-heading {
+  font-family: 'Sofia Pro', sans-serif !important;
+  font-weight: 700 !important;
+}
