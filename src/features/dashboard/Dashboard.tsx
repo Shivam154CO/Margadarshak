@@ -395,16 +395,16 @@ export default function Dashboard() {
             </button>
             <button
               onClick={handleExportDream}
-              className="px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-indigo-700 shadow-sm transition-all flex items-center space-x-2"
+              className="px-3 sm:px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-all flex items-center space-x-2"
             >
-              <FileText className="w-4 h-4 text-amber-200" />
+              <FileText className="w-4 h-4 text-amber-500" />
               <span className="sm:inline">Dream</span>
             </button>
             <button
               onClick={handleExportDreamCSV}
-              className="px-3 sm:px-4 py-2 bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-slate-900 shadow-sm transition-all flex items-center space-x-2"
+              className="px-3 sm:px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-all flex items-center space-x-2"
             >
-              <FileDown className="w-4 h-4 text-amber-200" />
+              <FileDown className="w-4 h-4 text-amber-500" />
               <span className="sm:inline">Dream</span>
             </button>
             <div className="flex items-center bg-white border border-slate-200 rounded-xl px-2 sm:px-3 py-1">
@@ -420,9 +420,9 @@ export default function Dashboard() {
             </div>
             <button
               onClick={handleExportStrategic}
-              className="px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-purple-700 shadow-sm transition-all flex items-center space-x-2"
+              className="px-3 sm:px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-all flex items-center space-x-2"
             >
-              <ClipboardList className="w-4 h-4 text-purple-200" />
+              <ClipboardList className="w-4 h-4 text-purple-500" />
               <span className="sm:inline">Options</span>
             </button>
           </div>

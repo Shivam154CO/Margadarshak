@@ -501,21 +501,50 @@ main {
 }
 
 @keyframes rotation {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes roundness {
-  0%, 100% { filter: contrast(15); }
-  20%, 60% { filter: contrast(3); }
+
+  0%,
+  100% {
+    filter: contrast(15);
+  }
+
+  20%,
+  60% {
+    filter: contrast(3);
+  }
 }
 
 @keyframes colorize {
-  0%, 100% { filter: hue-rotate(0deg); }
-  20% { filter: hue-rotate(-30deg); }
-  40% { filter: hue-rotate(-60deg); }
-  60% { filter: hue-rotate(-90deg); }
-  80% { filter: hue-rotate(-45deg); }
+
+  0%,
+  100% {
+    filter: hue-rotate(0deg);
+  }
+
+  20% {
+    filter: hue-rotate(-30deg);
+  }
+
+  40% {
+    filter: hue-rotate(-60deg);
+  }
+
+  60% {
+    filter: hue-rotate(-90deg);
+  }
+
+  80% {
+    filter: hue-rotate(-45deg);
+  }
 }
 
 /* ============================================
