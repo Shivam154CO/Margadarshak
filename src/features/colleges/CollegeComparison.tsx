@@ -23,7 +23,6 @@ import {
   Search,
   Plus,
   X,
-  Star,
   Download,
   Share2,
   GitCompare,

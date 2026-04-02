@@ -67,7 +67,7 @@ export default function Login() {
           info(`Welcome, ${existingProfile.name || data.user.email}!`, "Please complete your profile to continue.");
           navigate("/profile");
         } else {
-          success(`Welcome back, ${existingProfile.name || data.user.email}! 🎓`);
+          success(`Welcome back, ${existingProfile.name || data.user.email} !`);
           navigate("/dashboard");
         }
       }
@@ -112,7 +112,7 @@ export default function Login() {
       });
       if (error) throw error;
       setResetSent(true);
-      success("Reset Email Sent!", `Check ${forgotEmail} for the password reset link.`, );
+      success("Reset Email Sent!", `Check ${forgotEmail} for the password reset link.`,);
     } catch (err: any) {
       toastError("Reset Failed", err.message);
     } finally {

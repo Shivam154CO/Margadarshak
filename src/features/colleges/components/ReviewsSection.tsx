@@ -22,14 +22,12 @@ interface ReviewsSectionProps {
   reviews: Review[];
   isLoading: boolean;
   onOpenModal: () => void;
-  isLoggedIn: boolean;
 }
 
 export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
   reviews,
   isLoading,
   onOpenModal,
-  isLoggedIn,
 }) => {
   const averageRating = reviews.length > 0
     ? reviews.reduce((acc, r) => acc + r.overall_rating, 0) / reviews.length

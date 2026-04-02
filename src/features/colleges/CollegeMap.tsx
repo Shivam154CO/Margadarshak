@@ -679,12 +679,7 @@ function CollegeMapContent() {
     }));
   }, [mapMarkers, colleges, filters, whatIfScore]);
 
-  const getMarkerColor = (chance: number) => {
-    if (chance >= 80) return "#10B981";
-    if (chance >= 60) return "#3B82F6";
-    if (chance >= 40) return "#8B5CF6";
-    return "#EF4444";
-  };
+
 
   const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY, libraries: LIBRARIES });
 

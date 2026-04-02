@@ -15,7 +15,7 @@ export const CollegeHero: React.FC<CollegeHeroProps> = ({ college, academicData 
           <CollegeImage collegeCode={college.college_code || ""} type="logo" imageOverride={college.logo_url} className="absolute inset-0 w-full h-full object-fill" alt="Logo" />
         </div>
         <div className="w-full md:flex-1 md:min-w-0 overflow-hidden">
-          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2 break-words whitespace-normal leading-tight">
+          <h1 className="text-xl sm:text-3xl font-bold uppercase text-gray-900 mb-2 break-words whitespace-normal leading-tight">
             {college.college_name}
           </h1>
           <div className="flex flex-wrap justify-center md:justify-start gap-4 text-gray-600 text-sm font-medium">

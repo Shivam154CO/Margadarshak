@@ -35,19 +35,11 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
   build: {
     target: 'esnext',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.info', 'console.debug', 'console.warn'],
-      },
-      format: {
-        comments: false,
-      },
-    },
     rollupOptions: {
       output: {
         manualChunks(id) {

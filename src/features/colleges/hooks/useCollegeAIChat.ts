@@ -1,20 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { College } from '@/types/college';
 
-const getBranchFullName = (branchName: string) => {
-  const branch = (branchName || "").toUpperCase();
-  if (branch.includes("CSE") || branch.includes("COMPUTER")) return "Computer Science and Engineering";
-  if (branch.includes("IT")) return "Information Technology";
-  if (branch.includes("ECE")) return "Electronics and Communication Engineering";
-  if (branch.includes("EEE")) return "Electrical and Electronics Engineering";
-  if (branch.includes("MECH")) return "Mechanical Engineering";
-  if (branch.includes("CIVIL")) return "Civil Engineering";
-  if (branch.includes("E&TC")) return "Electronics and Telecommunication";
-  if (branch.includes("AIDS") || branch.includes("AI&DS")) return "Artificial Intelligence and Data Science";
-  if (branch.includes("AI&ML") || branch.includes("AIML")) return "Artificial Intelligence and Machine Learning";
-  if (branch.includes("CS")) return "Computer Science";
-  return branchName || "Engineering";
-};
+
 
 const getAIResponse = (message: string, college: College): string => {
   const lowerMessage = message.toLowerCase();

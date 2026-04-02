@@ -144,7 +144,6 @@ export default function CollegeDetails() {
             reviews={collegeReviews}
             isLoading={reviewsLoading}
             onOpenModal={() => profile ? setShowFeedbackModal(true) : alert("Please log in to review.")}
-            isLoggedIn={!!profile}
           />
         </div>
 

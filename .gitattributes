@@ -1,7 +1,6 @@
 # Encrypt ALL files by default
 * filter=git-crypt diff=git-crypt
 
-# EXCEPT these critical config files (MUST be readable by Git/IDE/Build system)
 .gitattributes !filter !diff
 .gitignore !filter !diff
 README.md !filter !diff
