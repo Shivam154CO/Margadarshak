@@ -42,21 +42,21 @@ export default function Landing() {
     const items = [];
     const len = allColleges.length;
     for (let i = 0; i < len; i++) {
-        const college = allColleges[i];
-        const code = String(college.college_code).trim();
-        if (!code) continue;
-        
-        const name = college.college_name || `Institute ${code}`;
-        
-        // Priority: Use database image URL if available, otherwise local asset
-        const src = (college.image && !college.image.includes('N/A')) 
-          ? college.image 
-          : `/src/assets/${code}/campus.png`;
+      const college = allColleges[i];
+      const code = String(college.college_code).trim();
+      if (!code) continue;
 
-        items.push({
-            src,
-            alt: `${name} | ${code}`
-        });
+      const name = college.college_name || `Institute ${code}`;
+
+      // Priority: Use database image URL if available, otherwise local asset
+      const src = (college.image && !college.image.includes('N/A'))
+        ? college.image
+        : `/src/assets/${code}/campus.png`;
+
+      items.push({
+        src,
+        alt: `${name} | ${code}`
+      });
     }
     return items;
   }, [allColleges]);
@@ -416,10 +416,12 @@ export default function Landing() {
                   <div className="bg-[#0a0a0a] rounded-[30px] md:rounded-[40px] border border-white/10 p-5 md:p-8 space-y-6 shadow-2xl transition-transform duration-700">
                     <div className="grid grid-cols-2 gap-3 pb-2">
                       {[
-                        { label: 'GOPEN', count: 2, color: 'bg-rose-500', p: '22%' },
+                        { label: 'GNTA', count: 2, color: 'bg-rose-500', p: '11%' },
+                        { label: 'GOPEN', count: 2, color: 'bg-rose-500', p: '44%' },
                         { label: 'GSC', count: 1, color: 'bg-rose-400', p: '11%' },
-                        { label: 'GOBC', count: 1, color: 'bg-orange-400', p: '11%' },
-                        { label: 'EWS', count: 2, color: 'bg-rose-600', p: '22%' },
+                        { label: 'GOBC', count: 1, color: 'bg-orange-400', p: '22%' },
+                        { label: 'SEBC', count: 1, color: 'bg-orange-400', p: '11%' },
+                        { label: 'EWS', count: 2, color: 'bg-rose-600', p: '11%' },
                       ].map((item, i) => (
                         <div key={i} className="bg-white/[0.03] border border-white/5 rounded-xl p-3 space-y-2">
                           <div className="flex justify-between items-center">
@@ -508,13 +510,6 @@ export default function Landing() {
                   <div className="space-y-2">
                     <h3 className="text-xl font-black text-slate-900 tracking-tight leading-none group-hover:text-rose-600 transition-colors uppercase">{feature.title}</h3>
                     <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-[220px] mx-auto opacity-80">{feature.desc}</p>
-                  </div>
-
-                  <div className="mt-auto pt-2">
-                    <div className="flex items-center gap-1.5 text-[9px] font-black text-rose-500 uppercase tracking-[0.2em] bg-rose-50/50 px-3 py-1 rounded-full border border-rose-100/50">
-                      <div className="w-1 h-1 rounded-full bg-rose-500 animate-pulse" />
-                      {feature.badge}
-                    </div>
                   </div>
                 </div>
               </ScrollAnimationWrapper>
