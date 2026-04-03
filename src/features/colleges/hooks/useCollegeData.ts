@@ -73,16 +73,38 @@ const groupCollegesByCode = (rawColleges: RawCollege[]): College[] => {
     }));
 };
 
+const CACHE_KEY = "ikigai_colleges_cache";
+const CACHE_TIME_KEY = "ikigai_colleges_cache_time";
+const CACHE_EXPIRY = 1000 * 60 * 60 * 12; // 12 hours
+
 const fetchAllColleges = async (): Promise<College[]> => {
-    const PAGE_SIZE = 1000;
+    // Check local cache first for "instant" feel
+    try {
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+        
+        if (cachedData && cachedTime) {
+            const isExpired = Date.now() - parseInt(cachedTime) > CACHE_EXPIRY;
+            if (!isExpired) {
+                console.log("Using cached college data");
+                return JSON.parse(cachedData);
+            }
+        }
+    } catch (e) {
+        console.error("Cache read error", e);
+    }
+
+    const PAGE_SIZE = 500; // Smaller chunks for better reliability
     let allRows: any[] = [];
     let from = 0;
     let hasMore = true;
 
+    console.log("Fetching colleges from database in chunks...");
+    
     while (hasMore) {
         const { data: batch, error } = await supabase
             .from('colleges_2025')
-            .select('*') // Select all for simplicity, or specific if needed
+            .select('*')
             .range(from, from + PAGE_SIZE - 1);
 
         if (error) throw error;
@@ -92,6 +114,9 @@ const fetchAllColleges = async (): Promise<College[]> => {
             allRows = [...allRows, ...batch];
             from += PAGE_SIZE;
             if (batch.length < PAGE_SIZE) hasMore = false;
+            
+            // Log progress for chunks
+            console.log(`Fetched ${allRows.length} rows...`);
         }
     }
 
@@ -100,7 +125,7 @@ const fetchAllColleges = async (): Promise<College[]> => {
         const code = String(row.college_code || row.id || "N/A");
         if (!collegeMap.has(code)) {
             collegeMap.set(code, {
-                ...row, // Preserve all original database fields
+                ...row,
                 college_code: code,
                 college_name: row.college_name || row.College_Name,
                 city: row.city || row.City,
@@ -132,7 +157,17 @@ const fetchAllColleges = async (): Promise<College[]> => {
         });
     });
 
-    return Array.from(collegeMap.values());
+    const finalColleges = Array.from(collegeMap.values());
+    
+    // Save to local cache in "chunks" (by being part of the successful fetch)
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(finalColleges));
+        localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+    } catch (e) {
+        console.warn("Storage limit exceeded, not caching all colleges", e);
+    }
+
+    return finalColleges;
 };
 
 export function useCollegeData() {

@@ -865,6 +865,11 @@ export default function DomeGallery({
                         backfaceVisibility: 'hidden',
                         filter: `var(--image-filter, ${grayscale ? 'grayscale(1)' : 'none'})`
                       }}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60";
+                        target.onerror = null; // Prevent infinite loop
+                      }}
                     />
                   </div>
                 </div>

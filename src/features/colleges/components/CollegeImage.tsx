@@ -1,22 +1,33 @@
 import React, { useState, useEffect } from 'react';
 
-// Function to get college image from local assets
+// Use Vite's glob import to get all college images (mapping of path -> url)
+const campusImages = import.meta.glob("../../../assets/*/campus.png", { 
+  eager: true, 
+  import: 'default' 
+}) as Record<string, string>;
+
+const logoImages = import.meta.glob("../../../assets/*/logo.png", { 
+  eager: true, 
+  import: 'default' 
+}) as Record<string, string>;
+
+// Function to get college image from local assets using Vite mapping
 const getCollegeImage = (collegeCode: string, type: 'logo' | 'campus' = 'campus'): string => {
   if (!collegeCode) {
-    return type === 'logo' ? "/src/assets/logo.png" : "/src/assets/fallback-campus.jpg";
+    return "";
   }
-  const fileName = type === 'logo' ? 'logo.png' : 'campus.png';
-  const imagePath = `/src/assets/${collegeCode}/${fileName}`;
-  return imagePath;
+  
+  const path = type === 'logo' 
+    ? `../../../assets/${collegeCode}/logo.png`
+    : `../../../assets/${collegeCode}/campus.png`;
+    
+  return type === 'logo' ? logoImages[path] : campusImages[path];
 };
 
 // Fallback Unsplash images
 const FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=2064&q=80",
   "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-  "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-  "https://images.unsplash.com/photo-1523580494863-6f3031224c94?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-  "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
 ];
 
 const getRandomFallbackImage = (): string => {

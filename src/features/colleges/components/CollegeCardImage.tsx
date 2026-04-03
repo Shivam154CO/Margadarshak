@@ -1,18 +1,8 @@
 /**
- * CollegeCardImage — Smart responsive image component for college cards
- *
- * HOW IT WORKS:
- * The browser picks the right pixel size based on the `sizes` hint.
- * Same visual quality (quality 90) but:
+ 
  *   - Mobile (320-640px): downloads ~80px-wide card image
  *   - Tablet (640-1024px): downloads ~180px image  
  *   - Desktop (1024px+): downloads ~300px image
- *
- * For Supabase Storage images → uses built-in image transformation API
- * For external URLs → uses srcset with width descriptor hints
- * For local assets → serves as-is with proper sizing hints
- *
- * Result: Same sharp quality, ~60-80% less data downloaded on mobile.
  */
 
 import { useState, useCallback } from 'react';
@@ -26,20 +16,6 @@ const FALLBACKS = [
   'https://images.unsplash.com/photo-1519452575417-564c1401ecc0?auto=format&fit=crop&w=800&q=80',
 ];
 
-/**
- * Generates a responsive srcset for a given image URL.
- *
- * For Supabase Storage URLs:
- *   Uses /render/image/public endpoint with width + quality params
- *   e.g. https://project.supabase.co/storage/v1/render/image/public/path?width=400&quality=90
- *
- * For other URLs:
- *   Returns the original URL for all sizes (browser uses `sizes` hint for layout)
- *
- * @param src - original image URL
- * @param widths - array of widths to generate (e.g. [400, 800, 1200])
- * @param quality - image quality 1-100 (default 90)
- */
 function buildSrcSet(src: string, widths: number[], quality = 90): string {
   if (!src) return '';
 

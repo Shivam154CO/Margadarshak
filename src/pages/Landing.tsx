@@ -18,6 +18,12 @@ const ProblemShowcase = lazy(() => import("../features/landing/components/spatia
 const DomeGallery = lazy(() => import("../components/DomeGallery"));
 const Footer = lazy(() => import("../components/Footer"));
 
+// Use Vite's glob import to get all college images at once (mapping of path -> url)
+const campusImages = import.meta.glob("../assets/*/campus.png", { 
+  eager: true, 
+  import: 'default' 
+}) as Record<string, string>;
+
 // Loading fallback component
 const SectionLoader = () => (
   <div className="w-full h-96 flex items-center justify-center bg-slate-50/50 rounded-[40px]">
@@ -34,24 +40,33 @@ export default function Landing() {
 
   // Prefetch college data from cache or network
   const { allColleges } = useCollegeData();
-  // CollegesContext will automatically react to allColleges via React Query
 
   const domeImages = useMemo(() => {
     if (!allColleges || allColleges.length === 0) return [];
 
     const items = [];
-    const len = allColleges.length;
-    for (let i = 0; i < len; i++) {
-      const college = allColleges[i];
+    // Only use a chunk (first 250) of colleges for the dome gallery for performance
+    const displayColleges = allColleges.slice(0, 250);
+    
+    for (const college of displayColleges) {
       const code = String(college.college_code).trim();
       if (!code) continue;
 
       const name = college.college_name || `Institute ${code}`;
 
-      // Priority: Use database image URL if available, otherwise local asset
-      const src = (college.image && !college.image.includes('N/A'))
-        ? college.image
-        : `/src/assets/${code}/campus.png`;
+      // 1. Try database image first
+      let src = (college.image && !college.image.includes('N/A')) ? college.image : "";
+      
+      // 2. Try matching with local assets via glob mapper
+      if (!src) {
+        const localPath = `../assets/${code}/campus.png`;
+        src = campusImages[localPath] || "";
+      }
+
+      // 3. Fallback to a nice unsplash image if still no luck
+      if (!src) {
+        src = `https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60`;
+      }
 
       items.push({
         src,
@@ -138,10 +153,10 @@ export default function Landing() {
   const heroScrollY = useTransform(scrollYProgress, [0, 0.2], [0, 100]);
 
   const journeySteps = useMemo(() => [
-    { title: "Enter Your Diploma Rank", description: "Share your rank and category details.", icon: "student" as const },
-    { title: "Pick Preferred Branches", description: "Select branches you're interested in.", icon: "brain" as const },
-    { title: "Get Your College List", description: "Instantly see colleges you can get into.", icon: "chart" as const },
-    { title: "Make Informed Choice", description: "Lock your future with confidence.", icon: "trophy" as const },
+    { title: "Enter Your Diploma Rank", description: "Share your rank and category details." },
+    { title: "Pick Preferred Branches", description: "Select branches you're interested in." },
+    { title: "Get Your College List", description: "Instantly see colleges you can get into." },
+    { title: "Make Informed Choice", description: "Lock your future with confidence." },
   ], []);
 
   const features = useMemo(() => [
@@ -554,9 +569,6 @@ export default function Landing() {
                     </div>
 
                     <div className="w-full md:w-[40%] flex justify-center">
-                      <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white rounded-[24px] md:rounded-[32px] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                        <LiveFeatureIcon type={step.icon} size={64} />
-                      </div>
                     </div>
                   </ScrollAnimationWrapper>
                 );
@@ -645,7 +657,7 @@ export default function Landing() {
               >
                 Sign Up Now →
               </motion.button>
-              <p className="text-white/20 font-extrabold text-xs uppercase tracking-[0.5em]">JOIN 52,000+ DIPLOMA ASPIRANTS</p>
+              <p className="text-white font-extrabold text-xs capitalize tracking-[0.5em]">Join 52,000+ Diploma Aspirants</p>
             </div>
           </ScrollAnimationWrapper>
         </div>
