@@ -18,11 +18,22 @@ const ProblemShowcase = lazy(() => import("../features/landing/components/spatia
 const DomeGallery = lazy(() => import("../components/DomeGallery"));
 const Footer = lazy(() => import("../components/Footer"));
 
-// Use Vite's glob import to get all college images at once (mapping of path -> url)
-const campusImages = import.meta.glob("../assets/*/campus.png", { 
+const campusImageGlob = import.meta.glob("../assets/*/campus.png", { 
   eager: true, 
   import: 'default' 
 }) as Record<string, string>;
+
+// Pre-map college codes to their asset URLs for O(1) lookup and robust path handling
+const collegeAssetMap = Object.entries(campusImageGlob).reduce((acc, [path, url]) => {
+  // Path usually looks like "../assets/1002/campus.png"
+  // We want the folder name which is the college code
+  const parts = path.split(/[/\\]/);
+  const code = parts[parts.length - 2]; // Get the folder name
+  if (code && code !== 'assets') {
+    acc[code] = url;
+  }
+  return acc;
+}, {} as Record<string, string>);
 
 // Loading fallback component
 const SectionLoader = () => (
@@ -42,11 +53,28 @@ export default function Landing() {
   const { allColleges } = useCollegeData();
 
   const domeImages = useMemo(() => {
-    if (!allColleges || allColleges.length === 0) return [];
+    // Fallback: If database is empty, fill gallery with all available local campus photos
+    if (!allColleges || allColleges.length === 0) {
+      console.log("No colleges in database, creating dome from local assets only.");
+      return Object.entries(collegeAssetMap).map(([code, src]) => ({
+        src,
+        alt: `Institute ${code} | ${code}`
+      })).slice(0, 350);
+    }
 
+    // Prioritize database colleges that actually have local images for a better visual experience
+    const collegesWithImages = allColleges.filter(c => {
+      const code = String(c.college_code).trim();
+      return !!collegeAssetMap[code];
+    });
+    
+    const otherColleges = allColleges.filter(c => {
+      const code = String(c.college_code).trim();
+      return !collegeAssetMap[code];
+    });
+
+    const displayColleges = [...collegesWithImages, ...otherColleges].slice(0, 350);
     const items = [];
-    // Only use a chunk (first 250) of colleges for the dome gallery for performance
-    const displayColleges = allColleges.slice(0, 250);
     
     for (const college of displayColleges) {
       const code = String(college.college_code).trim();
@@ -54,16 +82,13 @@ export default function Landing() {
 
       const name = college.college_name || `Institute ${code}`;
 
-      // 1. Try database image first
-      let src = (college.image && !college.image.includes('N/A')) ? college.image : "";
+      // Source Priority: 1. Local assets -> 2. Database image URL -> 3. Fallback
+      let src = collegeAssetMap[code] || "";
       
-      // 2. Try matching with local assets via glob mapper
-      if (!src) {
-        const localPath = `../assets/${code}/campus.png`;
-        src = campusImages[localPath] || "";
+      if (!src && college.image && !college.image.includes('N/A')) {
+        src = college.image;
       }
-
-      // 3. Fallback to a nice unsplash image if still no luck
+      
       if (!src) {
         src = `https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60`;
       }
@@ -74,7 +99,7 @@ export default function Landing() {
       });
     }
     return items;
-  }, [allColleges]);
+  }, [allColleges, collegeAssetMap]);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);

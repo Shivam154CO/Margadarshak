@@ -1,27 +1,41 @@
 import React, { useState, useEffect } from 'react';
 
 // Use Vite's glob import to get all college images (mapping of path -> url)
-const campusImages = import.meta.glob("../../../assets/*/campus.png", { 
-  eager: true, 
-  import: 'default' 
+const campusImages = import.meta.glob("../../../assets/*/campus.png", {
+  eager: true,
+  import: 'default'
 }) as Record<string, string>;
 
-const logoImages = import.meta.glob("../../../assets/*/logo.png", { 
-  eager: true, 
-  import: 'default' 
+const logoImages = import.meta.glob("../../../assets/*/logo.png", {
+  eager: true,
+  import: 'default'
 }) as Record<string, string>;
 
-// Function to get college image from local assets using Vite mapping
-const getCollegeImage = (collegeCode: string, type: 'logo' | 'campus' = 'campus'): string => {
-  if (!collegeCode) {
-    return "";
+// Pre-map college logos to their asset URLs for O(1) lookup and robust path handling
+const collegeLogoMap = Object.entries(logoImages).reduce((acc, [path, url]) => {
+  const parts = path.split(/[/\\]/);
+  const code = parts[parts.length - 2]; 
+  if (code && code !== 'assets') {
+    acc[code] = url as string;
   }
-  
-  const path = type === 'logo' 
-    ? `../../../assets/${collegeCode}/logo.png`
-    : `../../../assets/${collegeCode}/campus.png`;
-    
-  return type === 'logo' ? logoImages[path] : campusImages[path];
+  return acc;
+}, {} as Record<string, string>);
+
+// Pre-map college campus images to their asset URLs
+const collegeCampusMap = Object.entries(campusImages).reduce((acc, [path, url]) => {
+  const parts = path.split(/[/\\]/);
+  const code = parts[parts.length - 2]; 
+  if (code && code !== 'assets') {
+    acc[code] = url as string;
+  }
+  return acc;
+}, {} as Record<string, string>);
+
+// Function to get college image from local assets — now using pre-mapped dictionaries
+const getCollegeImage = (collegeCode: string, type: 'logo' | 'campus' = 'campus'): string => {
+  if (!collegeCode) return "";
+  const code = String(collegeCode).trim();
+  return type === 'logo' ? collegeLogoMap[code] || "" : collegeCampusMap[code] || "";
 };
 
 // Fallback Unsplash images
@@ -42,12 +56,12 @@ interface CollegeImageProps {
   alt?: string;
 }
 
-export const CollegeImage: React.FC<CollegeImageProps> = ({ 
-  collegeCode, 
+export const CollegeImage: React.FC<CollegeImageProps> = ({
+  collegeCode,
   type = 'campus',
   imageOverride,
-  className = "", 
-  alt = "College campus" 
+  className = "",
+  alt = "College campus"
 }) => {
   const [imageSrc, setImageSrc] = useState<string>("");
   const [loading, setLoading] = useState(true);

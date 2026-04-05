@@ -158,13 +158,19 @@ const fetchAllColleges = async (): Promise<College[]> => {
     });
 
     const finalColleges = Array.from(collegeMap.values());
+    console.log(`Successfully parsed ${finalColleges.length} colleges.`);
     
-    // Save to local cache in "chunks" (by being part of the successful fetch)
-    try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(finalColleges));
-        localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
-    } catch (e) {
-        console.warn("Storage limit exceeded, not caching all colleges", e);
+    // Save to local cache if results were found — don't cache empty results
+    if (finalColleges.length > 0) {
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(finalColleges));
+            localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+            console.log("College data cached successfully");
+        } catch (e) {
+            console.warn("Storage limit exceeded, not caching all colleges", e);
+        }
+    } else {
+        console.warn("No colleges found in database, not caching.");
     }
 
     return finalColleges;
