@@ -1,11 +1,17 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-    "../index.css",
+    "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Nunito Sans"', 'Inter', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
+        sofia: ['"Sofia Pro"', 'sans-serif'],
+        satoshi: ['Satoshi', 'sans-serif'],
+      },
       keyframes: {
         'fade-in-up': {
           '0%': { opacity: '0', transform: 'translateY(20px)' },

@@ -11,16 +11,18 @@ import Magnetic from "../components/Magnetic";
 import Loader from "../components/Loader";
 
 // Import custom illustrations
-import clgImg from "../assets/illustrations/clg.png";
+// Use vite-imagetools for a responsive srcset to improve mobile LCP with high quality
+import clgImgSrcset from "../assets/illustrations/clg.png?w=600;1200;1800;2400&format=webp&quality=95&as=srcset";
+import clgImgFallback from "../assets/illustrations/clg.png?w=1800&format=webp&quality=95&as=url";
 
 // Lazy load heavy components
 const ProblemShowcase = lazy(() => import("../features/landing/components/spatial-product-showcase"));
 const DomeGallery = lazy(() => import("../components/DomeGallery"));
 const Footer = lazy(() => import("../components/Footer"));
 
-const campusImageGlob = import.meta.glob("../assets/*/campus.png", { 
-  eager: true, 
-  import: 'default' 
+const campusImageGlob = import.meta.glob("../assets/*/campus.png", {
+  eager: true,
+  import: 'default'
 }) as Record<string, string>;
 
 // Pre-map college codes to their asset URLs for O(1) lookup and robust path handling
@@ -67,7 +69,7 @@ export default function Landing() {
       const code = String(c.college_code).trim();
       return !!collegeAssetMap[code];
     });
-    
+
     const otherColleges = allColleges.filter(c => {
       const code = String(c.college_code).trim();
       return !collegeAssetMap[code];
@@ -75,7 +77,7 @@ export default function Landing() {
 
     const displayColleges = [...collegesWithImages, ...otherColleges].slice(0, 350);
     const items = [];
-    
+
     for (const college of displayColleges) {
       const code = String(college.college_code).trim();
       if (!code) continue;
@@ -84,11 +86,11 @@ export default function Landing() {
 
       // Source Priority: 1. Local assets -> 2. Database image URL -> 3. Fallback
       let src = collegeAssetMap[code] || "";
-      
+
       if (!src && college.image && !college.image.includes('N/A')) {
         src = college.image;
       }
-      
+
       if (!src) {
         src = `https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60`;
       }
@@ -213,6 +215,8 @@ export default function Landing() {
             {[
               { label: 'Home', id: 'predictor' },
               { label: 'Features', id: 'features' },
+              { label: 'Colleges', id: 'colleges' },
+              { label: 'Gallery', id: 'gallery' },
               { label: 'Journey', id: 'how-it-works' }
             ].map(item => (
               <button
@@ -334,19 +338,23 @@ export default function Landing() {
           {/* The Overlying Asset */}
           <motion.div
             style={{ y: heroScrollY }}
-            initial={{ opacity: 0, x: 200 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
+            initial={{ opacity: 1, x: 50 }} // 100% opacity for instant LCP recognition
+            animate={{ x: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="relative lg:absolute lg:right-[-28%] lg:top-[15%] lg:-translate-y-1/2 w-full lg:w-[82%] z-40 pointer-events-none mt-10 md:mt-20 lg:mt-0"
           >
             <div className="relative group">
               <div className="absolute inset-0 bg-rose-500/5 blur-3xl rounded-full group-hover:scale-105 transition-transform duration-500 pointer-events-none" />
               <img
-                src={clgImg}
+                src={clgImgFallback}
+                srcSet={clgImgSrcset}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, (max-width: 1800px) 80vw, 1200px"
                 alt="Engineering Success"
+                width="1200"
+                height="800"
                 loading="eager"
                 fetchPriority="high"
-                decoding="async"
+                decoding="sync"
                 className="w-full h-auto animate-float scale-100 md:scale-110 object-contain will-change-transform transform-gpu"
               />
             </div>
@@ -642,7 +650,7 @@ export default function Landing() {
       </section>
 
       {/* Dome Gallery Section */}
-      <section data-theme="dark" className="pt-24 pb-0 w-full relative bg-[#080808] flex flex-col">
+      <section id="gallery" data-theme="dark" className="pt-24 pb-0 w-full relative bg-[#080808] flex flex-col">
         <div className="text-center relative z-20 mb-12 px-4">
           <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
             Explore Your <span className="text-rose-600 italic">Future Campus</span>

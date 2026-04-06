@@ -53,7 +53,15 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 // Scroll restorer
 const ScrollToTopOnRoute = () => {
   const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  const [prevPath, setPrevPath] = useState(pathname);
+
+  useEffect(() => {
+    if (prevPath !== pathname) {
+      window.scrollTo(0, 0);
+      setPrevPath(pathname);
+    }
+  }, [pathname, prevPath]);
+
   return null;
 };
 
@@ -144,7 +152,7 @@ export default function App() {
 
 function AppContent({ isLanding, setIsLanding }: { isLanding: boolean, setIsLanding: (v: boolean) => void }) {
   const { pathname } = useLocation();
-  
+
   useEffect(() => {
     const landing = pathname === '/';
     setIsLanding(landing);
