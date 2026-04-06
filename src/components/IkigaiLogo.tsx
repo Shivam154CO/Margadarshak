@@ -121,7 +121,7 @@ export default function IkigaiLogo({
             {showText && (
                 <div className="flex flex-col justify-center translate-y-0.5">
                     <span className={`${s.text} font-black ${textColorClass} tracking-tighter leading-[0.85]`}>
-                        Ikigai<span className="text-indigo-500">.</span>
+                        Ikigai
                     </span>
                     <span className={`${s.sub} font-bold ${subTextColorClass} uppercase tracking-[0.25em] mt-1 leading-none`}>
                         Prediction Engine

@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
-    ChevronRight,
     School,
     Brain,
     TrendingDown,
     AlertTriangle,
     Search,
     FileText,
-    BarChart3,
     type LucideIcon,
 } from 'lucide-react';
 
@@ -43,7 +41,6 @@ export interface ProblemData {
         barColor: string;
     };
     stats: {
-        statusLabel: string;
         statValue: string;
         statLabel: string;
     };
@@ -57,7 +54,7 @@ const PROBLEM_DATA: Record<ProblemId, ProblemData> = {
     chaos: {
         id: 'chaos',
         label: 'Choice Chaos',
-        title: 'Too Many Colleges.',
+        title: 'Too Many Colleges',
         description:
             'With over 340 colleges and 2,000+ branches across Maharashtra, picking just one is a nightmare. Every diploma student faces decision paralysis.',
         colors: {
@@ -67,7 +64,6 @@ const PROBLEM_DATA: Record<ProblemId, ProblemData> = {
             barColor: 'bg-rose-600',
         },
         stats: {
-            statusLabel: 'Overwhelming',
             statValue: '340+',
             statLabel: 'Choice Combinations',
         },
@@ -82,7 +78,7 @@ const PROBLEM_DATA: Record<ProblemId, ProblemData> = {
     overload: {
         id: 'overload',
         label: 'Data Overload',
-        title: 'Complex Data Overload.',
+        title: 'Complex Data Overload',
         description:
             'Searching through hundreds of pages of PDF cutoffs manually is slow, boring, and leads to costly mistakes that can ruin your admission.',
         colors: {
@@ -92,7 +88,6 @@ const PROBLEM_DATA: Record<ProblemId, ProblemData> = {
             barColor: 'bg-rose-600',
         },
         stats: {
-            statusLabel: 'Critical',
             statValue: '500+',
             statLabel: 'Pages of Raw Data',
         },
@@ -107,7 +102,7 @@ const PROBLEM_DATA: Record<ProblemId, ProblemData> = {
     uncertainty: {
         id: 'uncertainty',
         label: 'Yearly Shifts',
-        title: 'Uncertain Yearly Changes.',
+        title: 'Uncertain Yearly Changes',
         description:
             'Cutoffs change every year. Relying on old ranks is risky and can lead to you losing your dream seat to someone with a lower rank.',
         colors: {
@@ -117,7 +112,6 @@ const PROBLEM_DATA: Record<ProblemId, ProblemData> = {
             barColor: 'bg-rose-600',
         },
         stats: {
-            statusLabel: 'Unpredictable',
             statValue: '20%',
             statLabel: 'Average Yearly Shift',
         },
@@ -132,10 +126,6 @@ const PROBLEM_DATA: Record<ProblemId, ProblemData> = {
 };
 
 const PROBLEM_ORDER: ProblemId[] = ['chaos', 'overload', 'uncertainty'];
-
-// =========================================
-// 2. ANIMATION VARIANTS
-// =========================================
 
 const ANIMATIONS = {
     container: {
@@ -184,9 +174,6 @@ const ANIMATIONS = {
     }),
 };
 
-// =========================================
-// 3. SUB-COMPONENTS
-// =========================================
 
 const BackgroundGradient = ({ activeId }: { activeId: ProblemId }) => (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -224,29 +211,20 @@ const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) =>
             {/* Visual Container */}
             <div className="relative h-48 w-48 md:h-[210px] md:w-[210px] rounded-full border border-slate-100 shadow-xl flex items-center justify-center bg-white/10 shrink-0">
                 <motion.div
-                    animate={{ y: [-8, 8, -8] }}
-                    transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
                     className="relative z-10 w-full h-full flex items-center justify-center"
                 >
-                    <AnimatePresence mode="wait">
+                    <AnimatePresence>
                         <motion.div
-                            key={data.id}
-                            variants={ANIMATIONS.visual(index)}
-                            initial="initial"
-                            animate="animate"
-                            exit="exit"
                             className="relative flex items-center justify-center"
                         >
                             {/* Central Illustration */}
                             <motion.div
-                                animate={{ rotate: [0, 5, -5, 0] }}
-                                transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                                className="w-36 h-36 md:w-44 md:h-44 rounded-full bg-white flex items-center justify-center shadow-[0_15px_30px_rgba(0,0,0,0.06)] border border-slate-100/50"
+                                className="w-full h-44 rounded-3xl md:w-44 md:h-44 rounded-full bg-white flex items-center justify-center shadow-[0_15px_30px_rgba(0,0,0,0.06)] border border-slate-100/50"
                             >
                                 <img
                                     src={data.illustration}
                                     alt={data.title}
-                                    className="w-full h-full object-contain p-6 hover:scale-105 transition-transform duration-700"
+                                    className="w-full h-full object-cover p-6 hover:scale-105 transition-transform duration-700"
                                     loading="lazy"
                                     decoding="async"
                                 />
@@ -288,42 +266,11 @@ const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) =>
                                 </motion.div>
                             )}
 
-                            {/* Floating Particles */}
-                            {[...Array(5)].map((_, i) => (
-                                <motion.div
-                                    key={i}
-                                    animate={{
-                                        y: [0, -20, 0],
-                                        x: [0, Math.sin(i * 1.2) * 15, 0],
-                                        opacity: [0.3, 0.8, 0.3],
-                                    }}
-                                    transition={{
-                                        duration: 3 + i * 0.5,
-                                        repeat: Infinity,
-                                        delay: i * 0.4,
-                                    }}
-                                    className={`absolute w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${data.colors.glow} blur-[1px]`}
-                                    style={{
-                                        top: `${20 + i * 15}%`,
-                                        left: `${10 + i * 18}%`,
-                                    }}
-                                />
-                            ))}
                         </motion.div>
                     </AnimatePresence>
                 </motion.div>
             </div>
 
-            {/* Status Label */}
-            <motion.div
-                layout="position"
-                className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap"
-            >
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm backdrop-blur">
-                    <span className={`h-1.5 w-1.5 rounded-full ${data.colors.glow} animate-pulse`} />
-                    {data.stats.statusLabel}
-                </div>
-            </motion.div>
         </motion.div>
     );
 };
@@ -391,19 +338,6 @@ const ProblemDetails = ({
                         </div>
                     </div>
                 ))}
-
-                <div className={`pt-4 flex ${isEven ? 'justify-end' : 'justify-start'}`}>
-                    <button
-                        type="button"
-                        className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-300 hover:text-white transition-colors group"
-                    >
-                        <BarChart3 size={14} /> See Impact
-                        <ChevronRight
-                            size={14}
-                            className="group-hover:translate-x-1 transition-transform"
-                        />
-                    </button>
-                </div>
             </motion.div>
 
             {/* Stat */}
@@ -414,7 +348,7 @@ const ProblemDetails = ({
                 <span className="text-3xl font-black text-slate-950 tracking-tighter">
                     {data.stats.statValue}
                 </span>
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-800">
                     {data.stats.statLabel}
                 </span>
             </motion.div>
@@ -451,7 +385,6 @@ const Switcher = ({
                             <motion.div
                                 layoutId="problem-surface"
                                 className="absolute inset-0 rounded-full bg-slate-950 shadow-xl"
-                                transition={{ type: 'spring', stiffness: 220, damping: 22 }}
                             />
                         )}
                         <span
@@ -466,9 +399,6 @@ const Switcher = ({
     );
 };
 
-// =========================================
-// 4. MAIN COMPONENT
-// =========================================
 
 export default function ProblemShowcase() {
     const [activeProblem, setActiveProblem] = useState<ProblemId>('chaos');
@@ -496,7 +426,6 @@ export default function ProblemShowcase() {
             <div className="relative z-10 w-full px-6 max-w-6xl mx-auto">
                 <motion.div
                     layout
-                    transition={{ type: 'spring', bounce: 0, duration: 0.9 }}
                     className={`flex flex-col md:flex-row items-center justify-center gap-10 md:gap-20 lg:gap-32 w-full ${isEven ? 'md:flex-row-reverse' : 'md:flex-row'
                         }`}
                 >

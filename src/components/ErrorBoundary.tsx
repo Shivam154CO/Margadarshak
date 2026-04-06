@@ -27,8 +27,8 @@ class ErrorBoundary extends Component<Props, State> {
     public render() {
         if (this.state.hasError) {
             return (
-                <div className="fixed inset-0 z-[10000] w-full flex items-center justify-center p-8 bg-white text-center animate-in fade-in duration-500">
-                    <div className="max-w-xl w-full relative">
+                <div className="w-full h-screen flex items-center justify-center bg-white text-center animate-in fade-in duration-500">
+                    <div className="max-w-full w-cover relative">
                         <div className="absolute -top-10 left-0 w-full h-1.5 bg-rose-500 rounded-full" />
 
                         <img src={NetworkErrorImg} alt="Network Error" className="w-56 h-56 mx-auto mb-10 opacity-90" />
@@ -51,24 +51,13 @@ class ErrorBoundary extends Component<Props, State> {
                             </button>
 
                             <button
-                                onClick={() => window.location.href = '/'}
+                                onClick={() => window.location.href = '/dashboard'}
                                 className="flex-1 py-5 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-slate-50 transition-all active:scale-95"
                             >
                                 <Home className="w-6 h-6" />
-                                Return to Core
+                                Return to Dashboard
                             </button>
                         </div>
-
-                        {import.meta.env.DEV && (
-                            <div className="mt-12 text-left bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Terminal Error Log</span>
-                                <div className="max-h-40 overflow-auto custom-scrollbar">
-                                    <code className="text-[11px] text-rose-600 font-mono block leading-relaxed">
-                                        {this.state.error?.toString()}
-                                    </code>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             );

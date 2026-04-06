@@ -95,9 +95,9 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
 
   // Shuffle images to make it looks diverse
   const shuffled = [...normalizedImages].sort(() => Math.random() - 0.5);
-  
+
   // Fill all slots by cycling through available images if necessary
-  const finalImages: {src: string, alt: string}[] = [];
+  const finalImages: { src: string, alt: string }[] = [];
   for (let i = 0; i < totalSlots; i++) {
     finalImages.push(shuffled[i % shuffled.length]);
   }
@@ -217,7 +217,7 @@ export default function DomeGallery({
       const heightGuard = h * 1.35;
       radius = Math.min(radius, heightGuard);
       radius = clamp(radius, minRadius, maxRadius);
-      
+
       const viewerPad = Math.max(8, Math.round(minDim * padFactor));
       root.style.setProperty('--radius', `${Math.round(radius)}px`);
       root.style.setProperty('--viewer-pad', `${viewerPad}px`);
@@ -443,7 +443,7 @@ export default function DomeGallery({
     overlay.style.cssText = `position:fixed; left:50%; top:50%; width:${frameR.width}px; height:${frameR.height}px; opacity:0; z-index:99999; pointer-events: auto; will-change:transform,opacity,left,top,width,height; transform: translate(-50%, -50%); transition: transform ${enlargeTransitionMs}ms cubic-bezier(0.2, 0, 0.2, 1), opacity ${enlargeTransitionMs}ms ease, width ${enlargeTransitionMs}ms ease, height ${enlargeTransitionMs}ms ease; border-radius:${openedImageBorderRadius}; overflow:hidden; box-shadow:0 10px 100px rgba(0,0,0,.8);`;
     const rawSrc = parent.dataset.src || (el.querySelector('img') as HTMLImageElement)?.src || '';
     const rawAlt = parent.dataset.alt || (el.querySelector('img') as HTMLImageElement)?.alt || '';
-    
+
     // Look up real college name via parsed alt text, context, or fallback mapping
     let collegeName = '';
     let collegeCode = '';
@@ -457,7 +457,7 @@ export default function DomeGallery({
       const foundCollege = colleges.find(c => String(c.college_code).trim() === collegeCode);
       collegeName = foundCollege ? foundCollege.college_name : (COLLEGE_NAME_FALLBACKS[collegeCode] || `Institute ${collegeCode}`);
     }
-    
+
     const img = document.createElement('img');
     img.src = rawSrc;
     img.alt = collegeName;

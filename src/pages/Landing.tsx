@@ -10,32 +10,24 @@ import { LiveCastePreview, LiveMatchSimulator, LiveTrendPulse, LiveAIAssistant, 
 import Magnetic from "../components/Magnetic";
 import Loader from "../components/Loader";
 
-// Import custom illustrations
-// Use vite-imagetools for a responsive srcset to improve mobile LCP with high quality
-import clgImgSrcset from "../assets/illustrations/clg.png?w=600;1200;1800;2400&format=webp&quality=95&as=srcset";
-import clgImgFallback from "../assets/illustrations/clg.png?w=1800&format=webp&quality=95&as=url";
-
-// Lazy load heavy components
 const ProblemShowcase = lazy(() => import("../features/landing/components/spatial-product-showcase"));
 const DomeGallery = lazy(() => import("../components/DomeGallery"));
 const Footer = lazy(() => import("../components/Footer"));
 
-const campusImageGlob = import.meta.glob("../assets/*/campus.png", {
-  eager: true,
-  import: 'default'
-}) as Record<string, string>;
+import clgImgFallback from "@/assets/illustrations/clg.png?w=1200&format=webp&as=src";
+import clgImgSrcset from "@/assets/illustrations/clg.png?w=400;800;1200;1600&format=webp&as=srcset";
 
-// Pre-map college codes to their asset URLs for O(1) lookup and robust path handling
-const collegeAssetMap = Object.entries(campusImageGlob).reduce((acc, [path, url]) => {
-  // Path usually looks like "../assets/1002/campus.png"
-  // We want the folder name which is the college code
+// Asset loader moved to a more efficient lazy-load pattern to avoid blocking the main thread
+const campusImageGlob = import.meta.glob("../assets/*/campus.png", {
+  eager: false, // Set to false to avoid bloating the main bundle
+  import: 'default'
+}) as Record<string, () => Promise<string>>;
+
+// Efficiently extract codes without loading the assets
+const collegeCodesAvailable = Object.keys(campusImageGlob).map(path => {
   const parts = path.split(/[/\\]/);
-  const code = parts[parts.length - 2]; // Get the folder name
-  if (code && code !== 'assets') {
-    acc[code] = url;
-  }
-  return acc;
-}, {} as Record<string, string>);
+  return parts[parts.length - 2];
+});
 
 // Loading fallback component
 const SectionLoader = () => (
@@ -55,53 +47,32 @@ export default function Landing() {
   const { allColleges } = useCollegeData();
 
   const domeImages = useMemo(() => {
-    // Fallback: If database is empty, fill gallery with all available local campus photos
-    if (!allColleges || allColleges.length === 0) {
-      console.log("No colleges in database, creating dome from local assets only.");
-      return Object.entries(collegeAssetMap).map(([code, src]) => ({
-        src,
-        alt: `Institute ${code} | ${code}`
-      })).slice(0, 350);
-    }
+    // If database is empty, use available local asset codes
+    const baseColleges = (!allColleges || allColleges.length === 0)
+      ? collegeCodesAvailable.map(code => ({ college_code: code }))
+      : allColleges;
 
-    // Prioritize database colleges that actually have local images for a better visual experience
-    const collegesWithImages = allColleges.filter(c => {
-      const code = String(c.college_code).trim();
-      return !!collegeAssetMap[code];
-    });
-
-    const otherColleges = allColleges.filter(c => {
-      const code = String(c.college_code).trim();
-      return !collegeAssetMap[code];
-    });
-
-    const displayColleges = [...collegesWithImages, ...otherColleges].slice(0, 350);
-    const items = [];
-
-    for (const college of displayColleges) {
+    return baseColleges.slice(0, 300).map(college => {
       const code = String(college.college_code).trim();
-      if (!code) continue;
+      const name = "college_name" in college ? college.college_name : `Institute ${code}`;
 
-      const name = college.college_name || `Institute ${code}`;
-
-      // Source Priority: 1. Local assets -> 2. Database image URL -> 3. Fallback
-      let src = collegeAssetMap[code] || "";
-
-      if (!src && college.image && !college.image.includes('N/A')) {
+      // Source Priority: 1. Local assets (placeholder for now) -> 2. Database image URL -> 3. Fallback
+      // Since local assets are now lazy, we'll use a placeholder or the URL if it eventually resolves
+      let src = "";
+      if ("image" in college && typeof college.image === 'string' && !college.image.includes('N/A')) {
         src = college.image;
       }
 
       if (!src) {
-        src = `https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60`;
+        src = `https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60`;
       }
 
-      items.push({
+      return {
         src,
         alt: `${name} | ${code}`
-      });
-    }
-    return items;
-  }, [allColleges, collegeAssetMap]);
+      };
+    });
+  }, [allColleges]);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -264,6 +235,7 @@ export default function Landing() {
                 {[
                   { label: 'Home', id: 'predictor' },
                   { label: 'Features', id: 'features' },
+                  { label: 'Gallery', id: 'gallery' },
                   { label: 'Journey', id: 'how-it-works' }
                 ].map(item => (
                   <button
@@ -299,11 +271,8 @@ export default function Landing() {
 
                 <div className="relative z-10 space-y-8 group-hover:translate-x-2 transition-transform duration-700">
                   <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-white/60 backdrop-blur-2xl border border-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-2">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span className="font-black text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500">
+
+                    <span className="font-black text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700">
                       Maharashtra's #1 Diploma Portal
                     </span>
                   </div>
@@ -346,15 +315,15 @@ export default function Landing() {
             <div className="relative group">
               <div className="absolute inset-0 bg-rose-500/5 blur-3xl rounded-full group-hover:scale-105 transition-transform duration-500 pointer-events-none" />
               <img
-                src={clgImgFallback}
                 srcSet={clgImgSrcset}
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, (max-width: 1800px) 80vw, 1200px"
+                src={clgImgFallback}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
                 alt="Engineering Success"
                 width="1200"
                 height="800"
                 loading="eager"
                 fetchPriority="high"
-                decoding="sync"
+                decoding="async"
                 className="w-full h-auto animate-float scale-100 md:scale-110 object-contain will-change-transform transform-gpu"
               />
             </div>
@@ -386,7 +355,7 @@ export default function Landing() {
             </div>
             <div className="space-y-1">
               <div className="text-3xl md:text-5xl font-extrabold text-white tracking-tighter">Live</div>
-              <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.4em]">Diploma DATA 2026</div>
+              <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.4em]">Diploma DATA 2025 & 2026</div>
             </div>
           </div>
         </div>
@@ -406,7 +375,7 @@ export default function Landing() {
           <ScrollAnimationWrapper animation="slideUp" className="text-center mb-32">
             <h2 className="text-4xl md:text-8xl font-black text-white/95 tracking-tighter leading-none mb-8">
               Precision Powered by <br />
-              <span className="bg-gradient-to-r from-rose-400 to-rose-600 bg-clip-text text-transparent italic">Real Data.</span>
+              <span className="bg-gradient-to-r from-rose-400 to-rose-600 bg-clip-text text-transparent italic">Real Data</span>
             </h2>
           </ScrollAnimationWrapper>
 
@@ -457,17 +426,17 @@ export default function Landing() {
                   <div className="space-y-6">
                     <h3 className="text-4xl font-extrabold text-white tracking-tight">Category-Wise <br /> Seat Matrix.</h3>
                     <p className="text-lg text-white/60 font-medium leading-relaxed">
-                      Deep-dive into specific seat distribution for <span className="text-white">GOPEN, GSC, GOBC, and EWS</span> categories.
+                      Deep-dive into specific seat distribution for <span className="text-white">OPEN, SC, OBC, EWS, NTA, and SEBC</span> categories.
                     </p>
                   </div>
 
                   <div className="bg-[#0a0a0a] rounded-[30px] md:rounded-[40px] border border-white/10 p-5 md:p-8 space-y-6 shadow-2xl transition-transform duration-700">
                     <div className="grid grid-cols-2 gap-3 pb-2">
                       {[
-                        { label: 'GNTA', count: 2, color: 'bg-rose-500', p: '11%' },
-                        { label: 'GOPEN', count: 2, color: 'bg-rose-500', p: '44%' },
-                        { label: 'GSC', count: 1, color: 'bg-rose-400', p: '11%' },
-                        { label: 'GOBC', count: 1, color: 'bg-orange-400', p: '22%' },
+                        { label: 'NTA', count: 2, color: 'bg-rose-500', p: '11%' },
+                        { label: 'OPEN', count: 2, color: 'bg-rose-500', p: '44%' },
+                        { label: 'SC', count: 1, color: 'bg-rose-400', p: '11%' },
+                        { label: 'OBC', count: 1, color: 'bg-orange-400', p: '22%' },
                         { label: 'SEBC', count: 1, color: 'bg-orange-400', p: '11%' },
                         { label: 'EWS', count: 2, color: 'bg-rose-600', p: '11%' },
                       ].map((item, i) => (
@@ -495,7 +464,7 @@ export default function Landing() {
               <div className="bg-rose-900 rounded-[40px] md:rounded-[60px] p-8 md:p-16 h-full flex flex-col justify-between text-white relative overflow-hidden group">
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 blur-3xl rounded-full" />
                 <div className="relative z-10 space-y-6">
-                  <h3 className="text-4xl font-black tracking-tight leading-none">The 2026 <br /> Standard.</h3>
+                  <h3 className="text-4xl font-black tracking-tight leading-none">The 2026 <br /> Standard</h3>
                   <div className="text-7xl md:text-[150px] font-black tracking-tighter leading-none opacity-20 group-hover:opacity-100 transition-opacity duration-700">95.7%</div>
                   <p className="text-lg font-bold text-white/80">Prediction precision that eliminates the "Maybe" from your admission journey.</p>
                 </div>
@@ -508,7 +477,7 @@ export default function Landing() {
                   <div className="w-12 h-12 bg-rose-500/20 rounded-2xl flex items-center justify-center border border-rose-500/30">
                     <LiveFeatureIcon type="brain" size={44} />
                   </div>
-                  <h3 className="text-2xl font-bold text-white">AI Virtual Assistance.</h3>
+                  <h3 className="text-2xl font-bold text-white">AI Virtual Assistance</h3>
                   <p className="text-white/60 text-sm leading-relaxed">24/7 dedicated AI support to answer every doubt about your admission.</p>
                 </div>
               </div>
@@ -520,7 +489,7 @@ export default function Landing() {
                   <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
                     <LiveFeatureIcon type="chart" size={24} />
                   </div>
-                  <h3 className="text-2xl font-bold text-white">Placement Stats.</h3>
+                  <h3 className="text-2xl font-bold text-white">Placement Stats</h3>
                   <p className="text-white/60 text-sm leading-relaxed">Access real-time placement data, average packages, and top recruiter lists.</p>
                 </div>
               </div>
@@ -534,7 +503,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto">
           <ScrollAnimationWrapper animation="slideUp">
             <div className="text-center mb-16 md:mb-24">
-              <h2 className="text-4xl md:text-7xl font-extrabold text-slate-900 tracking-tighter leading-none mb-4">Powerful Features <br /> <span className="bg-gradient-to-r from-rose-400 to-rose-600 bg-clip-text text-transparent italic text-4xl md:text-7xl">Simple to Use.</span></h2>
+              <h2 className="text-4xl md:text-7xl font-extrabold text-slate-900 tracking-tighter leading-none mb-4">Powerful Features <br /> <span className="bg-gradient-to-r from-rose-400 to-rose-600 bg-clip-text text-transparent italic text-4xl md:text-7xl">Simple to Use</span></h2>
             </div>
           </ScrollAnimationWrapper>
 
@@ -571,7 +540,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <ScrollAnimationWrapper animation="slideUp" className="text-center mb-32">
             <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none">
-              Your Journey <span className="text-rose-600 italic">Redefined.</span>
+              Your Journey <span className="text-rose-600 italic">Redefined</span>
             </h2>
           </ScrollAnimationWrapper>
 
@@ -679,14 +648,14 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto space-y-10 md:space-y-16">
           <ScrollAnimationWrapper animation="slideUp">
             <h2 className="text-4xl md:text-9xl font-extrabold text-white tracking-tighter leading-[0.85]">
-              Secure Your <br /> <span className="italic text-rose-600">Future Today.</span>
+              Secure Your <br /> <span className="italic text-rose-600">Future Today</span>
             </h2>
             <div className="pt-16 space-y-10">
               <motion.button
                 onClick={() => navigate("/signup")}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-10 py-5 md:px-24 md:py-8 bg-white text-slate-950 rounded-full font-extrabold text-xl md:text-3xl shadow-3xl hover:bg-rose-600 hover:text-white transition-all"
+                className="px-8 py-6 md:px-24 md:py-8 bg-white text-slate-950 rounded-full font-extrabold text-xl md:text-3xl shadow-3xl hover:bg-rose-600 hover:text-white transition-all"
               >
                 Sign Up Now →
               </motion.button>

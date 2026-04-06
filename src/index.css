@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;700;800;900&family=Playfair+Display:wght@400;700;800;900&family=Nunito+Sans:wght@400;700;800;900&display=swap');
-@import "tailwindcss";
 
 /* ============================================
    DESIGN SYSTEM: CSS Custom Properties
@@ -127,9 +126,6 @@ main {
   flex-grow: 1;
 }
 
-/* ============================================
-   DARK MODE OVERRIDES
-   ============================================ */
 
 /* Navbar dark mode */
 .dark nav {
@@ -546,10 +542,6 @@ main {
     filter: hue-rotate(-45deg);
   }
 }
-
-/* ============================================
-   GLOBAL FONT OVERRIDES (NON-LANDING)
-   ============================================ */
 
 #main-content.font-inter-content {
   font-family: 'Inter', sans-serif !important;
