@@ -193,7 +193,7 @@ const BackgroundGradient = ({ activeId }: { activeId: ProblemId }) => (
 );
 
 /** Animated icon-based visual instead of a static image */
-const ProblemVisual = ({ data, index }: { data: ProblemData; index: number }) => {
+const ProblemVisual = ({ data }: { data: ProblemData }) => {
     return (
         <motion.div layout="position" className="relative group shrink-0">
             {/* Animated Rings */}
@@ -430,7 +430,7 @@ export default function ProblemShowcase() {
                         }`}
                 >
                     {/* Visual */}
-                    <ProblemVisual data={currentData} index={activeIndex} />
+                    <ProblemVisual data={currentData} />
 
                     {/* Details */}
                     <motion.div layout="position" className="w-full max-w-md">
