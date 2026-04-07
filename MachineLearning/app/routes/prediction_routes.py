@@ -101,7 +101,7 @@ def predict_admission():
         processed = 0
         errors    = 0
 
-        for _, row in filtered_df.iterrows():
+        for row in filtered_df.to_dict('records'):
             try:
                 cutoff_rank       = int(row.get('cutoff_rank', 0))
                 cutoff_percentile = float(row.get('cutoff_percentile', 0))
@@ -290,7 +290,7 @@ def generate_cap_form():
         df_filtered = df_filtered[category_mask]
 
         results = []
-        for _, row in df_filtered.iterrows():
+        for row in df_filtered.to_dict('records'):
             cutoff_rank       = int(row.get('cutoff_rank') or 0)
             cutoff_percentile = float(row.get('cutoff_percentile') or 0)
             fit, match_score, chance, _, _ = advanced_prediction_model(user_score, user_rank, cutoff_rank, cutoff_percentile)
@@ -357,7 +357,7 @@ def get_most_probable_colleges():
             filtered_df = filtered_df[category_mask]
 
         probable_colleges = []
-        for _, row in filtered_df.iterrows():
+        for row in filtered_df.to_dict('records'):
             cutoff_rank       = int(row.get('cutoff_rank') or 0)
             cutoff_percentile = float(row.get('cutoff_percentile') or 0)
 

@@ -204,6 +204,15 @@ def get_colleges():
         return jsonify({"error": str(e)}), 500
 
 
+@college_bp.route("/colleges/all_raw", methods=["GET"])
+def get_colleges_all_raw():
+    try:
+        df = current_app.df
+        return jsonify(df.to_dict(orient="records"))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @college_bp.route("/branches", methods=["GET"])
 def get_branches():
     branches = sorted(current_app.df['branch_name'].unique().tolist())
