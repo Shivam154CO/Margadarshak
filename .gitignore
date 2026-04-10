@@ -12,13 +12,11 @@ dist
 dist-ssr
 *.local
 
-# Environment Variables - NEVER commit
 .env
 .env.local
 .env.production
 .env.*.local
 
-# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -28,21 +26,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-# Not required files
-Enterprise_Gap_Analysis.html
-FullStack_Audit_Report.html
-proposals.md
-PTC_Campus_Interview_Guide.html
-PTC_India_Power_Trading_Interview_Guide.html
-Roadmap_to_97_Percent.html
-SmartCF_Audit_Report.html
-SmartCF_Campus_Interview_QnA.html
-tech-analysis.html
-supabase.ts
-Mega_App_Solutions.html
-Remaining_System_Design.html
-SmartCF_Campus_Interview_QnA.html
-SmartCF_Campus_Interview_QnA.html
-Mega_App_Architecture_VS_SmartCF.html
-Final_Enterprise_Audit_Report.html

@@ -5,18 +5,10 @@ import type { College, RawCollege } from "@/types/college";
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? "http://127.0.0.1:5001";
 
-// Maps a city string to a state name
-const getStateFromCity = (city: string): string => {
-    const cityStateMap: Record<string, string> = {
-        "Mumbai": "Maharashtra", "Pune": "Maharashtra", "Nagpur": "Maharashtra",
-        "Nashik": "Maharashtra", "Aurangabad": "Maharashtra", "Thane": "Maharashtra",
-        "Delhi": "Delhi", "Bangalore": "Karnataka", "Chennai": "Tamil Nadu",
-        "Hyderabad": "Telangana", "Kolkata": "West Bengal", "Ahmedabad": "Gujarat",
-        "Jaipur": "Rajasthan", "Lucknow": "Uttar Pradesh", "Bhopal": "Madhya Pradesh",
-        "Chandigarh": "Chandigarh", "Thiruvananthapuram": "Kerala",
-        "Bhubaneswar": "Odisha", "Guwahati": "Assam", "Patna": "Bihar",
-    };
-    return cityStateMap[city] || "Maharashtra";
+// Removing hardcoded mapping to make it 100% dynamic.
+// The region/state should come from the ML API or Supabase backend.
+const getStateFromCity = (city: string, rawRegion?: string): string => {
+    return rawRegion || "Unknown";
 };
 
 // Groups raw ML prediction rows by college_code
@@ -39,7 +31,7 @@ const groupCollegesByCode = (rawColleges: RawCollege[]): College[] => {
                 highest_package_lpa: rawCollege.highest_package_lpa,
                 branches: [],
                 is_predicted: true,
-                region: getStateFromCity(rawCollege.city),
+                region: getStateFromCity(rawCollege.city, rawCollege.region || rawCollege.state),
                 established_year: rawCollege.established_year || undefined,
                 naac_grade: rawCollege.naac_grade || undefined,
                 website: rawCollege.website || rawCollege.website_url || undefined,
@@ -143,7 +135,7 @@ const fetchAllColleges = async (): Promise<College[]> => {
                 highest_package_lpa: parseFloat(row.highest_package_lpa || row.Highest_Package_LPA || 0),
                 branches: [],
                 is_predicted: false,
-                region: getStateFromCity(row.city || row.City),
+                region: getStateFromCity(row.city || row.City, row.region || row.Region || row.state || row.State),
                 website: row.website_url || row.Website_Url,
                 address: row.address || `${row.college_name || row.College_Name}, ${row.city || row.City}`
             } as College);

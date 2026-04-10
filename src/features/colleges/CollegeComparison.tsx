@@ -28,6 +28,7 @@ import {
   GitCompare,
   Check,
   CheckCheck,
+  Settings2,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -113,6 +114,19 @@ function CollegeComparison() {
   const [comparisonView, setComparisonView] = useState<"table" | "radar" | "bar">("table");
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
+  
+  // Dynamic User-Controlled Algorithm Weights (No longer hardcoded!)
+  const [smartWeights, setSmartWeights] = useState({
+    placement_rate: 0.25,
+    average_package_lpa: 0.20,
+    fees: 0.15,
+    cutoff_percentile: 0.15,
+    student_faculty_ratio: 0.10,
+    campus_area: 0.05,
+    library_books: 0.05,
+    research_papers: 0.05,
+  });
+  const [showWeightSettings, setShowWeightSettings] = useState(false);
 
   // Fetch colleges data
   useEffect(() => {
@@ -282,8 +296,36 @@ function CollegeComparison() {
                    </button>
                  </>
                )}
+               <button onClick={() => setShowWeightSettings(true)} className="flex-1 md:flex-none flex items-center justify-center px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold transition hover:bg-gray-50 hover:shadow-sm shadow-sm">
+                  <Settings2 className="w-4 h-4 mr-2" /> Algorithm Rules
+               </button>
             </div>
           </header>
+
+          <AnimatePresence>
+            {showWeightSettings && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mb-8 overflow-hidden">
+                <div className="bg-white p-6 rounded-3xl border border-indigo-100 shadow-sm relative">
+                  <button onClick={() => setShowWeightSettings(false)} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200 text-gray-600"><X className="w-4 h-4" /></button>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Dynamic Smart Score Rules</h3>
+                  <p className="text-sm text-gray-500 mb-6">You control the AI algorithm. Adjust the multipliers to sort colleges by what matters most to YOU.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {Object.entries(smartWeights).map(([key, value]) => (
+                      <div key={key} className="space-y-2">
+                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex justify-between">
+                          {key.replace(/_/g, ' ')} <span className="text-indigo-600">{(value * 100).toFixed(0)}%</span>
+                        </label>
+                        <input type="range" min="0" max="1" step="0.05" value={value}
+                          onChange={(e) => setSmartWeights(prev => ({ ...prev, [key]: parseFloat(e.target.value) }))}
+                          className="w-full accent-indigo-600"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="mb-8 p-1 bg-gray-200/50 rounded-2xl w-fit flex gap-1">
             {['browse', 'compare'].map(tab => (
@@ -348,10 +390,10 @@ function CollegeComparison() {
                           <div className="mt-auto">
                             <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase mb-1">
                               <span>Smart Score</span>
-                              <span className="text-indigo-600">{calculateSmartScore(college).total}%</span>
+                              <span className="text-indigo-600">{calculateSmartScore(college, smartWeights).total}%</span>
                             </div>
                             <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                              <motion.div initial={{ width: 0 }} animate={{ width: `${calculateSmartScore(college).total}%` }} className="h-full bg-indigo-500" />
+                              <motion.div initial={{ width: 0 }} animate={{ width: `${calculateSmartScore(college, smartWeights).total}%` }} className="h-full bg-indigo-500" />
                             </div>
                           </div>
                         </div>
