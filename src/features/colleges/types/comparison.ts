@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, DollarSign, Award, Users, Trophy, Star, Home, Shield, Calendar, MapPin, CheckCircle, GraduationCap, Link2, Mail, Phone, Library, Activity, Maximize2, Briefcase, Landmark } from 'lucide-react';
+import { TrendingUp, DollarSign, Award, Users, User, Trophy, Star, Target, Layers, Home, Shield, Calendar, MapPin, CheckCircle, GraduationCap, Link2, Mail, Phone, Library, Activity, Maximize2, Briefcase, Landmark } from 'lucide-react';
 
 export interface College {
   college_code: string;
@@ -79,9 +79,9 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     icon: React.createElement(TrendingUp, { className: "w-4 h-4" }),
     unit: "%",
     higherIsBetter: true,
-    weight: 30,
+    weight: 25,
     category: "career",
-    description: "Percentage of students successfully placed"
+    description: "Percentage of students placed"
   },
   {
     key: "average_package_lpa",
@@ -89,19 +89,9 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     icon: React.createElement(DollarSign, { className: "w-4 h-4" }),
     unit: " LPA",
     higherIsBetter: true,
-    weight: 25,
+    weight: 20,
     category: "career",
-    description: "Average annual salary placement package"
-  },
-  {
-    key: "highest_package_lpa",
-    label: "Highest Package",
-    icon: React.createElement(Trophy, { className: "w-4 h-4" }),
-    unit: " LPA",
-    higherIsBetter: true,
-    weight: 10,
-    category: "career",
-    description: "Highest salary package offered"
+    description: "Average annual salary package"
   },
   {
     key: "fees",
@@ -111,7 +101,7 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     higherIsBetter: false,
     weight: 15,
     category: "financial",
-    description: "Annual tuition fees for the branch"
+    description: "Annual tuition fees"
   },
   {
     key: "cutoff_percentile",
@@ -119,9 +109,9 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     icon: React.createElement(Award, { className: "w-4 h-4" }),
     unit: "%",
     higherIsBetter: true,
-    weight: 10,
+    weight: 15,
     category: "academic",
-    description: "Last year's closing CET percentile"
+    description: "Required percentile for admission"
   },
   {
     key: "total_intake",
@@ -129,9 +119,29 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     icon: React.createElement(Users, { className: "w-4 h-4" }),
     unit: "",
     higherIsBetter: true,
-    weight: 5,
+    weight: 10,
     category: "academic",
-    description: "Total number of available seats"
+    description: "Total number of students admitted"
+  },
+  {
+    key: "seats",
+    label: "Available Seats",
+    icon: React.createElement(User, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 8,
+    category: "academic",
+    description: "Number of available seats"
+  },
+  {
+    key: "highest_package_lpa",
+    label: "Highest Package",
+    icon: React.createElement(Trophy, { className: "w-4 h-4" }),
+    unit: " LPA",
+    higherIsBetter: true,
+    weight: 12,
+    category: "career",
+    description: "Highest salary package offered"
   },
   {
     key: "rating",
@@ -139,69 +149,29 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     icon: React.createElement(Star, { className: "w-4 h-4" }),
     unit: "/5",
     higherIsBetter: true,
-    weight: 5,
+    weight: 10,
     category: "academic",
-    description: "Overall student and academic rating"
+    description: "Overall college rating"
   },
   {
-    key: "seats",
-    label: "Category Seats",
-    icon: React.createElement(Users, { className: "w-4 h-4" }),
-    unit: "",
-    higherIsBetter: true,
-    weight: 0,
-    category: "academic",
-    description: "Seats available for your specific category"
-  },
-  {
-    key: "established_year",
-    label: "Established",
-    icon: React.createElement(Calendar, { className: "w-4 h-4" }),
+    key: "nirf_ranking",
+    label: "NIRF Ranking",
+    icon: React.createElement(Target, { className: "w-4 h-4" }),
     unit: "",
     higherIsBetter: false,
-    weight: 0,
+    weight: 8,
     category: "academic",
-    description: "Founding year of the institute"
+    description: "Lower ranking number is better"
   },
   {
-    key: "autonomy_status",
-    label: "Autonomy",
-    icon: React.createElement(Shield, { className: "w-4 h-4" }),
+    key: "alumni_strength",
+    label: "Alumni Strength",
+    icon: React.createElement(Layers, { className: "w-4 h-4" }),
     unit: "",
     higherIsBetter: true,
-    weight: 0,
-    category: "academic",
-    description: "Autonomous or Non-Autonomous status"
-  },
-  {
-    key: "hostel_available",
-    label: "Hostel Facility",
-    icon: React.createElement(Home, { className: "w-4 h-4" }),
-    unit: "",
-    higherIsBetter: true,
-    weight: 0,
-    category: "infrastructure",
-    description: "Availability of campus hostel"
-  },
-  {
-    key: "accreditation",
-    label: "Accreditation",
-    icon: React.createElement(CheckCircle, { className: "w-4 h-4" }),
-    unit: "",
-    higherIsBetter: true,
-    weight: 0,
-    category: "academic",
-    description: "NAAC/NBA Accreditations"
-  },
-  {
-    key: "university",
-    label: "University",
-    icon: React.createElement(GraduationCap, { className: "w-4 h-4" }),
-    unit: "",
-    higherIsBetter: true,
-    weight: 0,
-    category: "academic",
-    description: "Affiliating University"
+    weight: 7,
+    category: "career",
+    description: "Strength of alumni network"
   },
   {
     key: "city",
@@ -222,26 +192,6 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     weight: 0,
     category: "academic",
     description: "Government, Private, or Aided Status"
-  },
-  {
-    key: "naac_grade",
-    label: "NAAC Grade",
-    icon: React.createElement(Award, { className: "w-4 h-4" }),
-    unit: "",
-    higherIsBetter: true,
-    weight: 0,
-    category: "academic",
-    description: "Specific NAAC grading (e.g., A++, A+)"
-  },
-  {
-    key: "nirf_ranking",
-    label: "NIRF Ranking",
-    icon: React.createElement(Trophy, { className: "w-4 h-4" }),
-    unit: "",
-    higherIsBetter: true,
-    weight: 0,
-    category: "academic",
-    description: "National institutional ranking (if applicable)"
   },
   {
     key: "campus_area",
@@ -312,5 +262,65 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     weight: 0,
     category: "academic",
     description: "Primary contact or reception line"
+  },
+  {
+    key: "established_year",
+    label: "Established",
+    icon: React.createElement(Calendar, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: false,
+    weight: 0,
+    category: "academic",
+    description: "Founding year of the institute"
+  },
+  {
+    key: "autonomy_status",
+    label: "Autonomy",
+    icon: React.createElement(Shield, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "Autonomous or Non-Autonomous status"
+  },
+  {
+    key: "hostel_available",
+    label: "Hostel Facility",
+    icon: React.createElement(Home, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "infrastructure",
+    description: "Availability of campus hostel"
+  },
+  {
+    key: "accreditation",
+    label: "Accreditation",
+    icon: React.createElement(CheckCircle, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "NAAC/NBA Accreditations"
+  },
+  {
+    key: "university",
+    label: "University",
+    icon: React.createElement(GraduationCap, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "Affiliating University"
+  },
+  {
+    key: "naac_grade",
+    label: "NAAC Grade",
+    icon: React.createElement(Award, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "Specific NAAC grading (e.g., A++, A+)"
   }
 ];

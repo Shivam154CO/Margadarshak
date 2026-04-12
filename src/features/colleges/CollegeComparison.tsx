@@ -61,12 +61,12 @@ const calculateSmartScore = (college: College, weights: Record<string, number> =
   breakdown: Record<string, number>;
 } => {
   const defaultWeights = {
-    placement_rate: 0.30,
-    average_package_lpa: 0.25,
+    placement_rate: 0.25,
+    average_package_lpa: 0.20,
     highest_package_lpa: 0.10,
     fees: 0.15,
-    cutoff_percentile: 0.10,
-    total_intake: 0.05,
+    cutoff_percentile: 0.15,
+    total_intake: 0.10,
     rating: 0.05,
   };
 
@@ -111,15 +111,16 @@ function CollegeComparison() {
   const [comparisonView, setComparisonView] = useState<"table" | "radar" | "bar">("table");
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
-  
+  const [visibleCount, setVisibleCount] = useState(500);
+
   // Dynamic User-Controlled Algorithm Weights
   const [smartWeights, setSmartWeights] = useState({
-    placement_rate: 0.30,
-    average_package_lpa: 0.25,
+    placement_rate: 0.25,
+    average_package_lpa: 0.20,
     highest_package_lpa: 0.10,
     fees: 0.15,
-    cutoff_percentile: 0.10,
-    total_intake: 0.05,
+    cutoff_percentile: 0.15,
+    total_intake: 0.10,
     rating: 0.05,
   });
   const [showWeightSettings, setShowWeightSettings] = useState(false);
@@ -172,9 +173,9 @@ function CollegeComparison() {
         const code = (row.college_code || row.College_code || "").toString().trim();
         const name = (row.college_name || row.College_name || "Unknown").toString().trim();
         const branch = (row.branch_name || row.Branch_name || "Generic").toString().trim();
-        
+
         // Use college_code + name as unique key to ensure each college appears only once
-        const collegeKey = `${code}|${name}`; 
+        const collegeKey = `${code}|${name}`;
 
         if (!code || code === "") return;
 
@@ -212,6 +213,7 @@ function CollegeComparison() {
             sports_facilities: row.sports_facilities || row.Sports_facilities || "Available",
             internship_rate: parseFloat(row.internship_rate || row.Internship_rate || 0),
             university: row.university || row.University || "State University",
+            established_year: parseInt(row.established_year || row.Established_year || 0),
           } as College);
         }
       });
@@ -237,6 +239,11 @@ function CollegeComparison() {
     });
   }, [colleges, searchTerm, selectedBranch, selectedCity]);
 
+  // Reset slicing when filters update
+  useEffect(() => {
+    setVisibleCount(500);
+  }, [searchTerm, selectedBranch, selectedCity]);
+
   const addToComparison = (college: College) => {
     if (selectedColleges.length >= 4) return;
     if (!selectedColleges.find(c => c.college_code === college.college_code)) {
@@ -255,7 +262,7 @@ function CollegeComparison() {
     const doc = new jsPDF();
     doc.setFontSize(20);
     doc.text('College Comparison Report', 14, 22);
-    
+
     autoTable(doc, {
       head: [['College', 'City', 'Branch', 'Fees', 'Placement', 'Avg Package']] as any,
       body: selectedColleges.map(c => [c.college_name, c.city, c.branch_name, `₹${c.fees.toLocaleString()}`, `${c.placement_rate}%`, `${c.average_package_lpa} LPA`]),
@@ -306,19 +313,19 @@ function CollegeComparison() {
             </div>
 
             <div className="flex gap-3 w-full md:w-auto">
-               {selectedColleges.length > 0 && activeTab === 'compare' && (
-                 <>
-                   <button onClick={shareComparison} className="flex-1 md:flex-none flex items-center justify-center px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold transition shadow-sm hover:shadow-lg">
-                     {copied ? <CheckCheck className="w-4 h-4 mr-2" /> : <Share2 className="w-4 h-4 mr-2" />} {copied ? "Copied" : "Share"}
-                   </button>
-                   <button onClick={exportToPDF} disabled={exporting} className="flex-1 md:flex-none flex items-center justify-center px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-bold transition shadow-sm hover:shadow-lg disabled:opacity-50">
-                     <Download className="w-4 h-4 mr-2" /> {exporting ? "..." : "PDF"}
-                   </button>
-                 </>
-               )}
-               <button onClick={() => setShowWeightSettings(true)} className="flex-1 md:flex-none flex items-center justify-center px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold transition hover:bg-gray-50 hover:shadow-sm shadow-sm">
-                  <Settings2 className="w-4 h-4 mr-2" /> Algorithm Rules
-               </button>
+              {selectedColleges.length > 0 && activeTab === 'compare' && (
+                <>
+                  <button onClick={shareComparison} className="flex-1 md:flex-none flex items-center justify-center px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold transition shadow-sm hover:shadow-lg">
+                    {copied ? <CheckCheck className="w-4 h-4 mr-2" /> : <Share2 className="w-4 h-4 mr-2" />} {copied ? "Copied" : "Share"}
+                  </button>
+                  <button onClick={exportToPDF} disabled={exporting} className="flex-1 md:flex-none flex items-center justify-center px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-bold transition shadow-sm hover:shadow-lg disabled:opacity-50">
+                    <Download className="w-4 h-4 mr-2" /> {exporting ? "..." : "PDF"}
+                  </button>
+                </>
+              )}
+              <button onClick={() => setShowWeightSettings(true)} className="flex-1 md:flex-none flex items-center justify-center px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold transition hover:bg-gray-50 hover:shadow-sm shadow-sm">
+                <Settings2 className="w-4 h-4 mr-2" /> Algorithm Rules
+              </button>
             </div>
           </header>
 
@@ -380,10 +387,10 @@ function CollegeComparison() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <AnimatePresence>
-                  {filteredColleges.map(college => {
+                  {filteredColleges.slice(0, visibleCount).map(college => {
                     const isSelected = selectedColleges.some(c => c.college_code === college.college_code);
                     return (
-                      <motion.div layout key={college.college_code} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all flex flex-col group">
+                      <motion.div key={college.college_code} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all flex flex-col group">
                         <div className="relative h-44">
                           <CollegeImage collegeCode={college.college_code} className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -395,17 +402,16 @@ function CollegeComparison() {
                           </div>
                         </div>
                         <div className="p-5 flex-1 flex flex-col">
-                          <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{college.city}</div>
-                          <div className="text-sm font-bold text-gray-700 line-clamp-1 mb-4">{college.branch_name}</div>
+                          <div className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">{college.city}</div>
                           <div className="grid grid-cols-2 gap-2 mb-6">
-                             <div className="bg-slate-50 p-2 rounded-xl text-center">
-                               <div className="text-indigo-600 font-black">₹{(college.fees / 1000).toFixed(0)}K</div>
-                               <div className="text-[9px] font-bold text-gray-400 uppercase">Fees</div>
-                             </div>
-                             <div className="bg-slate-50 p-2 rounded-xl text-center">
-                               <div className="text-emerald-600 font-black">{college.placement_rate}%</div>
-                               <div className="text-[9px] font-bold text-gray-400 uppercase">Placed</div>
-                             </div>
+                            <div className="bg-slate-50 p-2 rounded-xl text-center">
+                              <div className="text-indigo-600 font-black">₹{(college.fees / 1000).toFixed(0)}K</div>
+                              <div className="text-[9px] font-bold text-gray-400 uppercase">Fees</div>
+                            </div>
+                            <div className="bg-slate-50 p-2 rounded-xl text-center">
+                              <div className="text-emerald-600 font-black">{college.placement_rate}%</div>
+                              <div className="text-[9px] font-bold text-gray-400 uppercase">Placed</div>
+                            </div>
                           </div>
                           <div className="mt-auto">
                             <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase mb-1">
@@ -422,6 +428,17 @@ function CollegeComparison() {
                   })}
                 </AnimatePresence>
               </div>
+
+              {visibleCount < filteredColleges.length && (
+                <div className="flex justify-center pt-8">
+                  <button 
+                    onClick={() => setVisibleCount(prev => prev + 500)}
+                    className="px-8 py-3 bg-white border border-gray-200 text-indigo-600 font-bold rounded-xl shadow-sm hover:shadow-md transition-all hover:bg-gray-50 flex items-center justify-center gap-2"
+                  >
+                    View More Colleges <span className="text-gray-400 text-xs font-medium">({filteredColleges.length - visibleCount} remaining)</span>
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-8">
@@ -451,7 +468,7 @@ function CollegeComparison() {
                             <X className="w-4 h-4" />
                           </button>
                           <h4 className="font-bold text-gray-900 pr-4 leading-tight">{c.college_name}</h4>
-                          <span className="text-[10px] font-black text-indigo-400 uppercase tracking-wider block mt-2">{c.branch_name}</span>
+                          <span className="text-[10px] font-black text-indigo-400 uppercase tracking-wider block mt-2">{c.city}</span>
                         </div>
                       ))}
                     </div>
