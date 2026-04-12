@@ -64,9 +64,9 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100">
         <div className="w-8 h-8 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-center">
-          <MapPin className="w-4 h-4 text-indigo-500" />
+          <MapPin className="w-4 h-4 text-indigo-600" />
         </div>
-        <h3 className="text-base font-bold text-slate-800">Contact Information</h3>
+        <h3 className="text-base font-bold text-slate-900">Contact Information</h3>
       </div>
 
       <div className="divide-y divide-slate-100">
@@ -75,10 +75,10 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({
           return (
             <div key={i} className="flex items-start gap-4 px-6 py-3.5 hover:bg-slate-50 transition-colors">
               <div className="mt-0.5 w-7 h-7 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Icon className="w-3.5 h-3.5 text-slate-500" />
+                <Icon className="w-3.5 h-3.5 text-slate-600" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{item.label}</p>
+                <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-0.5">{item.label}</p>
                 {item.content}
               </div>
             </div>

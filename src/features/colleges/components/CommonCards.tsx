@@ -24,8 +24,8 @@ export const StatCard: React.FC<StatCardProps> = ({
         <Icon className="w-5 h-5 text-indigo-500" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider">{label}</p>
-        <p className="text-sm sm:text-lg font-extrabold text-slate-900 mt-0.5 leading-tight">{value}</p>
+        <p className="text-[10px] sm:text-xs text-slate-500 font-extrabold uppercase tracking-wider">{label}</p>
+        <p className="text-sm sm:text-lg font-black text-slate-900 mt-0.5 leading-tight">{value}</p>
       </div>
     </div>
   </motion.div>

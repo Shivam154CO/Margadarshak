@@ -26,8 +26,8 @@ export const AvailableBranches: React.FC<AvailableBranchesProps> = ({
     return (
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
         <div className="text-center py-10">
-          <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500 text-sm">No branch information available</p>
+          <BookOpen className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <p className="text-slate-600 text-sm font-medium">No branch information available</p>
         </div>
       </div>
     );
@@ -39,11 +39,11 @@ export const AvailableBranches: React.FC<AvailableBranchesProps> = ({
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-center">
-            <BookOpen className="w-4 h-4 text-indigo-500" />
+            <BookOpen className="w-4 h-4 text-indigo-600" />
           </div>
-          <h3 className="text-base font-bold text-slate-800">Available Branches</h3>
+          <h3 className="text-base font-bold text-slate-900">Available Branches</h3>
         </div>
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
           {branches.length} Branches
         </span>
       </div>
@@ -67,27 +67,27 @@ export const AvailableBranches: React.FC<AvailableBranchesProps> = ({
                 {/* Left: Name + meta */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className={`font-bold text-sm leading-snug break-words ${isSelected ? 'text-indigo-700' : 'text-slate-800'}`}>
+                    <p className={`font-bold text-sm leading-snug break-words ${isSelected ? 'text-indigo-800' : 'text-slate-900'}`}>
                       {branch.branch_name}
                     </p>
                     {isSelected && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-[10px] font-bold uppercase tracking-wide">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full text-[10px] font-bold uppercase tracking-wide">
                         <CheckCircle2 className="w-3 h-3" /> Selected
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5">{totalSeats} seats total</p>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">{totalSeats} seats total</p>
                 </div>
 
                 {/* Right: Summary pills + expand */}
                 <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                   {branch.categories && branch.categories.slice(0, 3).map((cat, ci) => (
-                    <span key={ci} className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded-md text-[11px] font-semibold text-slate-600 whitespace-nowrap">
-                      {cat.category}: <span className="text-slate-800 font-bold">{cat.seats}</span>
+                    <span key={ci} className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded-md text-[11px] font-semibold text-slate-700 whitespace-nowrap">
+                      {cat.category}: <span className="text-slate-900 font-bold">{cat.seats}</span>
                     </span>
                   ))}
                   {branch.categories && branch.categories.length > 3 && (
-                    <span className="text-[11px] text-slate-400 font-medium">+{branch.categories.length - 3} more</span>
+                    <span className="text-[11px] text-slate-500 font-bold">+{branch.categories.length - 3} more</span>
                   )}
 
                   {branch.categories && branch.categories.length > 0 && (
@@ -115,8 +115,8 @@ export const AvailableBranches: React.FC<AvailableBranchesProps> = ({
                     transition={{ duration: 0.25, ease: 'easeInOut' }}
                     className="overflow-hidden"
                   >
-                    <div className="px-6 pb-5 pt-3 bg-slate-50 border-t border-slate-100">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                    <div className="px-6 pb-5 pt-3 bg-slate-50 border-t border-slate-200">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
                         Category-wise Seat Distribution — {branch.branch_name}
                       </p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -129,12 +129,12 @@ export const AvailableBranches: React.FC<AvailableBranchesProps> = ({
                             className="flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2.5 shadow-sm"
                           >
                             <div>
-                              <p className="text-xs font-black text-slate-800 leading-none">{cat.category}</p>
-                              <p className="text-[10px] font-medium text-slate-400 mt-0.5">Category</p>
+                              <p className="text-xs font-black text-slate-900 leading-none">{cat.category}</p>
+                              <p className="text-[10px] font-semibold text-slate-500 mt-0.5">Category</p>
                             </div>
                             <div className="text-right">
                               <p className="text-sm font-black text-slate-900 leading-none">{cat.seats}</p>
-                              <p className="text-[10px] font-bold text-indigo-600 mt-0.5">{cat.percentage.toFixed(1)}%</p>
+                              <p className="text-[10px] font-bold text-indigo-700 mt-0.5">{cat.percentage.toFixed(1)}%</p>
                             </div>
                           </motion.div>
                         ))}
@@ -144,16 +144,16 @@ export const AvailableBranches: React.FC<AvailableBranchesProps> = ({
                       <div className="mt-4 space-y-1.5">
                         {branch.categories.map((cat, ci) => (
                           <div key={ci} className="flex items-center gap-3">
-                            <span className="text-[10px] font-bold text-slate-500 w-14 shrink-0 text-right">{cat.category}</span>
+                            <span className="text-[10px] font-bold text-slate-600 w-14 shrink-0 text-right">{cat.category}</span>
                             <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                               <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${cat.percentage}%` }}
                                 transition={{ duration: 0.5, delay: ci * 0.04 }}
-                                className="h-full bg-indigo-500 rounded-full"
+                                className="h-full bg-indigo-600 rounded-full"
                               />
                             </div>
-                            <span className="text-[10px] font-bold text-slate-500 w-8 shrink-0">{cat.seats}</span>
+                            <span className="text-[10px] font-bold text-slate-600 w-8 shrink-0">{cat.seats}</span>
                           </div>
                         ))}
                       </div>

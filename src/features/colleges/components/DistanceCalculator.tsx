@@ -41,7 +41,7 @@ export const DistanceCalculator: React.FC<DistanceCalculatorProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div>
             <h3 className="text-xl font-bold text-slate-900 tracking-tight">Distance Matrix</h3>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Travel Analytics</p>
+            <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest leading-none mt-1">Travel Analytics</p>
           </div>
 
           <div className="flex p-1 bg-slate-50 rounded-xl self-start sm:self-auto border border-slate-100">
@@ -110,14 +110,14 @@ export const DistanceCalculator: React.FC<DistanceCalculatorProps> = ({
                 <div className="grid grid-cols-1 gap-4">
                   <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center">
                     <div>
-                      <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Total Distance</p>
-                      <p className="text-3xl font-black text-slate-900">{displayDistance.toFixed(1)} <span className="text-sm text-slate-400 font-bold uppercase ml-1">km</span></p>
+                      <p className="text-slate-500 text-[10px] font-extrabold uppercase tracking-widest mb-1">Total Distance</p>
+                      <p className="text-3xl font-black text-slate-900">{displayDistance.toFixed(1)} <span className="text-sm text-slate-500 font-bold uppercase ml-1">km</span></p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-5 bg-white border border-slate-100 rounded-2xl">
-                      <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1.5">Est. Travel Time</p>
+                      <p className="text-slate-500 text-[9px] font-extrabold uppercase tracking-widest mb-1.5">Est. Travel Time</p>
                       <p className="text-lg font-bold text-slate-900 tracking-tight">
                           {displayDistance < 10 ? `${Math.round(displayDistance * 6)} min` :
                            displayDistance < 50 ? `${Math.round(displayDistance * 2)} min` :
@@ -125,7 +125,7 @@ export const DistanceCalculator: React.FC<DistanceCalculatorProps> = ({
                       </p>
                     </div>
                     <div className="p-5 bg-white border border-slate-100 rounded-2xl">
-                      <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1.5">Travel Cost</p>
+                      <p className="text-slate-500 text-[9px] font-extrabold uppercase tracking-widest mb-1.5">Travel Cost</p>
                       <p className="text-lg font-bold text-slate-900 tracking-tight">₹{Math.round(displayDistance * 5)}</p>
                     </div>
                   </div>

@@ -49,11 +49,11 @@ export const SeatMatrixSection: React.FC<SeatMatrixSectionProps> = ({
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-center">
-            <Layers className="w-4 h-4 text-indigo-500" />
+            <Layers className="w-4 h-4 text-indigo-600" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-800">Seat Matrix</h3>
-            <p className="text-[11px] text-slate-400">{branchName} · {totalSeats} total seats</p>
+            <h3 className="text-sm font-bold text-slate-900">Seat Matrix</h3>
+            <p className="text-[11px] font-medium text-slate-500">{branchName} · {totalSeats} total seats</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -94,14 +94,14 @@ export const SeatMatrixSection: React.FC<SeatMatrixSectionProps> = ({
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
           {seatMatrix.slice(0, 5).map((cat, i) => (
             <div key={i} className="flex items-center gap-1.5">
-              <div className={`w-2 h-2 rounded-full ${cat.category === userCategory ? 'bg-indigo-600' : 'bg-slate-300'}`} />
-              <span className={`text-[10px] font-bold ${cat.category === userCategory ? 'text-indigo-700' : 'text-slate-500'}`}>
+              <div className={`w-2 h-2 rounded-full ${cat.category === userCategory ? 'bg-indigo-600' : 'bg-slate-400'}`} />
+              <span className={`text-[10px] font-extrabold ${cat.category === userCategory ? 'text-indigo-800' : 'text-slate-600'}`}>
                 {cat.category}: {cat.seats}
               </span>
             </div>
           ))}
           {seatMatrix.length > 5 && (
-            <span className="text-[10px] text-slate-400 font-medium">+{seatMatrix.length - 5} more</span>
+            <span className="text-[10px] text-slate-500 font-bold">+{seatMatrix.length - 5} more</span>
           )}
         </div>
       </div>
@@ -133,24 +133,24 @@ export const SeatMatrixSection: React.FC<SeatMatrixSectionProps> = ({
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className={`text-xs font-black leading-none ${isUser ? 'text-indigo-700' : 'text-slate-800'}`}>
+                        <span className={`text-xs font-black leading-none ${isUser ? 'text-indigo-800' : 'text-slate-900'}`}>
                           {category.category}
                         </span>
                         {isUser && (
-                          <span className="text-[9px] font-black text-indigo-600 uppercase tracking-wide">You</span>
+                          <span className="text-[9px] font-black text-indigo-700 uppercase tracking-wide">You</span>
                         )}
                       </div>
-                      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-2">
+                      <div className="w-full h-1.5 bg-slate-200/60 rounded-full overflow-hidden mb-2">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${category.percentage}%` }}
                           transition={{ duration: 0.5, delay: index * 0.05 }}
-                          className={`h-full rounded-full ${isUser ? 'bg-indigo-500' : 'bg-slate-400'}`}
+                          className={`h-full rounded-full ${isUser ? 'bg-indigo-600' : 'bg-slate-500'}`}
                         />
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-[10px] text-slate-500 font-medium">{category.percentage.toFixed(1)}%</span>
-                        <span className={`text-[10px] font-black ${isUser ? 'text-indigo-600' : 'text-slate-700'}`}>{category.seats} seats</span>
+                        <span className="text-[10px] text-slate-600 font-bold">{category.percentage.toFixed(1)}%</span>
+                        <span className={`text-[10px] font-black ${isUser ? 'text-indigo-700' : 'text-slate-800'}`}>{category.seats} seats</span>
                       </div>
                     </motion.div>
                   );

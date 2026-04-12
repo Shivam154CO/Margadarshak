@@ -225,8 +225,8 @@ export const AdmissionTimeline: React.FC<AdmissionTimelineProps> = ({
             <Calendar className="w-4 h-4 text-indigo-500" />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Maharashtra CAP 2025-26</p>
-            <h3 className="text-sm font-bold text-slate-800">Engineering Admission Schedule</h3>
+            <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Maharashtra CAP 2025-26</p>
+            <h3 className="text-sm font-bold text-slate-900">Engineering Admission Schedule</h3>
           </div>
           <a
             href="https://cetcell.mahacet.org/"
@@ -241,8 +241,8 @@ export const AdmissionTimeline: React.FC<AdmissionTimelineProps> = ({
         {/* Progress bar */}
         <div className="px-5 py-3 bg-slate-50 border-b border-slate-100">
           <div className="flex justify-between items-center mb-1.5">
-            <span className="text-[10px] font-bold text-slate-500">Overall Progress</span>
-            <span className="text-[10px] font-black text-indigo-600">{completedCount}/{MAHARASHTRA_CAP_SCHEDULE.length} phases</span>
+            <span className="text-[10px] font-extrabold text-slate-600">Overall Progress</span>
+            <span className="text-[10px] font-extrabold text-indigo-700">{completedCount}/{MAHARASHTRA_CAP_SCHEDULE.length} phases</span>
           </div>
           <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
             <motion.div
@@ -273,9 +273,9 @@ export const AdmissionTimeline: React.FC<AdmissionTimelineProps> = ({
               <div className="flex items-start gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
                 <ChevronRight className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Coming Up Next</p>
-                  <p className="text-xs font-bold text-slate-700">{nextPhase.phase.label}</p>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-[9px] font-extrabold uppercase tracking-widest text-slate-500 mb-0.5">Coming Up Next</p>
+                  <p className="text-xs font-bold text-slate-800">{nextPhase.phase.label}</p>
+                  <p className="text-[10px] text-slate-500 font-medium">
                     Starts {formatDate(nextPhase.phase.startDate)}
                   </p>
                 </div>
@@ -298,8 +298,8 @@ export const AdmissionTimeline: React.FC<AdmissionTimelineProps> = ({
             <Layers className="w-4 h-4 text-indigo-500" />
           </div>
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Step-by-step</p>
-            <h3 className="text-sm font-bold text-slate-800">CAP Round Timeline</h3>
+            <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Step-by-step</p>
+            <h3 className="text-sm font-bold text-slate-900">CAP Round Timeline</h3>
           </div>
         </div>
 
@@ -330,10 +330,10 @@ export const AdmissionTimeline: React.FC<AdmissionTimelineProps> = ({
             <ClipboardList className="w-4 h-4 text-indigo-500" />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Checklist</p>
-            <h3 className="text-sm font-bold text-slate-800">Required Documents ({REQUIRED_DOCUMENTS.length})</h3>
+            <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Checklist</p>
+            <h3 className="text-sm font-bold text-slate-900">Required Documents ({REQUIRED_DOCUMENTS.length})</h3>
           </div>
-          {docsExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-300" />}
+          {docsExpanded ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
         </button>
 
         <AnimatePresence>
@@ -385,8 +385,8 @@ export const AdmissionTimeline: React.FC<AdmissionTimelineProps> = ({
               <Phone className="w-4 h-4 text-indigo-500" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">College Help Desk</p>
-              <h3 className="text-sm font-bold text-slate-800">Admission Contacts</h3>
+              <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">College Help Desk</p>
+              <h3 className="text-sm font-bold text-slate-900">Admission Contacts</h3>
             </div>
           </div>
           <div className="divide-y divide-slate-100">

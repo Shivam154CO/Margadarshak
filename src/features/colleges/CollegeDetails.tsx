@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Bookmark, Share2, Tag,
   Eye, Layers, CreditCard, Building, Trophy, Bot, Newspaper,
-  X, AlertCircle, Users, ClipboardList, Sparkles,
+  X, AlertCircle, Users, Sparkles,
   FileText, Globe
 } from 'lucide-react';
 
@@ -12,7 +12,7 @@ import {
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { CollegeImage } from '@/features/colleges/components/CollegeImage';
-import { StatCard, InfoCard } from '@/features/colleges/components/CommonCards';
+import { StatCard } from '@/features/colleges/components/CommonCards';
 import { SeatMatrixSection } from '@/features/colleges/components/SeatMatrixSection';
 import { AvailableBranches } from '@/features/colleges/components/AvailableBranches';
 import { AdmissionTimeline } from '@/features/colleges/components/AdmissionTimeline';
@@ -112,29 +112,45 @@ export default function CollegeDetails() {
 
   const renderOverview = () => (
     <div className="space-y-8">
+      {/* Quick Stats Grid */}
       {quickStats.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {quickStats.map((stat, idx) => <StatCard key={idx} {...stat} />)}
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      {/* Main Content Grid: Seat info and branch info taking main stage */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-8">
           <SeatMatrixSection
             seatMatrix={college.seat_matrix || []}
             userCategory={college.category || "GOPEN"}
             branchName={college.branch_name || ""}
             totalIntake={college.total_intake}
           />
-
           <AvailableBranches
             branches={college.branches || []}
             collegeCode={college.college_code || ""}
             selectedBranch={college.branch_name}
             onBranchSelect={updateBranch}
           />
+        </div>
 
-
+        <div className="space-y-8">
+          {/* Small Stats for a quick contextual read */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest mb-1">Avg Package</p>
+                <p className="text-lg font-black text-slate-900">₹{placementData.averagePackage} LPA</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest mb-1">Placement Rate</p>
+                <p className="text-lg font-black text-slate-900">{formatPercentage(placementData.placementRate)}</p>
+              </div>
+            </div>
+          </div>
+          
           <ScholarshipsSection
             collegeScholarships={college.scholarships || []}
             userCategory={profile?.category}
@@ -146,74 +162,34 @@ export default function CollegeDetails() {
             onOpenModal={() => profile ? setShowFeedbackModal(true) : alert("Please log in to review.")}
           />
         </div>
+      </div>
 
-        <div className="space-y-8">
-          <InfoCard title="Quick Stats" icon={Trophy}>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                <span className="text-sm text-slate-500">Placement Rate</span>
-                <span className="text-sm font-bold text-slate-800">{formatPercentage(placementData.placementRate)}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                <span className="text-sm text-slate-500">Avg Package</span>
-                <span className="text-sm font-bold text-slate-800">₹{placementData.averagePackage} LPA</span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-slate-500">Intake</span>
-                <span className="text-sm font-bold text-slate-800">{seatData.totalIntake}</span>
-              </div>
-            </div>
-          </InfoCard>
-
-          <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-bold mb-6 flex items-center gap-3">
-              <ClipboardList className="w-5 h-5 text-indigo-600" /> Required Docs
-            </h3>
-            <ul className="space-y-3">
-              {["SSC Marksheet", "HSC Marksheet", "LC/TC", "Domicile", "Income Certificate"].map((doc, i) => (
-                <li key={i} className="flex items-center gap-3 text-sm text-gray-600">
-                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                  {doc}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <AdmissionTimeline
+      {/* Admission Timeline takes full width for better readability of steps */}
+      <div className="pt-8 border-t border-slate-200">
+         <AdmissionTimeline
             admissionSteps={college.admission_process || []}
             admissionDates={college.admission_dates}
             contacts={college.admission_contacts}
           />
+      </div>
 
-          <DistanceCalculator
-            distance={distance}
-            isGettingLocation={isGettingLocation}
-            onGetLocation={handleGetLocation}
-            error={locationError}
-            collegeCity={college.city}
-            collegeCoords={college.latitude ? { lat: college.latitude, lng: college.longitude! } : undefined}
-          />
-
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">
-                Strategic Evaluation Summary
-              </h4>
-              {isInsightsLoading && <div className="w-3 h-3 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />}
-            </div>
-            <p className="text-slate-900 text-sm font-medium leading-relaxed">
-              {collegeInsights ? (collegeInsights.split('\n').find(l => !l.includes('Verdict:')) || "Reviewing college metadata...").replace(/\*\*/g, '').replace(/### /g, '') : "Status: Generating final evaluation..."}
-            </p>
-          </div>
-
-          <ContactInfo
-            email={college.contact_email}
-            phone={college.contact_phone}
-            city={college.city}
-            district={college.district}
-            website={college.website_url}
-          />
-        </div>
+      {/* Location and Contact Info */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t border-slate-200">
+        <DistanceCalculator
+          distance={distance}
+          isGettingLocation={isGettingLocation}
+          onGetLocation={handleGetLocation}
+          error={locationError}
+          collegeCity={college.city}
+          collegeCoords={college.latitude ? { lat: college.latitude, lng: college.longitude! } : undefined}
+        />
+        <ContactInfo
+          email={college.contact_email}
+          phone={college.contact_phone}
+          city={college.city}
+          district={college.district}
+          website={college.website_url}
+        />
       </div>
     </div>
   );
