@@ -61,14 +61,13 @@ const calculateSmartScore = (college: College, weights: Record<string, number> =
   breakdown: Record<string, number>;
 } => {
   const defaultWeights = {
-    placement_rate: 0.25,
-    average_package_lpa: 0.20,
+    placement_rate: 0.30,
+    average_package_lpa: 0.25,
+    highest_package_lpa: 0.10,
     fees: 0.15,
-    cutoff_percentile: 0.15,
-    student_faculty_ratio: 0.10,
-    campus_area: 0.05,
-    library_books: 0.05,
-    research_papers: 0.05,
+    cutoff_percentile: 0.10,
+    total_intake: 0.05,
+    rating: 0.05,
   };
 
   const finalWeights = { ...defaultWeights, ...weights };
@@ -82,8 +81,6 @@ const calculateSmartScore = (college: College, weights: Record<string, number> =
     if (value > 0) {
       if (metric.key === "fees") {
         normalizedScore = Math.max(0, 100 - (value / 100000));
-      } else if (metric.key === "student_faculty_ratio") {
-        normalizedScore = Math.max(0, 100 - value * 10);
       } else {
         normalizedScore = Math.min(100, value);
       }
@@ -115,16 +112,15 @@ function CollegeComparison() {
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
   
-  // Dynamic User-Controlled Algorithm Weights (No longer hardcoded!)
+  // Dynamic User-Controlled Algorithm Weights
   const [smartWeights, setSmartWeights] = useState({
-    placement_rate: 0.25,
-    average_package_lpa: 0.20,
+    placement_rate: 0.30,
+    average_package_lpa: 0.25,
+    highest_package_lpa: 0.10,
     fees: 0.15,
-    cutoff_percentile: 0.15,
-    student_faculty_ratio: 0.10,
-    campus_area: 0.05,
-    library_books: 0.05,
-    research_papers: 0.05,
+    cutoff_percentile: 0.10,
+    total_intake: 0.05,
+    rating: 0.05,
   });
   const [showWeightSettings, setShowWeightSettings] = useState(false);
 
@@ -146,16 +142,33 @@ function CollegeComparison() {
   const fetchColleges = async () => {
     try {
       setLoading(true);
-      // Fetch up to 4000 records to load "all" colleges/branches
-      let { data, error } = await supabase
-        .from('colleges_2025')
-        .select('*')
-        .range(0, 4000);
+      let allData: any[] = [];
+      let page = 0;
+      const pageSize = 1000;
+      let hasMore = true;
 
-      if (error) throw error;
+      while (hasMore) {
+        let { data, error } = await supabase
+          .from('colleges_2025')
+          .select('*')
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allData = [...allData, ...data];
+          if (data.length < pageSize) {
+            hasMore = false;
+          } else {
+            page++;
+          }
+        } else {
+          hasMore = false;
+        }
+      }
 
       const uniqueMap = new Map<string, College>();
-      (data || []).forEach((row: any) => {
+      (allData).forEach((row: any) => {
         const code = (row.college_code || row.College_code || "").toString().trim();
         const name = (row.college_name || row.College_name || "Unknown").toString().trim();
         const branch = (row.branch_name || row.Branch_name || "Generic").toString().trim();
@@ -192,6 +205,13 @@ function CollegeComparison() {
             accreditation: row.accreditation || row.Accreditation || "",
             rating: parseFloat(row.rating || row.Rating || 0),
             nirf_ranking: row.nirf_ranking || row.NIRF_ranking || 0,
+            status: row.status || row.Status || row.institution_type || "Unaided",
+            naac_grade: row.naac_grade || row.Naac_grade || row.NAAC_Grade || "N/A",
+            campus_area: parseFloat(row.campus_area || row.Campus_area || 0),
+            library_books: parseInt(row.library_books || row.Library_books || 0),
+            sports_facilities: row.sports_facilities || row.Sports_facilities || "Available",
+            internship_rate: parseFloat(row.internship_rate || row.Internship_rate || 0),
+            university: row.university || row.University || "State University",
           } as College);
         }
       });

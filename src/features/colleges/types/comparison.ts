@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, DollarSign, Award, Users, User, Trophy, Star, Target, Layers } from 'lucide-react';
+import { TrendingUp, DollarSign, Award, Users, Trophy, Star, Home, Shield, Calendar, MapPin, CheckCircle, GraduationCap, Link2, Mail, Phone, Library, Activity, Maximize2, Briefcase, Landmark } from 'lucide-react';
 
 export interface College {
   college_code: string;
@@ -41,6 +41,8 @@ export interface College {
   rating?: number;
   nirf_ranking?: number;
   naac_grade?: string;
+  status?: string;
+  internship_rate?: number;
 
   // Prediction fields
   probability_level?: string;
@@ -77,9 +79,9 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     icon: React.createElement(TrendingUp, { className: "w-4 h-4" }),
     unit: "%",
     higherIsBetter: true,
-    weight: 25,
+    weight: 30,
     category: "career",
-    description: "Percentage of students placed"
+    description: "Percentage of students successfully placed"
   },
   {
     key: "average_package_lpa",
@@ -87,9 +89,19 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     icon: React.createElement(DollarSign, { className: "w-4 h-4" }),
     unit: " LPA",
     higherIsBetter: true,
-    weight: 20,
+    weight: 25,
     category: "career",
-    description: "Average annual salary package"
+    description: "Average annual salary placement package"
+  },
+  {
+    key: "highest_package_lpa",
+    label: "Highest Package",
+    icon: React.createElement(Trophy, { className: "w-4 h-4" }),
+    unit: " LPA",
+    higherIsBetter: true,
+    weight: 10,
+    category: "career",
+    description: "Highest salary package offered"
   },
   {
     key: "fees",
@@ -99,7 +111,7 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     higherIsBetter: false,
     weight: 15,
     category: "financial",
-    description: "Annual tuition fees"
+    description: "Annual tuition fees for the branch"
   },
   {
     key: "cutoff_percentile",
@@ -107,9 +119,9 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     icon: React.createElement(Award, { className: "w-4 h-4" }),
     unit: "%",
     higherIsBetter: true,
-    weight: 15,
+    weight: 10,
     category: "academic",
-    description: "Required percentile for admission"
+    description: "Last year's closing CET percentile"
   },
   {
     key: "total_intake",
@@ -117,29 +129,9 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     icon: React.createElement(Users, { className: "w-4 h-4" }),
     unit: "",
     higherIsBetter: true,
-    weight: 10,
+    weight: 5,
     category: "academic",
-    description: "Total number of students admitted"
-  },
-  {
-    key: "seats",
-    label: "Available Seats",
-    icon: React.createElement(User, { className: "w-4 h-4" }),
-    unit: "",
-    higherIsBetter: true,
-    weight: 8,
-    category: "academic",
-    description: "Number of available seats"
-  },
-  {
-    key: "highest_package_lpa",
-    label: "Highest Package",
-    icon: React.createElement(Trophy, { className: "w-4 h-4" }),
-    unit: " LPA",
-    higherIsBetter: true,
-    weight: 12,
-    category: "career",
-    description: "Highest salary package offered"
+    description: "Total number of available seats"
   },
   {
     key: "rating",
@@ -147,28 +139,178 @@ export const COMPARISON_METRICS: ComparisonMetric[] = [
     icon: React.createElement(Star, { className: "w-4 h-4" }),
     unit: "/5",
     higherIsBetter: true,
-    weight: 10,
+    weight: 5,
     category: "academic",
-    description: "Overall college rating"
+    description: "Overall student and academic rating"
+  },
+  {
+    key: "seats",
+    label: "Category Seats",
+    icon: React.createElement(Users, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "Seats available for your specific category"
+  },
+  {
+    key: "established_year",
+    label: "Established",
+    icon: React.createElement(Calendar, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: false,
+    weight: 0,
+    category: "academic",
+    description: "Founding year of the institute"
+  },
+  {
+    key: "autonomy_status",
+    label: "Autonomy",
+    icon: React.createElement(Shield, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "Autonomous or Non-Autonomous status"
+  },
+  {
+    key: "hostel_available",
+    label: "Hostel Facility",
+    icon: React.createElement(Home, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "infrastructure",
+    description: "Availability of campus hostel"
+  },
+  {
+    key: "accreditation",
+    label: "Accreditation",
+    icon: React.createElement(CheckCircle, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "NAAC/NBA Accreditations"
+  },
+  {
+    key: "university",
+    label: "University",
+    icon: React.createElement(GraduationCap, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "Affiliating University"
+  },
+  {
+    key: "city",
+    label: "Location",
+    icon: React.createElement(MapPin, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "infrastructure",
+    description: "Base city of the campus"
+  },
+  {
+    key: "status",
+    label: "Institution Type",
+    icon: React.createElement(Landmark, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "Government, Private, or Aided Status"
+  },
+  {
+    key: "naac_grade",
+    label: "NAAC Grade",
+    icon: React.createElement(Award, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "Specific NAAC grading (e.g., A++, A+)"
   },
   {
     key: "nirf_ranking",
     label: "NIRF Ranking",
-    icon: React.createElement(Target, { className: "w-4 h-4" }),
-    unit: "",
-    higherIsBetter: false,
-    weight: 8,
-    category: "academic",
-    description: "Lower ranking number is better"
-  },
-  {
-    key: "alumni_strength",
-    label: "Alumni Strength",
-    icon: React.createElement(Layers, { className: "w-4 h-4" }),
+    icon: React.createElement(Trophy, { className: "w-4 h-4" }),
     unit: "",
     higherIsBetter: true,
-    weight: 7,
-    category: "career",
-    description: "Strength of alumni network"
+    weight: 0,
+    category: "academic",
+    description: "National institutional ranking (if applicable)"
   },
+  {
+    key: "campus_area",
+    label: "Campus Size",
+    icon: React.createElement(Maximize2, { className: "w-4 h-4" }),
+    unit: " Acres",
+    higherIsBetter: true,
+    weight: 0,
+    category: "infrastructure",
+    description: "Total campus area in acres"
+  },
+  {
+    key: "library_books",
+    label: "Library Collection",
+    icon: React.createElement(Library, { className: "w-4 h-4" }),
+    unit: " Books",
+    higherIsBetter: true,
+    weight: 0,
+    category: "infrastructure",
+    description: "Volume of books available in digital/physical library"
+  },
+  {
+    key: "sports_facilities",
+    label: "Sports Facilities",
+    icon: React.createElement(Activity, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "infrastructure",
+    description: "Availability of sports grounds and equipment"
+  },
+  {
+    key: "internship_rate",
+    label: "Internship Rate",
+    icon: React.createElement(Briefcase, { className: "w-4 h-4" }),
+    unit: "%",
+    higherIsBetter: true,
+    weight: 0,
+    category: "career",
+    description: "Percentage of students securing internships"
+  },
+  {
+    key: "website_url",
+    label: "Official Website",
+    icon: React.createElement(Link2, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "Link to the college's official domain"
+  },
+  {
+    key: "contact_email",
+    label: "Contact Email",
+    icon: React.createElement(Mail, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "Primary academic or admission email"
+  },
+  {
+    key: "contact_phone",
+    label: "Contact Phone",
+    icon: React.createElement(Phone, { className: "w-4 h-4" }),
+    unit: "",
+    higherIsBetter: true,
+    weight: 0,
+    category: "academic",
+    description: "Primary contact or reception line"
+  }
 ];

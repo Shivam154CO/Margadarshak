@@ -7,6 +7,7 @@ import {
   X, AlertCircle, Users, Sparkles,
   FileText, Globe
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 // Components
 import Navbar from '@/components/Navbar';
@@ -114,7 +115,7 @@ export default function CollegeDetails() {
     <div className="space-y-8">
       {/* Quick Stats Grid */}
       {quickStats.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-[1fr_3fr_3fr_1fr] gap-4">
           {quickStats.map((stat, idx) => <StatCard key={idx} {...stat} />)}
         </div>
       )}
@@ -159,7 +160,15 @@ export default function CollegeDetails() {
           <ReviewsSection
             reviews={collegeReviews}
             isLoading={reviewsLoading}
+            currentUserId={profile?.id}
             onOpenModal={() => profile ? setShowFeedbackModal(true) : alert("Please log in to review.")}
+            onEditReview={() => alert("Edit functionality is currently being refined. Feel free to delete and submit a new review!")}
+            onDeleteReview={async (id) => {
+              if (window.confirm("Are you sure you want to delete your review?")) {
+                const { error } = await supabase.from('college_reviews').delete().eq('id', id);
+                if (!error) window.location.reload();
+              }
+            }}
           />
         </div>
       </div>
