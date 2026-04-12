@@ -74,7 +74,7 @@ export default function CollegeDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+      <div className="min-h-screen flex flex-col bg-slate-50">
         <Navbar activeTab="search" />
         <div className="flex-grow flex items-center justify-center p-4">
           <div className="text-center">
@@ -92,15 +92,15 @@ export default function CollegeDetails() {
 
   if (error || !college.college_name || college.college_name === "Unknown College") {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 text-center py-20">
+      <div className="min-h-screen flex flex-col bg-slate-50 text-center py-20">
         <Navbar activeTab="search" />
         <div className="flex-grow flex items-center justify-center p-4">
           <div className="max-w-md">
-            <AlertCircle className="w-20 h-20 text-rose-500 mx-auto mb-6" />
+            <AlertCircle className="w-20 h-20 text-slate-400 mx-auto mb-6" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Oops! Something went wrong</h2>
             <p className="text-gray-600 mb-8">{error || "College information could not be found."}</p>
             <div className="flex gap-4 justify-center">
-              <button onClick={() => navigate(-1)} className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold">Go Back</button>
+              <button onClick={() => navigate(-1)} className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors">Go Back</button>
               <button onClick={() => window.location.reload()} className="px-6 py-3 bg-gray-200 text-gray-800 rounded-xl font-bold">Try Again</button>
             </div>
           </div>
@@ -148,19 +148,19 @@ export default function CollegeDetails() {
         </div>
 
         <div className="space-y-8">
-          <InfoCard title="Quick Stats" icon={Trophy} gradient="from-blue-600 to-indigo-700">
-            <div className="space-y-4">
-              <div className="flex justify-between text-white/90">
-                <span>Placement Rate</span>
-                <span className="font-bold text-white">{formatPercentage(placementData.placementRate)}</span>
+          <InfoCard title="Quick Stats" icon={Trophy}>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                <span className="text-sm text-slate-500">Placement Rate</span>
+                <span className="text-sm font-bold text-slate-800">{formatPercentage(placementData.placementRate)}</span>
               </div>
-              <div className="flex justify-between text-white/90">
-                <span>Avg Package</span>
-                <span className="font-bold text-white">₹{placementData.averagePackage} LPA</span>
+              <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                <span className="text-sm text-slate-500">Avg Package</span>
+                <span className="text-sm font-bold text-slate-800">₹{placementData.averagePackage} LPA</span>
               </div>
-              <div className="flex justify-between text-white/90">
-                <span>Intake</span>
-                <span className="font-bold text-white">{seatData.totalIntake}</span>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm text-slate-500">Intake</span>
+                <span className="text-sm font-bold text-slate-800">{seatData.totalIntake}</span>
               </div>
             </div>
           </InfoCard>
@@ -219,7 +219,7 @@ export default function CollegeDetails() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-indigo-50/30">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar activeTab="search" />
       <div className="max-w-7xl mx-auto px-4 py-8 w-full">
         {/* Header */}
@@ -228,7 +228,7 @@ export default function CollegeDetails() {
             <ArrowLeft className="w-4 h-4" /> Back to Dashboard
           </button>
           <div className="flex gap-3 w-full sm:w-auto">
-            <button onClick={handleSaveCollege} className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-xl border transition-all ${saved ? 'bg-blue-600 text-white' : 'bg-white border-gray-300 text-gray-700'}`}>
+            <button onClick={handleSaveCollege} className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-xl border transition-all ${saved ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
               <Bookmark className={`w-4 h-4 ${saved ? 'fill-current' : ''}`} /> {saved ? 'Saved' : 'Save'}
             </button>
             <button onClick={handleShare} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 font-bold hover:bg-gray-50 transition-colors">
@@ -275,10 +275,10 @@ export default function CollegeDetails() {
             {activeTab === "overview" && renderOverview()}
             {activeTab === "seats" && (
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <StatCard label="Total Intake" value={seatData.totalIntake} icon={Users} gradient="from-blue-500 to-indigo-600" />
-                <StatCard label="Your Category" value={seatData.currentSeats} icon={Tag} gradient="from-emerald-500 to-teal-600" />
-                <StatCard label="Other Seats" value={seatData.otherSeats} icon={Building} gradient="from-purple-500 to-pink-600" />
-                <StatCard label="Percentage" value={`${((seatData.currentSeats / seatData.totalIntake) * 100).toFixed(1)}%`} icon={Trophy} gradient="from-amber-500 to-orange-600" />
+                <StatCard label="Total Intake" value={seatData.totalIntake} icon={Users} />
+                <StatCard label="Your Category" value={seatData.currentSeats} icon={Tag} />
+                <StatCard label="Other Seats" value={seatData.otherSeats} icon={Building} />
+                <StatCard label="Percentage" value={`${((seatData.currentSeats / seatData.totalIntake) * 100).toFixed(1)}%`} icon={Trophy} />
                 <div className="lg:col-span-4 mt-8">
                   <SeatMatrixSection
                     seatMatrix={college.seat_matrix || []}

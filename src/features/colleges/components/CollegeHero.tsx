@@ -18,18 +18,18 @@ export const CollegeHero: React.FC<CollegeHeroProps> = ({ college, academicData 
           <h1 className="text-xl sm:text-3xl font-bold uppercase text-gray-900 mb-2 break-words whitespace-normal leading-tight">
             {college.college_name}
           </h1>
-          <div className="flex flex-wrap justify-center md:justify-start gap-4 text-gray-600 text-sm font-medium">
+          <div className="flex flex-wrap justify-center md:justify-start gap-4 text-slate-500 text-sm font-medium">
             <span className="flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-rose-500" /> {college.city}{college.district ? `, ${college.district}` : ""}
+              <MapPin className="w-4 h-4 text-slate-400" /> {college.city}{college.district ? `, ${college.district}` : ""}
             </span>
             <span className="flex items-center gap-1.5">
-              <BookOpen className="w-4 h-4 text-blue-500" /> {college.branch_name}
+              <BookOpen className="w-4 h-4 text-slate-400" /> {college.branch_name}
             </span>
             <span className="flex items-center gap-1.5">
-              <Tag className="w-4 h-4 text-emerald-500" /> {college.category}
+              <Tag className="w-4 h-4 text-slate-400" /> {college.category}
             </span>
             <span className="flex items-center gap-1.5">
-              <Award className="w-4 h-4 text-amber-500" /> {academicData.accreditation}
+              <Award className="w-4 h-4 text-slate-400" /> {academicData.accreditation}
             </span>
           </div>
         </div>

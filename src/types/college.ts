@@ -97,6 +97,13 @@ export interface PlacementStats {
     placement_cell_contact?: string;
 }
 
+export interface AdmissionContact {
+    name: string;
+    role: string;
+    phone: string;
+    email: string;
+}
+
 export interface AdmissionMeta {
     admission_start?: string;
     admission_end?: string;
@@ -112,6 +119,7 @@ export interface AdmissionMeta {
         admission_start: string;
         admission_end: string;
     };
+    admission_contacts?: AdmissionContact[];
 }
 
 export interface College extends CollegeContact, CollegeInfrastructure, PlacementStats, AdmissionMeta {

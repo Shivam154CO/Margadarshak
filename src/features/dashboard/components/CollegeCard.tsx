@@ -114,42 +114,33 @@ const CollegeCardComponent: React.FC<CollegeCardProps> = ({
       <div className="p-5 flex flex-col flex-grow">
         {/* Branch & Category */}
         <div className="flex flex-wrap items-center gap-2 mb-5">
-          <div className="inline-flex items-center space-x-1.5 whitespace-nowrap px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide border border-slate-200/60">
-            <Layers className="w-3 h-3 text-indigo-500" />
+          <div className="inline-flex items-center space-x-1.5 whitespace-nowrap px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide bg-indigo-50 border border-indigo-100 text-indigo-700">
+            <Layers className="w-3 h-3 text-indigo-400" />
             <span className="line-clamp-1 max-w-[180px]">{college.branch_name || college.branch}</span>
           </div>
-          <div className="inline-flex items-center space-x-1.5 bg-slate-50 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide border border-slate-200/60">
+          <div className="inline-flex items-center space-x-1.5 bg-emerald-50 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide border border-emerald-100 text-emerald-700">
             <Award className="w-3 h-3 text-emerald-500" />
             <span>{college.category}</span>
           </div>
         </div>
 
         {/* 4-Grid Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
-          <div className="flex flex-col justify-center bg-white p-2 text-center border-b md:border-b-0 border-r md:border-r-0 border-slate-100">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cutoff</span>
-            <span className="text-sm font-black text-slate-800">
-              {(college.cutoff_rank ?? 0) > 0 ? college.cutoff_rank : Math.round(college.cutoff_percentile || 0)}
-            </span>
-          </div>
-          <div className="flex flex-col justify-center bg-white p-2 text-center border-b md:border-b-0 md:border-l border-slate-100">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Seats</span>
-            <span className="text-sm font-black text-slate-800">
-              {college.seats || "N/A"}
-            </span>
-          </div>
-          <div className="flex flex-col justify-center bg-white p-2 text-center border-r md:border-r-0 md:border-l border-slate-100">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Fees</span>
-            <span className="text-sm font-black text-slate-800">
-              {college.fees ? `₹${(college.fees / 100000).toFixed(1)}L` : "N/A"}
-            </span>
-          </div>
-          <div className="flex flex-col justify-center bg-white p-2 text-center md:border-l border-slate-100">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Placements</span>
-            <span className="text-sm font-black text-emerald-600">
-              {college.placement_rate ? `${college.placement_rate.toFixed(0)}%` : "N/A"}
-            </span>
-          </div>
+        <div className="grid grid-cols-4 bg-slate-50 rounded-xl border border-slate-100 mb-6 overflow-hidden">
+          {[
+            { label: 'Cutoff', value: (college.cutoff_rank ?? 0) > 0 ? college.cutoff_rank : Math.round(college.cutoff_percentile || 0), cls: 'text-slate-800' },
+            { label: 'Seats',  value: college.seats || 'N/A', cls: 'text-slate-800' },
+            { label: 'Fees',   value: college.fees ? `₹${(college.fees / 100000).toFixed(1)}L` : 'N/A', cls: 'text-slate-800' },
+            { label: 'Placed', value: college.placement_rate ? `${college.placement_rate.toFixed(0)}%` : 'N/A', cls: 'text-emerald-600' },
+          ].map(({ label, value, cls }, i) => (
+            <div
+              key={label}
+              className="flex flex-col items-center py-3 px-1 text-center"
+              style={i > 0 ? { borderLeft: '1px solid #f1f5f9' } : undefined}
+            >
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</span>
+              <span className={`text-sm font-black ${cls}`}>{value}</span>
+            </div>
+          ))}
         </div>
 
         {/* Admission Probability Bar */}
