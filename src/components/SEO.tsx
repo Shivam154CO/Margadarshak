@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 
 interface SEOProps {
@@ -8,6 +8,10 @@ interface SEOProps {
     ogImage?: string;
 }
 
+/**
+ * SEO Component for managing page metadata using react-helmet-async.
+ * Standardizes titles and meta tags across the application.
+ */
 export default function SEO({
     title = "SmartCF | Engineering Admission Intelligence",
     description = "Advanced engine for engineering college predictions and admission assistance in Maharashtra.",
@@ -15,47 +19,31 @@ export default function SEO({
     ogImage = "/og-image.jpg"
 }: SEOProps) {
     const location = useLocation();
+    const siteTitle = title.includes("SmartCF") ? title : `${title} | SmartCF`;
+    const canonicalUrl = `${window.location.origin}${location.pathname}`;
 
-    useEffect(() => {
-        // Update Title
-        document.title = title.includes("SmartCF") ? title : `${title} | SmartCF`;
+    return (
+        <Helmet>
+            {/* Standard metadata */}
+            <title>{siteTitle}</title>
+            <meta name="description" content={description} />
+            <meta name="keywords" content={keywords} />
 
-        // Update Meta Description
-        let metaDescription = document.querySelector('meta[name="description"]');
-        if (!metaDescription) {
-            metaDescription = document.createElement('meta');
-            metaDescription.setAttribute('name', 'description');
-            document.head.appendChild(metaDescription);
-        }
-        metaDescription.setAttribute('content', description);
+            {/* Canonical link */}
+            <link rel="canonical" href={canonicalUrl} />
 
-        // Update Meta Keywords
-        let metaKeywords = document.querySelector('meta[name="keywords"]');
-        if (!metaKeywords) {
-            metaKeywords = document.createElement('meta');
-            metaKeywords.setAttribute('name', 'keywords');
-            document.head.appendChild(metaKeywords);
-        }
-        metaKeywords.setAttribute('content', keywords);
+            {/* Open Graph Tags */}
+            <meta property="og:title" content={siteTitle} />
+            <meta property="og:description" content={description} />
+            <meta property="og:url" content={canonicalUrl} />
+            <meta property="og:image" content={ogImage} />
+            <meta property="og:type" content="website" />
 
-        // OpenGraph Tags
-        const updateOG = (property: string, content: string) => {
-            let tag = document.querySelector(`meta[property="${property}"]`);
-            if (!tag) {
-                tag = document.createElement('meta');
-                tag.setAttribute('property', property);
-                document.head.appendChild(tag);
-            }
-            tag.setAttribute('content', content);
-        };
-
-        updateOG('og:title', title);
-        updateOG('og:description', description);
-        updateOG('og:url', window.location.href);
-        updateOG('og:image', ogImage);
-        updateOG('og:type', 'website');
-
-    }, [title, description, keywords, ogImage, location]);
-
-    return null;
+            {/* Twitter Card Tags */}
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content={siteTitle} />
+            <meta name="twitter:description" content={description} />
+            <meta name="twitter:image" content={ogImage} />
+        </Helmet>
+    );
 }

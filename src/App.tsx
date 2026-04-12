@@ -132,21 +132,25 @@ const AnimatedRoutes = () => {
   );
 };
 
+import { HelmetProvider } from "react-helmet-async";
+
 export default function App() {
   const [isLanding, setIsLanding] = useState(window.location.pathname === '/');
 
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <ReactLenis root>
-          <CollegesProvider>
-            <Router>
-              <AppContent isLanding={isLanding} setIsLanding={setIsLanding} />
-            </Router>
-          </CollegesProvider>
-        </ReactLenis>
-      </ToastProvider>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <ReactLenis root>
+            <CollegesProvider>
+              <Router>
+                <AppContent isLanding={isLanding} setIsLanding={setIsLanding} />
+              </Router>
+            </CollegesProvider>
+          </ReactLenis>
+        </ToastProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 
