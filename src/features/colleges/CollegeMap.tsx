@@ -51,27 +51,26 @@ const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
 const iconCache = new Map<string, L.DivIcon>();
 
 const getLeafletIcon = (college: MapMarker, isSelected: boolean) => {
-  const cacheKey = `${college.id}-${isSelected}-${college.admission_chance}`;
-  if (iconCache.has(cacheKey)) return iconCache.get(cacheKey)!;
-
   const chance = college.admission_chance;
   let color = "#EF4444";
   if (chance >= 80) color = "#10B981";
   else if (chance >= 60) color = "#3B82F6";
   else if (chance >= 40) color = "#8B5CF6";
 
-  const logoUrl = getCollegeImage(college.id);
+  const cacheKey = `fast-${isSelected}-${color}`;
+  if (iconCache.has(cacheKey)) return iconCache.get(cacheKey)!;
 
   const icon = L.divIcon({
-    className: `custom-marker-container ${isSelected ? 'active-marker' : ''}`,
+    className: `custom-marker-container ${isSelected ? 'active-marker z-[1000]' : ''}`,
     html: `
-      <div class="map-marker-box ${isSelected ? 'glow' : ''}" style="border-color: ${isSelected ? color : 'rgba(255,255,255,0.1)'};">
-        <img src="${logoUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(college.name)}&background=18181b&color=fff&bold=true&rounded=0&format=svg'" class="marker-logo" />
-        <div class="chance-badge" style="background: ${color};"></div>
+      <div class="map-marker-box ${isSelected ? 'glow' : ''}" style="border-color: ${color}; background: #18181b; outline: ${isSelected ? `2px solid ${color}` : 'none'} ">
+        <div style="color: white; font-weight: bold; font-size: 14px; font-family: ui-sans-serif, system-ui, sans-serif;">
+           ${isSelected ? '★' : '•'}
+        </div>
       </div>
     `,
-    iconSize: [42, 42],
-    iconAnchor: [21, 21],
+    iconSize: isSelected ? [36, 36] : [24, 24],
+    iconAnchor: isSelected ? [18, 18] : [12, 12],
   });
 
   iconCache.set(cacheKey, icon);
@@ -145,6 +144,7 @@ interface MapMarker {
   placement_rate: number;
   type: string;
   is_predicted: boolean;
+  average_fee?: number;
 }
 
 import type { UserProfile } from "@/types/user";
@@ -375,33 +375,31 @@ export default function InteractiveCollegeMap() {
         }
 
         .map-marker-box {
-          width: 42px;
-          height: 42px;
+          width: 100%;
+          height: 100%;
           background: #18181b;
           border: 2px solid rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
+          border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          overflow: hidden;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          position: relative;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+          transition: all 0.2s ease-out;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
         }
 
         .map-marker-box:hover {
-          transform: translateY(-4px) scale(1.1);
-          border-color: rgba(255, 255, 255, 0.4);
-          z-index: 1000;
+          transform: scale(1.2);
+          z-index: 999;
+          border-color: white !important;
         }
 
         .active-marker .map-marker-box {
-          transform: translateY(-4px) scale(1.15);
+          transform: scale(1.15);
           z-index: 1000;
         }
 
         .glow {
-          animation: marker-glow 2s infinite ease-in-out;
+          box-shadow: 0 0 15px currentColor;
           color: inherit;
         }
 
@@ -635,6 +633,7 @@ function CollegeMapContent() {
               placement_rate: college.placement_rate,
               type: college.autonomy_status,
               is_predicted: !!college.is_predicted,
+              average_fee: college.branches.length > 0 ? (college.branches.reduce((sum, b) => sum + (b.fees || 0), 0) / college.branches.length) : 0,
             };
           });
           setMapMarkers(markers);
@@ -662,22 +661,18 @@ function CollegeMapContent() {
 
   const filteredMarkers = useMemo(() => {
     return mapMarkers.filter(m => {
-      const college = colleges.find(c => c.college_code === m.id);
-      if (!college) return false;
-
       const simulatedChance = Math.min(100, Math.max(0, m.admission_chance + whatIfScore));
       if (simulatedChance < filters.minChance) return false;
       if (m.placement_rate < filters.minPlacement) return false;
 
-      const averageFee = college.branches.length > 0 ? (college.branches.reduce((sum, b) => sum + (b.fees || 0), 0) / college.branches.length) : 0;
-      if (filters.maxFees < 500000 && averageFee > filters.maxFees) return false;
+      if (filters.maxFees < 500000 && m.average_fee && m.average_fee > filters.maxFees) return false;
 
       return true;
     }).map(m => ({
       ...m,
       simulated_chance: Math.min(100, Math.max(0, m.admission_chance + whatIfScore))
     }));
-  }, [mapMarkers, colleges, filters, whatIfScore]);
+  }, [mapMarkers, filters, whatIfScore]);
 
 
 
