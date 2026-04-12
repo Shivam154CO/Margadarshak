@@ -184,6 +184,7 @@ function CollegeComparison() {
             college_code: code,
             college_name: name,
             city: row.city || row.City || "Unknown",
+            district: row.district || row.District || "",
             branch: branch,
             branch_name: branch,
             branch_code: row.branch_code || row.Branch_code || "",
@@ -402,7 +403,9 @@ function CollegeComparison() {
                           </div>
                         </div>
                         <div className="p-5 flex-1 flex flex-col">
-                          <div className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">{college.city}</div>
+                          <div className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">
+                            {college.city}{college.district ? `, ${college.district}` : ""}
+                          </div>
                           <div className="grid grid-cols-2 gap-2 mb-6">
                             <div className="bg-slate-50 p-2 rounded-xl text-center">
                               <div className="text-indigo-600 font-black">₹{(college.fees / 1000).toFixed(0)}K</div>

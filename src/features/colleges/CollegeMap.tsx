@@ -57,20 +57,23 @@ const getLeafletIcon = (college: MapMarker, isSelected: boolean) => {
   else if (chance >= 60) color = "#3B82F6";
   else if (chance >= 40) color = "#8B5CF6";
 
-  const cacheKey = `fast-${isSelected}-${color}`;
+  const cacheKey = `pin-${isSelected}-${color}`;
   if (iconCache.has(cacheKey)) return iconCache.get(cacheKey)!;
 
+  // Render a teardrop map pin SVG
   const icon = L.divIcon({
     className: `custom-marker-container ${isSelected ? 'active-marker z-[1000]' : ''}`,
     html: `
-      <div class="map-marker-box ${isSelected ? 'glow' : ''}" style="border-color: ${color}; background: #18181b; outline: ${isSelected ? `2px solid ${color}` : 'none'} ">
-        <div style="color: white; font-weight: bold; font-size: 14px; font-family: ui-sans-serif, system-ui, sans-serif;">
-           ${isSelected ? '★' : '•'}
-        </div>
+      <div class="map-pin-container ${isSelected ? 'glow' : ''}">
+        <svg viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5));">
+          <path d="M12 0C5.37258 0 0 5.37258 0 12C0 21 12 36 12 36C12 36 24 21 24 12C24 5.37258 18.6274 0 12 0Z" fill="#18181b" stroke="${color}" stroke-width="2"/>
+          <circle cx="12" cy="12" r="5" fill="${color}" />
+          ${isSelected ? `<circle cx="12" cy="12" r="8" stroke="white" stroke-width="1.5" stroke-dasharray="2 2" fill="none"/>` : ''}
+        </svg>
       </div>
     `,
-    iconSize: isSelected ? [36, 36] : [24, 24],
-    iconAnchor: isSelected ? [18, 18] : [12, 12],
+    iconSize: isSelected ? [36, 54] : [28, 42],
+    iconAnchor: isSelected ? [18, 54] : [14, 42],
   });
 
   iconCache.set(cacheKey, icon);
@@ -374,33 +377,27 @@ export default function InteractiveCollegeMap() {
           border: none !important;
         }
 
-        .map-marker-box {
+        .map-pin-container {
           width: 100%;
           height: 100%;
-          background: #18181b;
-          border: 2px solid rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           transition: all 0.2s ease-out;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
         }
 
-        .map-marker-box:hover {
-          transform: scale(1.2);
+        .map-pin-container:hover {
+          transform: translateY(-5px) scale(1.1);
           z-index: 999;
-          border-color: white !important;
         }
 
-        .active-marker .map-marker-box {
-          transform: scale(1.15);
+        .active-marker .map-pin-container {
+          transform: translateY(-5px) scale(1.15);
           z-index: 1000;
         }
 
-        .glow {
-          box-shadow: 0 0 15px currentColor;
-          color: inherit;
+        .glow svg path {
+          filter: drop-shadow(0 0 8px currentColor);
         }
 
         .marker-logo {
@@ -501,56 +498,80 @@ function CollegeMapContent() {
         let allColleges: College[] = [];
         let predictedColleges: College[] = [];
 
-        try {
-          const { data: dbColleges, error: dbError } = await supabase.from('colleges_2025').select('*');
-          if (dbColleges && !dbError) {
-            const collegeMap = new Map<string, College>();
-            dbColleges.forEach((college: any) => {
-              const coords = getCityCoordinates(college.city);
-              const collegeCode = college.college_code?.toString() || college.id?.toString();
+        let allData: any[] = [];
+        let page = 0;
+        const pageSize = 1000;
+        let hasMore = true;
 
-              if (!collegeCode) return;
+        while (hasMore) {
+          let { data, error } = await supabase
+            .from('colleges_2025')
+            .select('*')
+            .range(page * pageSize, (page + 1) * pageSize - 1);
 
-              if (!collegeMap.has(collegeCode)) {
-                collegeMap.set(collegeCode, {
-                  college_code: collegeCode,
-                  college_name: college.college_name || 'Unknown College',
-                  city: college.city || 'Unknown',
-                  state: getStateFromCity(college.city),
-                  latitude: coords.lat,
-                  longitude: coords.lng,
-                  autonomy_status: college.autonomy_status || 'Government',
-                  placement_rate: college.placement_rate || 0,
-                  average_package_lpa: college.average_package_lpa || 0,
-                  highest_package_lpa: college.highest_package_lpa || 0,
-                  hostel_available: college.hostel_available || 'No',
-                  image: college.image_url || getCollegeImage(collegeCode),
-                  branches: [],
-                  is_predicted: false,
-                  match_score: 0,
-                });
-              }
-
-              const existingCollege = collegeMap.get(collegeCode)!;
-              const branchCode = college.branch_code?.toString();
-              if (branchCode && !existingCollege.branches.find(b => b.branch_code === branchCode)) {
-                existingCollege.branches.push({
-                  branch: college.branch_name || college.branch || 'Unknown',
-                  branch_code: branchCode,
-                  admission_chance: 50,
-                  probability_level: 'View Details',
-                  is_most_probable: false,
-                  fees: college.fees || 0,
-                  cutoff_rank: college.cutoff_rank || 0,
-                  seats: college.seats || 0,
-                });
-              }
-            });
-            allColleges = Array.from(collegeMap.values());
-            console.log(`Database: Loaded ${allColleges.length} unique colleges from Supabase`);
+          if (error) {
+            console.error("Database fetch error:", error);
+            break;
           }
-        } catch (dbErr) {
-          console.error("Database fetch error:", dbErr);
+          if (data && data.length > 0) {
+            allData = [...allData, ...data];
+            if (data.length < pageSize) {
+              hasMore = false;
+            } else {
+              page++;
+            }
+          } else {
+            hasMore = false;
+          }
+        }
+
+        if (allData.length > 0) {
+          const collegeMap = new Map<string, College>();
+          allData.forEach((college: any) => {
+            const coords = getCityCoordinates(college.city);
+            const collegeCode = college.college_code?.toString() || college.id?.toString();
+
+            if (!collegeCode) return;
+
+            if (!collegeMap.has(collegeCode)) {
+              collegeMap.set(collegeCode, {
+                college_code: collegeCode,
+                college_name: college.college_name || 'Unknown College',
+                city: college.city || 'Unknown',
+                state: getStateFromCity(college.city),
+                latitude: coords.lat,
+                longitude: coords.lng,
+                autonomy_status: college.autonomy_status || 'Government',
+                placement_rate: college.placement_rate || 0,
+                average_package_lpa: college.average_package_lpa || 0,
+                highest_package_lpa: college.highest_package_lpa || 0,
+                hostel_available: college.hostel_available || 'No',
+                image: college.image_url || getCollegeImage(collegeCode),
+                branches: [],
+                is_predicted: false,
+                match_score: 0,
+              });
+            }
+
+            const existingCollege = collegeMap.get(collegeCode)!;
+            const branchCode = college.branch_code?.toString();
+            if (branchCode && !existingCollege.branches.find(b => b.branch_code === branchCode)) {
+              existingCollege.branches.push({
+                branch: college.branch_name || college.branch || 'Unknown',
+                branch_code: branchCode,
+                admission_chance: 50,
+                probability_level: 'View Details',
+                is_most_probable: false,
+                fees: college.fees || 0,
+                cutoff_rank: college.cutoff_rank || 0,
+                seats: college.seats || 0,
+              });
+            }
+          });
+          allColleges = Array.from(collegeMap.values());
+          console.log(`Database: Loaded ${allColleges.length} unique colleges from Supabase`);
+          allColleges = Array.from(collegeMap.values());
+          console.log(`Database: Loaded ${allColleges.length} unique colleges from Supabase`);
         }
 
         if (profile && allColleges.length > 0) {
@@ -695,11 +716,11 @@ function CollegeMapContent() {
       .map(c => ({ lat: c.latitude as number, lng: c.longitude as number }));
   }, [visitList]);
 
-  const [osmRouteCoords, setOsmRouteCoords] = useState<{lat: number, lng: number}[]>([]);
+  const [osmRouteCoords, setOsmRouteCoords] = useState<{ lat: number, lng: number }[]>([]);
   const [googleRouteResponse, setGoogleRouteResponse] = useState<google.maps.DirectionsResult | null>(null);
   const [directionsPanel, setDirectionsPanel] = useState<HTMLElement | null>(null);
   const [isNavPinned, setIsNavPinned] = useState(false);
-  const [streetViewPos, setStreetViewPos] = useState<{lat: number, lng: number} | null>(null);
+  const [streetViewPos, setStreetViewPos] = useState<{ lat: number, lng: number } | null>(null);
   const [isSplitView, setIsSplitView] = useState(false);
 
   // Fetch OSRM Route for OpenStreetMap
@@ -765,22 +786,22 @@ function CollegeMapContent() {
   }
 
 
-// Smooth Map Recenter Controller
-function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; zoom: number }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView([center.lat, center.lng], zoom, {
-      animate: true,
-      duration: 1.5,
-      easeLinearity: 0.25
-    });
-  }, [center, zoom, map]);
-  return null;
-}
+  // Smooth Map Recenter Controller
+  function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; zoom: number }) {
+    const map = useMap();
+    useEffect(() => {
+      map.setView([center.lat, center.lng], zoom, {
+        animate: true,
+        duration: 1.5,
+        easeLinearity: 0.25
+      });
+    }, [center, zoom, map]);
+    return null;
+  }
 
 
 
-// Render OpenStreetMap (Leaflet)
+  // Render OpenStreetMap (Leaflet)
   const renderOpenStreetMap = () => {
 
     return (
@@ -793,7 +814,7 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
         preferCanvas={true}
       >
         <MapRecenter center={mapCenter} zoom={zoomLevel} />
-        
+
         {/* City Labels Overlay */}
         {majorCities.map(city => (
           <LeafletMarker
@@ -1051,11 +1072,11 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
                 onClick={() => {
                   const college = filteredMarkers.find(c => c.id === marker.id);
                   if (college) {
-                     // Find full college data if needed
-                     setSelectedCollege(marker as any); 
-                     setMapCenter({ lat: marker.lat, lng: marker.lng });
-                     setZoomLevel(15);
-                     setStreetViewPos({ lat: marker.lat, lng: marker.lng });
+                    // Find full college data if needed
+                    setSelectedCollege(marker as any);
+                    setMapCenter({ lat: marker.lat, lng: marker.lng });
+                    setZoomLevel(15);
+                    setStreetViewPos({ lat: marker.lat, lng: marker.lng });
                   }
                 }}
                 icon={{
@@ -1075,13 +1096,13 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
           {/* Floating Navigation Pinned Panel */}
           {isNavPinned && googleRouteResponse && (
             <div className="absolute top-6 left-6 z-[45] w-[300px] h-[400px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200">
-               <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white/90 backdrop-blur-sm">
-                  <h3 className="text-sm font-bold text-slate-900">Live Directions</h3>
-                  <button onClick={() => setIsNavPinned(false)} className="p-1 hover:bg-slate-100 rounded-md">
-                    <X className="w-4 h-4 text-slate-500" />
-                  </button>
-               </div>
-               <div className="flex-1 overflow-y-auto premium-scrollbar bg-slate-50" ref={setDirectionsPanel} />
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white/90 backdrop-blur-sm">
+                <h3 className="text-sm font-bold text-slate-900">Live Directions</h3>
+                <button onClick={() => setIsNavPinned(false)} className="p-1 hover:bg-slate-100 rounded-md">
+                  <X className="w-4 h-4 text-slate-500" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto premium-scrollbar bg-slate-50" ref={setDirectionsPanel} />
             </div>
           )}
         </div>
@@ -1112,16 +1133,16 @@ function MapRecenter({ center, zoom }: { center: { lat: number; lng: number }; z
 
         {/* Split View Toggle Controls (Bottom Right) */}
         {!isSplitView && googleRouteResponse && (
-           <div className="absolute right-6 bottom-32 z-[40]">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsSplitView(true)}
-                className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-2xl transition-all border border-indigo-500/20"
-              >
-                <Compass className="w-5 h-5" /> 3D Explorer
-              </motion.button>
-           </div>
+          <div className="absolute right-6 bottom-32 z-[40]">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsSplitView(true)}
+              className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-2xl transition-all border border-indigo-500/20"
+            >
+              <Compass className="w-5 h-5" /> 3D Explorer
+            </motion.button>
+          </div>
         )}
       </div>
     );

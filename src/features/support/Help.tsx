@@ -268,9 +268,9 @@ export default function Help() {
         </div>
 
         {/* ===== Content Grid ===== */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* ===== FAQs Section ===== */}
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Primary Column: FAQs & Guides */}
+          <div className="lg:col-span-8 space-y-8">
             <div className="bg-white rounded-3xl border border-gray-200/60 shadow-lg p-6 relative overflow-hidden">
               <div className="flex items-center space-x-3 mb-6 relative z-10">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm">
@@ -303,21 +303,17 @@ export default function Help() {
                     )}
                   </div>
                 ))}
+
+                {filteredFAQs.length === 0 && (
+                  <div className="text-center py-12">
+                    <img src={NoResultsImg} alt="No results" className="w-32 h-32 mx-auto mb-4 opacity-80" />
+                    <p className="text-gray-900 font-bold text-lg">No FAQs found.</p>
+                    <p className="text-gray-500 text-sm">Try adjusting your search terms.</p>
+                  </div>
+                )}
               </div>
-
-              {filteredFAQs.length === 0 && (
-                <div className="text-center py-12">
-                  <img src={NoResultsImg} alt="No results" className="w-32 h-32 mx-auto mb-4 opacity-80" />
-                  <p className="text-gray-900 font-bold text-lg">No FAQs found.</p>
-                  <p className="text-gray-500 text-sm">Try adjusting your search terms.</p>
-                </div>
-              )}
             </div>
-          </div>
 
-          {/* ===== Sidebar ===== */}
-          <div className="space-y-6">
-            {/* ===== Quick Guides ===== */}
             <div className="bg-white rounded-3xl border border-gray-200/60 shadow-lg p-6">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -326,11 +322,11 @@ export default function Help() {
                 <h3 className="text-xl font-bold text-gray-900">Quick Guides</h3>
               </div>
 
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredGuides.map((guide) => (
                   <div
                     key={guide.id}
-                    className="border border-gray-200/50 rounded-2xl p-4 hover:shadow-md transition-shadow"
+                    className="border border-gray-200/50 rounded-2xl p-4 hover:shadow-md transition-shadow bg-slate-50/30"
                   >
                     <div className="flex items-start space-x-3 mb-3">
                       <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
@@ -347,11 +343,11 @@ export default function Help() {
                           <div className="w-7 h-7 bg-indigo-100 rounded-md flex items-center justify-center flex-shrink-0">
                             <span className="text-xs text-indigo-700 font-bold">{index + 1}</span>
                           </div>
-                          <p className="text-sm text-gray-600">{step}</p>
+                          <p className="text-sm text-gray-600 line-clamp-1">{step}</p>
                         </div>
                       ))}
                       {guide.steps.length > 3 && (
-                        <p className="text-sm text-indigo-600 font-medium ml-7">
+                        <p className="text-sm text-indigo-600 font-medium ml-9">
                           +{guide.steps.length - 3} more steps...
                         </p>
                       )}
@@ -360,8 +356,10 @@ export default function Help() {
                 ))}
               </div>
             </div>
+          </div>
 
-            {/* ===== Contact Support ===== */}
+          {/* Sidebar Column: Support & Topics */}
+          <div className="lg:col-span-4 space-y-8">
             <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6 backdrop-blur-sm relative overflow-hidden">
               <div className="flex items-center space-x-3 mb-6 relative z-10">
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center">
@@ -399,7 +397,6 @@ export default function Help() {
               </div>
             </div>
 
-            {/* ===== Popular Topics ===== */}
             <div className="bg-white rounded-3xl border border-gray-200/60 shadow-lg p-6">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center">

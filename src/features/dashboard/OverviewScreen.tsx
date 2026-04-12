@@ -758,7 +758,7 @@ export default function OverviewScreen() {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-slate-100">
-                        {["College", "Branch", "City", "Chance", "Package", "Placement", "Cutoff", "Fit"].map(h => (
+                        {["College", "Location", "Chance", "Package", "Placement", "Cutoff", "Fit"].map(h => (
                           <th key={h} className="px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wide">{h}</th>
                         ))}
                       </tr>
@@ -774,8 +774,7 @@ export default function OverviewScreen() {
                                 <span className="text-sm font-bold text-slate-800 line-clamp-1 max-w-[160px]">{c.college_name}</span>
                               </div>
                             </td>
-                            <td className="px-4 py-4 text-sm text-slate-600">{c.branch}</td>
-                            <td className="px-4 py-4 text-sm text-slate-500">{c.city}</td>
+                            <td className="px-4 py-4 text-sm text-slate-500">{c.city}{c.district ? `, ${c.district}` : ""}</td>
                             <td className="px-4 py-4 text-sm font-bold text-indigo-600">{c.admission_chance_percentage ?? "—"}</td>
                             <td className="px-4 py-4 text-sm text-slate-700">₹{c.average_package_lpa ?? 0}L</td>
                             <td className="px-4 py-4 text-sm text-slate-700">{c.placement_rate ?? 0}%</td>

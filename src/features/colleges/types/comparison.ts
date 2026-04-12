@@ -5,6 +5,7 @@ export interface College {
   college_code: string;
   college_name: string;
   city: string;
+  district?: string;
   branch: string;
   branch_name: string;
   branch_code: string;

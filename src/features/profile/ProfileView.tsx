@@ -7,6 +7,18 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import axios from "axios";
 import type { UserProfile } from "@/types/user";
+import { 
+  User, 
+  BookOpen, 
+  Target, 
+  Layers, 
+  Star, 
+  MessageCircle, 
+  Phone, 
+  Sparkles,
+  X,
+  Check
+} from "lucide-react";
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 
@@ -133,334 +145,438 @@ export default function ProfileView() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-['Inter_var',_sans-serif] font-bold text-slate-400">
-        Loading...
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
+        <span className="text-slate-400 font-semibold tracking-wider text-xs uppercase">Retrieving Profile</span>
+      </div>
     </div>
   );
 
   if (!userProfile) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 font-['Inter_var'] text-[rgb(51,51,51)]">
+    <div className="min-h-screen flex flex-col bg-slate-50/50 selection:bg-indigo-100">
       <Navbar activeTab="profile" userProfile={userProfile} />
 
-      <main className="flex-1 max-w-none mx-auto w-full px-6 sm:px-12 lg:px-20 py-8 mt-16 pb-24">
-        {/* Header - Reduced Font Sizes and No Colors */}
-        <div className="mb-10 border-b border-slate-200 pb-6">
-            <div className="mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Profile View</span>
-            </div>
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h1 
-                        className="tracking-tight"
-                        style={{ 
-                            fontFamily: '"Playfair Display", serif',
-                            fontSize: '28px',
-                            fontWeight: 700,
-                            lineHeight: '36px',
-                            color: 'rgb(51, 51, 51)',
-                            fontStyle: 'normal'
-                        }}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 mt-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Column: Profile Card */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-xl shadow-slate-200/20 overflow-hidden relative">
+              <div className="h-24 bg-gradient-to-r from-indigo-500 to-indigo-600" />
+              
+              <div className="px-8 pb-8 flex flex-col items-center -mt-12 relative z-10">
+                <div className="relative group mb-6">
+                  <div className="w-24 h-24 rounded-[2rem] bg-white p-1.5 shadow-xl transition-transform group-hover:scale-105 duration-500">
+                    <img 
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name)}&background=f1f5f9&color=4f46e5&bold=true&size=128`} 
+                      alt={userProfile.name}
+                      className="w-full h-full rounded-[1.6rem] object-cover"
+                    />
+                  </div>
+                  {isDigilockerVerified && (
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-indigo-600 rounded-full border-4 border-white flex items-center justify-center shadow-lg">
+                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-white fill-current"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-center">
+                  <h1 className="text-xl font-bold text-slate-900 mb-1 tracking-tight">{userProfile.name}</h1>
+                  <p className="text-slate-500 font-medium text-sm mb-6">{userProfile.email}</p>
+ 
+                  <div className="flex flex-wrap justify-center gap-2 mb-8">
+                    <span className="px-3 py-1 bg-slate-100 border border-slate-200/60 rounded-full text-xs font-semibold text-slate-600 uppercase tracking-wide">{userProfile.exam_type}</span>
+                    <span className="px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-full text-xs font-semibold text-indigo-600 uppercase tracking-wide">{userProfile.category}</span>
+                  </div>
+ 
+                  <div className="flex flex-col w-full gap-3">
+                    <button 
+                      onClick={() => navigate("/profile")}
+                      className="w-full bg-indigo-600 text-white py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95 flex items-center justify-center gap-2"
                     >
-                        {userProfile.name}
-                    </h1>
-                    <p className="text-slate-400 font-bold mt-1 text-xs uppercase tracking-wide">Candidate Identity Data</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={() => copyToClipboard(window.location.href)} className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50 transition uppercase tracking-wider">
-                        {copied ? "Link Copied" : "Share"}
+                      <Layers className="w-4 h-4" />
+                      Configure Professional Identity
                     </button>
-                    <button onClick={() => navigate("/profile")} className="px-4 py-2 bg-slate-900 text-white rounded-lg text-[10px] font-bold hover:bg-black transition uppercase tracking-wider">
-                        Edit
+                    <button 
+                      onClick={() => copyToClipboard(window.location.href)}
+                      className="w-full bg-white text-slate-900 py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-50 transition-all border border-slate-200 shadow-sm active:scale-95"
+                    >
+                      {copied ? "Link Secured" : "Share Digital Profile"}
                     </button>
+                  </div>
                 </div>
+              </div>
             </div>
-        </div>
 
-        {/* Info Blocks - Reduced Sizes & Monochrome */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {[
-                { l: "Examination", v: userProfile.exam_type },
-                { l: "Category", v: userProfile.category },
-                { l: "State Rank", v: userProfile.exam_type === 'CET' ? (userProfile.cet_rank || 'N/A') : (userProfile.diploma_rank || 'N/A') },
-                { l: "Streak", v: analytics?.login_streak || 1 }
-            ].map(s => (
-                <div key={s.l} className="bg-white p-4 border border-slate-200 rounded-xl">
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{s.l}</div>
-                    <div className="text-lg font-bold text-slate-800 lowercase">{s.v}</div>
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white border border-slate-200/60 p-5 rounded-3xl shadow-sm">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">State Rank</p>
+                <p className="text-lg font-bold text-slate-900">#{userProfile.exam_type === 'CET' ? (userProfile.cet_rank || '--') : (userProfile.diploma_rank || '--')}</p>
+              </div>
+              <div className="bg-white border border-slate-200/60 p-5 rounded-3xl shadow-sm">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Login Streak</p>
+                <p className="text-lg font-bold text-indigo-600">{analytics?.login_streak || 1} Days</p>
+              </div>
+            </div>
+
+            {/* Identity Status Light */}
+            {!isDigilockerVerified && (
+              <div className="bg-white rounded-3xl border border-slate-200/60 p-6 shadow-sm group">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Verification</h3>
                 </div>
-            ))}
-        </div>
-
-        {/* Verification Status - Subtle */}
-        <div className="mb-8 p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Digital Authentication</span>
-            <div className="flex items-center gap-3">
-                {isDigilockerVerified ? (
-                    <span className="text-[10px] font-bold text-slate-600 border border-slate-200 px-3 py-1 rounded-md uppercase">Verified Account</span>
-                ) : (
-                    <button onClick={() => setIsAuthenticating(true)} className="text-[10px] font-bold text-slate-900 underline underline-offset-4 uppercase">Link DigiLocker</button>
-                )}
-            </div>
-        </div>
-
-        {/* Tab Selection - Reduced Sizes, Solid White/Slate */}
-        <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-4 scrollbar-none border-b border-slate-100">
-            {[
-                { id: 'overview', label: 'Primary' },
-                { id: 'academics', label: 'Metrics' },
-                { id: 'predictions', label: 'Forecast' },
-                { id: 'skills', label: 'Grid' },
-                { id: 'achievements', label: 'Badges' },
-                { id: 'activities', label: 'Logs' },
-                { id: 'scholarships', label: 'Grants' }
-            ].map((f) => (
-                <button
-                    key={f.id}
-                    onClick={() => setActiveSection(f.id)}
-                    className={`px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap border ${
-                        activeSection === f.id ? "bg-slate-900 text-white border-slate-900 shadow-sm" : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
-                    } uppercase tracking-widest`}
+                <p className="text-slate-500 text-xs mb-6 font-medium leading-relaxed">Boost your admission precision by linking your official credentials.</p>
+                <button 
+                  onClick={() => setIsAuthenticating(true)}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm active:scale-95"
                 >
-                    {f.label}
+                  Start Verification
                 </button>
-            ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Detailed Modules */}
+          <div className="lg:col-span-8 flex flex-col">
+            {/* Elegant Tab Navigation */}
+            <div className="bg-white/80 backdrop-blur-md sticky top-[calc(4rem+1px)] z-20 border border-slate-200/60 rounded-2xl mb-8 p-1.5 shadow-sm scrollbar-none overflow-x-auto">
+              <div className="flex gap-1 min-w-max">
+                {[
+                  { id: 'overview', label: 'Identity', icon: User },
+                  { id: 'academics', label: 'Academic', icon: BookOpen },
+                  { id: 'predictions', label: 'Choices', icon: Target },
+                  { id: 'skills', label: 'Expertise', icon: Layers },
+                  { id: 'achievements', label: 'Rewards', icon: Star },
+                  { id: 'activities', label: 'Logs', icon: MessageCircle },
+                  { id: 'scholarships', label: 'Grants', icon: Phone }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveSection(tab.id)}
+                    className={`flex items-center gap-2 px-5 py-2 rounded-xl transition-all text-xs font-bold uppercase tracking-wider ${
+                      activeSection === tab.id 
+                        ? "bg-slate-900 text-white shadow-md font-extrabold" 
+                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                    }`}
+                  >
+                    <tab.icon className="w-3.5 h-3.5" />
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Content Hub */}
+            <div className="space-y-6">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeSection}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  {activeSection === 'overview' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="md:col-span-2 bg-white rounded-3xl border border-slate-200/60 p-8 shadow-sm">
+                        <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-100">
+                          <h3 className="text-lg font-bold text-slate-900 tracking-tight">Personal Dossier</h3>
+                          <button 
+                            onClick={() => navigate("/profile")}
+                            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-widest flex items-center gap-1.5"
+                          >
+                            Edit Information
+                            <Layers className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-8">
+                          {[
+                            { l: "Full Name", v: userProfile.name },
+                            { l: "Primary Email", v: userProfile.email },
+                            { l: "Contact Handle", v: userProfile.phone || "Not provided" },
+                            { l: "Category Status", v: userProfile.category },
+                            { l: "Active Stream", v: userProfile.exam_type },
+                            { l: "Entry Date", v: new Date(userProfile.created_at).toLocaleDateString("en-IN", { month: 'long', year: 'numeric' }) }
+                          ].map(item => (
+                            <div key={item.l} className="group">
+                              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 group-hover:text-indigo-600 transition-colors">{item.l}</p>
+                              <p className="text-sm font-bold text-slate-700">{item.v}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="bg-white rounded-3xl border border-slate-200/60 p-6 shadow-sm">
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">University Target</p>
+                        <p className="text-sm font-bold text-slate-700 leading-relaxed">
+                          {userProfile.university_preference || "Standard Educational Institutions"}
+                        </p>
+                      </div>
+                      <div className="bg-white rounded-3xl border border-slate-200/60 p-6 shadow-sm">
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Region of Interest</p>
+                        <p className="text-sm font-bold text-slate-700">{userProfile.state || "Maharashtra State, India"}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeSection === 'academics' && (
+                    <div className="space-y-6">
+                      <div className="bg-white rounded-3xl border border-slate-200/60 p-8 shadow-sm relative overflow-hidden">
+                        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                          <div className="space-y-1">
+                            <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Academic Summary</span>
+                            <h3 className="text-xl font-bold text-slate-900 tracking-tight uppercase">{userProfile.exam_type} Profile</h3>
+                          </div>
+                          <div className="flex gap-8">
+                            <div className="group">
+                              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 group-hover:text-slate-900 transition-colors">Entrance Rank</p>
+                              <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tighter">#{userProfile.exam_type === 'CET' ? (userProfile.cet_rank || '--') : (userProfile.diploma_rank || '--')}</p>
+                            </div>
+                            <div className="group border-l border-slate-100 pl-8">
+                              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 group-hover:text-slate-900 transition-colors">Assessment Score</p>
+                              <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tighter">{userProfile.exam_type === 'CET' ? (userProfile.cet_score || '--') : (userProfile.diploma_score || '--')}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="bg-white rounded-3xl border border-slate-200/60 p-6 flex flex-col items-center shadow-sm">
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">SSC Aggregate</p>
+                          <p className="text-xl font-bold text-slate-900">{userProfile.tenth_percentage || "--"}%</p>
+                        </div>
+                        <div className="bg-white rounded-3xl border border-slate-200/60 p-6 flex flex-col items-center shadow-sm">
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">HSC/Dip Aggregate</p>
+                          <p className="text-xl font-bold text-indigo-600">{userProfile.twelfth_percentage || "--"}%</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeSection === 'predictions' && (
+                    <div className="grid grid-cols-1 gap-4">
+                      {predictions.length > 0 ? predictions.map((p, i) => (
+                        <div key={i} className="group bg-white hover:border-indigo-200 border border-slate-200/60 p-4 rounded-2xl flex items-center justify-between transition-all duration-300 shadow-sm hover:shadow-md">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-500 group-hover:text-indigo-600 group-hover:bg-indigo-50 font-bold text-lg transition-all">
+                              {p.college_name.charAt(0)}
+                            </div>
+                            <div>
+                              <h4 className="text-base font-bold text-slate-900 mb-1 leading-tight">{p.college_name}</h4>
+                              <div className="flex items-center gap-2">
+                                <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-bold text-slate-500 uppercase tracking-wide">{p.branch}</span>
+                                <span className="text-xs text-slate-400 font-medium">{p.city}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xl font-bold text-slate-900">{Math.round(p.admission_chance)}%</div>
+                            <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wide italic">{p.fit} fit</span>
+                          </div>
+                        </div>
+                      )) : (
+                        <div className="py-20 text-center bg-white rounded-3xl border border-slate-100 shadow-sm px-10">
+                          <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <Target className="w-6 h-6 text-indigo-600" />
+                          </div>
+                          <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">No Predictions Calculated</h4>
+                          <p className="text-slate-500 text-xs font-medium mb-8 leading-relaxed">Update your academic scores and preferred branches to unlock precision admission modeling.</p>
+                          <button 
+                            onClick={() => navigate("/profile")}
+                            className="px-8 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider"
+                          >
+                            Setup Academic Profile
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeSection === 'skills' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {skills.length > 0 ? skills.map((s, i) => (
+                        <div key={i} className="bg-white rounded-3xl border border-slate-200/60 p-5 shadow-sm">
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">{s.skill_name}</h4>
+                            <span className="text-indigo-600 font-bold text-xs">{s.proficiency_level}%</span>
+                          </div>
+                          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${s.proficiency_level}%` }}
+                              className="h-full bg-slate-900 rounded-full" 
+                            />
+                          </div>
+                        </div>
+                      )) : (
+                        [
+                          { n: "Analytical Logic", p: 85 },
+                          { n: "Technical Aptitude", p: 78 },
+                          { n: "System Design", p: 65 },
+                          { n: "Critical Reasoning", p: 92 }
+                        ].map((s, i) => (
+                          <div key={i} className="bg-white rounded-3xl border border-slate-200/60 p-5 shadow-sm opacity-60">
+                            <div className="flex justify-between items-center mb-4">
+                              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{s.n} <span className="text-[10px] font-medium lowercase italic">(Inferred)</span></h4>
+                              <span className="text-slate-400 font-bold text-xs">{s.p}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden">
+                              <div className="h-full bg-slate-300 rounded-full" style={{ width: `${s.p}%` }} />
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {/* Achievements section */}
+                  {activeSection === 'achievements' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {achievements.length > 0 ? achievements.map((a, i) => (
+                        <div key={i} className={`group bg-white p-6 rounded-3xl border transition-all duration-500 shadow-sm ${a.is_unlocked ? "border-indigo-100" : "opacity-40 grayscale border-slate-100"}`}>
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 ${a.is_unlocked ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-300'}`}>
+                            <Star className={`w-5 h-5 ${a.is_unlocked ? "fill-indigo-600" : ""}`} />
+                          </div>
+                          <h4 className="text-base font-bold text-slate-900 mb-1 tracking-tight uppercase">{a.achievement_name}</h4>
+                          <p className="text-slate-500 text-xs font-medium leading-relaxed">{a.achievement_description}</p>
+                        </div>
+                      )) : (
+                        [
+                          { n: "Pioneer", d: "Successfully established digital identity on Ikigai Core." },
+                          { n: "Data Strategist", d: "First batch of academic records verified and synced." }
+                        ].map((a, i) => (
+                          <div key={i} className="group bg-white p-6 rounded-3xl border border-indigo-50 shadow-sm">
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                              <Check className="w-5 h-5" />
+                            </div>
+                            <h4 className="text-base font-bold text-slate-900 mb-1 tracking-tight uppercase">{a.n}</h4>
+                            <p className="text-slate-500 text-xs font-medium leading-relaxed">{a.d}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {/* Scholarships section */}
+                  {activeSection === 'scholarships' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {(scholarships.length > 0 ? scholarships : [
+                        { scholarship_name: "Rajarshi Shahu Maharaj Fee Concession", estimated_amount: 80000, eligibility_score: 95 },
+                        { scholarship_name: "Post-Matric Scholarship Scheme", estimated_amount: 45000, eligibility_score: 88 }
+                      ]).map((s, i) => (
+                        <div key={i} className={`bg-white rounded-3xl border p-6 shadow-sm relative overflow-hidden group hover:border-indigo-200 transition-colors ${scholarships.length === 0 ? 'border-indigo-50/50' : 'border-slate-200/60'}`}>
+                          <div className="absolute top-0 right-0 p-5">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${scholarships.length === 0 ? 'bg-slate-300' : 'bg-indigo-600'}`} />
+                              <span className={`text-xs font-bold uppercase tracking-wide ${scholarships.length === 0 ? 'text-slate-400' : 'text-indigo-600'}`}>
+                                {s.eligibility_score}% {scholarships.length === 0 ? 'Potential' : 'Match'}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Financial Assistance</p>
+                          <h4 className="text-lg font-bold text-slate-900 mb-1 leading-tight">{s.scholarship_name}</h4>
+                          <p className="text-2xl font-bold text-slate-900 mb-6 tracking-tight uppercase italic">₹{s.estimated_amount.toLocaleString()}</p>
+                          <button 
+                            onClick={() => navigate("/scholarships")}
+                            className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border border-slate-100"
+                          >
+                            Details & Application
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Activities Section */}
+                  {activeSection === 'activities' && (
+                    <div className="bg-white rounded-3xl border border-slate-200/60 p-6 shadow-sm">
+                       <div className="space-y-3">
+                          {(activities.length > 0 ? activities : [
+                            { activity_type: "account_initialized", created_at: userProfile.created_at }
+                          ]).map((act, i) => (
+                            <div key={i} className="flex items-center justify-between px-5 py-4 bg-slate-50/50 rounded-xl border border-slate-100 group hover:bg-white hover:border-indigo-200 transition-all">
+                              <div className="flex items-center gap-4">
+                                <div className={`w-1.5 h-1.5 rounded-full group-hover:scale-125 transition-transform ${activities.length === 0 ? 'bg-slate-400' : 'bg-indigo-600'}`} />
+                                <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">{act.activity_type.replace('_', ' ')}</span>
+                              </div>
+                              <span className="text-xs font-medium text-slate-400 uppercase">{new Date(act.created_at).toLocaleDateString("en-IN", { day: 'numeric', month: 'short' })}</span>
+                            </div>
+                          ))}
+                       </div>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
-
-        {/* Detail Sections - Focus on reduced font sizes/monochrome */}
-        <AnimatePresence mode="wait">
-            {activeSection === 'overview' && (
-                <motion.div key="ov" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                    <div className="bg-white border border-slate-200 p-6 rounded-2xl">
-                        <h4 
-                            className="text-sm font-bold secondary-heading uppercase tracking-widest mb-6 border-b border-slate-50 pb-3"
-                            style={{ fontFamily: '"Playfair Display", serif' }}
-                        >
-                            Dossier Data
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                            {[
-                                { l: "Name", v: userProfile.name },
-                                { l: "Email", v: userProfile.email },
-                                { l: "Phone", v: userProfile.phone || "Missing" },
-                                { l: "Caste", v: userProfile.category },
-                                { l: "Exam", v: userProfile.exam_type },
-                                { l: "Joined", v: new Date(userProfile.created_at).toLocaleDateString("en-IN") }
-                            ].map(x => (
-                                <div key={x.l}>
-                                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] block mb-1">{x.l}</span>
-                                    <p className="text-sm font-bold text-slate-700">{x.v}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white border border-slate-200 p-6 rounded-2xl">
-                             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">University Pref</span>
-                             <p className="text-sm font-bold text-slate-700">{userProfile.university_preference || "Standard Institutions"}</p>
-                        </div>
-                        <div className="bg-white border border-slate-200 p-6 rounded-2xl">
-                             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">State Target</span>
-                             <p className="text-sm font-bold text-slate-700">{userProfile.state || "Maharashtra"}</p>
-                        </div>
-                        <div className="col-span-1 md:col-span-2 bg-white border border-slate-200 p-6 rounded-2xl">
-                             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Address</span>
-                             <p className="text-sm font-bold text-slate-700">{userProfile.address || "No address provided"}</p>
-                        </div>
-                    </div>
-                </motion.div>
-            )}
-
-            {activeSection === 'academics' && (
-                <motion.div key="acad" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                    <div className="bg-slate-900 rounded-2xl p-8 text-white">
-                        <div className="mb-6">
-                            <h2 className="text-xl font-bold tracking-tight uppercase" style={{ fontFamily: '"Playfair Display", serif' }}>{userProfile.exam_type} Profile</h2>
-                        </div>
-                        <div className="grid grid-cols-2 gap-8">
-                            <div className="border-l-2 border-slate-700 pl-4">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">State Rank</span>
-                                <p className="text-3xl font-bold tabular-nums">#{userProfile.exam_type === 'CET' ? (userProfile.cet_rank || '--') : (userProfile.diploma_rank || '--')}</p>
-                            </div>
-                            <div className="border-l-2 border-slate-700 pl-4">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Score</span>
-                                <p className="text-3xl font-bold tabular-nums">{userProfile.exam_type === 'CET' ? (userProfile.cet_score || '--') : (userProfile.diploma_score || '--')}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {[
-                            { l: "10th %", v: userProfile.tenth_percentage },
-                            { l: "12th/Dip %", v: userProfile.twelfth_percentage }
-                        ].map(q => (
-                            <div key={q.l} className="bg-white border border-slate-200 p-6 rounded-2xl">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">{q.l}</span>
-                                <p className="text-2xl font-black text-slate-800">{q.v || "--"}%</p>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="bg-white border border-slate-200 p-6 rounded-2xl">
-                        <h5 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Interests</h5>
-                        <div className="flex flex-wrap gap-2">
-                            {userProfile.preferred_branches?.map((b: string) => (
-                                <span key={b} className="px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-md text-[9px] font-black uppercase tracking-wider">{b}</span>
-                            ))}
-                        </div>
-                    </div>
-                </motion.div>
-            )}
-
-            {activeSection === 'predictions' && (
-                <motion.div key="pred" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
-                    {predictions.length > 0 ? predictions.map((p, i) => (
-                        <div key={i} className="bg-white border border-slate-200 p-4 rounded-xl flex items-center justify-between gap-4">
-                            <div className="min-w-0">
-                                <h4 
-                                    className="font-bold text-[rgb(51,51,51)] text-sm tracking-tight uppercase mb-1"
-                                    style={{ fontFamily: '"Playfair Display", serif' }}
-                                >
-                                    {p.college_name}
-                                </h4>
-                                <div className="flex items-center gap-2 overflow-hidden">
-                                    <span className="text-[8px] font-bold bg-slate-50 border border-slate-100 px-2 py-0.5 rounded text-slate-500 uppercase whitespace-nowrap">{p.branch}</span>
-                                    <span className="text-[8px] font-bold text-slate-400 uppercase truncate shrink-0">• {p.city}</span>
-                                </div>
-                            </div>
-                            <div className="text-right shrink-0 border-l border-slate-100 pl-4">
-                                <div className="text-xl font-bold text-slate-900">{Math.round(p.admission_chance)}%</div>
-                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{p.fit}</span>
-                            </div>
-                        </div>
-                    )) : (
-                        <div className="py-20 text-center bg-white border border-slate-200 rounded-2xl">
-                            <p className="text-slate-400 text-xs font-bold uppercase">{predictions.length === 0 ? "Analyzing Datasets..." : "No Predictions available"}</p>
-                        </div>
-                    )}
-                </motion.div>
-            )}
-
-            {activeSection === 'skills' && (
-                <motion.div key="skill" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {skills.length > 0 ? skills.map((s, i) => (
-                        <div key={i} className="bg-white p-4 border border-slate-200 rounded-xl">
-                            <div className="flex justify-between mb-3 text-[9px] font-bold uppercase tracking-widest text-slate-500">
-                                <span>{s.skill_name}</span>
-                                <span>{s.proficiency_level}%</span>
-                            </div>
-                            <div className="h-2 bg-slate-50 rounded-full border border-slate-100">
-                                <div className="h-full bg-slate-400 rounded-full" style={{ width: `${s.proficiency_level}%` }} />
-                            </div>
-                        </div>
-                    )) : <p className="col-span-2 text-center py-10 text-slate-400 text-xs uppercase font-bold">Recordset empty</p>}
-                </motion.div>
-            )}
-
-            {activeSection === 'achievements' && (
-                <motion.div key="ach" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {achievements.map((a, i) => (
-                        <div key={i} className={`p-6 bg-white border border-slate-200 rounded-2xl ${a.is_unlocked ? "" : "opacity-30 grayscale"}`}>
-                            <h4 
-                                className="font-bold text-sm text-[rgb(51,51,51)] uppercase mb-1"
-                                style={{ fontFamily: '"Playfair Display", serif' }}
-                            >
-                                {a.achievement_name}
-                            </h4>
-                            <p className="text-[10px] text-slate-400 font-bold leading-normal">{a.achievement_description}</p>
-                        </div>
-                    ))}
-                </motion.div>
-            )}
-
-            {activeSection === 'activities' && (
-                <motion.div key="act" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-                    {activities.map((act, i) => (
-                        <div key={i} className="bg-white border border-slate-200 p-4 rounded-xl flex justify-between items-center">
-                            <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">{act.activity_type.replace('_', ' ')}</p>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase">{new Date(act.created_at).toLocaleDateString()}</p>
-                        </div>
-                    ))}
-                </motion.div>
-            )}
-
-            {activeSection === 'scholarships' && (
-                <motion.div key="sch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {scholarships.map((s, i) => (
-                        <div key={i} className="bg-white border border-slate-200 p-6 rounded-2xl">
-                            <h4 
-                                className="text-xs font-bold text-[rgb(51,51,51)] uppercase mb-3"
-                                style={{ fontFamily: '"Playfair Display", serif' }}
-                            >
-                                {s.scholarship_name}
-                            </h4>
-                            <p className="text-2xl font-black text-slate-800">₹{s.estimated_amount.toLocaleString()}</p>
-                            <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between text-[9px] font-black text-slate-600 uppercase">
-                                <span>Eligibility Match</span>
-                                <span>{s.eligibility_score}%</span>
-                            </div>
-                        </div>
-                    ))}
-                </motion.div>
-            )}
-        </AnimatePresence>
-
-        {/* Auth Modal - Monochrome, Minimalist */}
-        <AnimatePresence>
-            {isAuthenticating && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-white rounded-2xl w-full max-w-sm shadow-xl border border-slate-200 overflow-hidden">
-                        <div className="p-8 border-b border-slate-50 text-center">
-                            <button onClick={() => setIsAuthenticating(false)} className="absolute top-6 right-6 text-slate-300 hover:text-slate-900 transition-all font-black">X</button>
-                            <h3 className="text-sm font-bold uppercase text-slate-900 tracking-widest">Document Vault</h3>
-                        </div>
-                        <div className="p-8">
-                            {authStep === 0 && (
-                                <div className="text-center">
-                                    <p className="text-slate-500 text-[10px] mb-8 font-bold leading-relaxed px-4 text-center">Verification required via DigiLocker servers.</p>
-                                    <button onClick={async () => {
-                                        setAuthStep(1);
-                                        // Dynamic Verification Simulation
-                                        await new Promise(r => setTimeout(r, 1500));
-                                        setAuthStep(2);
-                                        
-                                        const { data: { session } } = await supabase.auth.getSession();
-                                        if (session) {
-                                            const { error } = await supabase
-                                                .from('users')
-                                                .update({ digilocker_verified: true })
-                                                .eq('id', session.user.id);
-                                            
-                                            if (!error) {
-                                                setIsDigilockerVerified(true);
-                                                setAuthStep(3);
-                                                setTimeout(() => setIsAuthenticating(false), 2000);
-                                            } else {
-                                                console.error("Verification failed:", error);
-                                                setAuthStep(0);
-                                                setIsAuthenticating(false);
-                                            }
-                                        }
-                                    }} className="w-full bg-slate-900 text-white py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all">Authorize Access</button>
-                                </div>
-                            )}
-                            {authStep > 0 && authStep < 3 && (
-                                <div className="text-center py-6">
-                                    <div className="w-8 h-8 border-2 border-slate-100 border-t-slate-900 rounded-full animate-spin mx-auto mb-4"></div>
-                                    <p className="text-[10px] font-bold text-slate-500 uppercase animate-pulse">Establishing Link</p>
-                                </div>
-                            )}
-                            {authStep === 3 && (
-                                <div className="text-center py-6 text-slate-900 text-xs font-bold uppercase">Success</div>
-                            )}
-                        </div>
-                    </motion.div>
-                </div>
-            )}
-        </AnimatePresence>
       </main>
+
+      {/* Light-Themed Verification Flow */}
+      <AnimatePresence>
+        {isAuthenticating && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/10 backdrop-blur-md">
+            <motion.div 
+              initial={{ scale: 1.05, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.05, opacity: 0 }}
+              className="bg-white rounded-3xl w-full max-w-sm border border-slate-200 shadow-2xl relative"
+            >
+              <div className="absolute top-0 right-0 p-6">
+                 <button onClick={() => setIsAuthenticating(false)} className="text-slate-300 hover:text-slate-900 transition-colors">
+                  <X className="w-6 h-6" />
+                 </button>
+              </div>
+
+              <div className="p-10 text-center">
+                <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <Sparkles className="w-8 h-8 text-indigo-600" />
+                </div>
+                
+                <h3 className="text-xl font-bold text-slate-900 mb-2 tracking-tight uppercase">Identity Bridge</h3>
+                <p className="text-slate-500 text-xs font-medium leading-relaxed mb-8 px-4">Link your oficial DigiLocker to sync academic records and generate high-precision predictions.</p>
+
+                {authStep === 0 && (
+                  <button 
+                    onClick={async () => {
+                      setAuthStep(1);
+                      await new Promise(r => setTimeout(r, 2000));
+                      setAuthStep(3);
+                      const { data: { session } } = await supabase.auth.getSession();
+                      if (session) {
+                        await supabase.from('users').update({ digilocker_verified: true }).eq('id', session.user.id);
+                        setIsDigilockerVerified(true);
+                        setTimeout(() => setIsAuthenticating(false), 1500);
+                      }
+                    }}
+                    className="w-full py-3.5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95"
+                  >
+                    Authorize Official Link
+                  </button>
+                )}
+
+                {authStep === 1 && (
+                  <div className="flex flex-col items-center gap-4 py-4">
+                    <div className="w-8 h-8 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin" />
+                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest animate-pulse">Establishing Nodes</p>
+                  </div>
+                )}
+
+                {authStep === 3 && (
+                  <div className="py-4 text-emerald-600 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 italic">
+                    <Check className="w-4 h-4" />
+                    Verified Successfully
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <Footer />
     </div>

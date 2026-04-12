@@ -14,7 +14,7 @@ import {
   Target,
   ChevronDown,
 } from "lucide-react";
-import { StepIndicator } from "./components/StepIndicator";
+
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 
@@ -381,45 +381,45 @@ export default function Profile() {
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-600 mx-auto mb-4"></div>
-          <div className="text-slate-600 font-medium">Loading your profile...</div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <div className="text-slate-400 font-bold text-xs uppercase tracking-wider">Initialising Setup</div>
         </div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-[#fafafa] p-3 sm:p-4 md:p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50/50 p-3 sm:p-4 md:p-6 relative overflow-hidden selection:bg-indigo-100">
       {/* Dynamic Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-rose-500/5 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-500/5 blur-[120px] rounded-full" />
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-500/5 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/5 blur-[120px] rounded-full" />
       </div>
 
       {/* CET Alert Modal */}
       <AnimatePresence>
         {showCETAlert && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 1.1 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white rounded-[32px] max-w-md w-full p-8 shadow-2xl border border-white/20"
+              exit={{ opacity: 0, scale: 1.1 }}
+              className="bg-slate-900 rounded-[2.5rem] max-w-md w-full p-10 shadow-2xl border border-white/10"
             >
-              <div className="flex items-center justify-center w-16 h-16 bg-rose-100 rounded-full mx-auto mb-6">
-                <AlertCircle className="w-8 h-8 text-rose-600" />
+              <div className="flex items-center justify-center w-16 h-16 bg-indigo-500/10 rounded-2xl mx-auto mb-6">
+                <AlertCircle className="w-8 h-8 text-indigo-500" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 text-center mb-3">
-                CET Feature Coming Soon
+              <h3 className="text-xl font-bold text-white text-center mb-3 tracking-tight">
+                CET Analysis in Development
               </h3>
-              <p className="text-slate-500 text-center mb-8 leading-relaxed">
-                The CET score analysis feature is currently under development.
+              <p className="text-slate-400 text-center mb-10 leading-relaxed font-medium">
+                The CET score analysis feature is currently being optimized.
                 Please select Diploma for now to complete your profile setup.
               </p>
               <button
                 onClick={() => setShowCETAlert(false)}
-                className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20"
+                className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-lg active:scale-95"
               >
                 Continue with Diploma
               </button>
@@ -437,17 +437,17 @@ export default function Profile() {
           <div className="flex flex-col lg:flex-row bg-white/60 backdrop-blur-3xl border border-white/20 rounded-[40px] shadow-[0_40px_100px_rgba(0,0,0,0.05)] overflow-hidden min-h-[600px]">
 
             {/* Mobile Header Strip - visible only on small screens */}
-            <div className="lg:hidden bg-slate-900 px-6 py-5 flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
+            <div className="lg:hidden bg-white border-b border-slate-100 px-6 py-5 flex items-center gap-3">
+              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
                 <GraduationCap className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-sm font-black text-white tracking-widest uppercase">Smart College Finder</h1>
-                <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Profile Setup · Step {currentStep + 1} of {steps.length}</p>
+                <h1 className="text-xs font-bold text-slate-900 tracking-wider uppercase">Profile Master</h1>
+                <p className="text-slate-400 text-[10px] uppercase tracking-wider font-bold">Step {currentStep + 1} of {steps.length}</p>
               </div>
               <div className="ml-auto">
-                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden w-24">
-                  <div className="h-full bg-rose-500 transition-all duration-500 ease-out" style={{ width: `${((currentStep) / steps.length) * 100}%` }} />
+                <div className="h-1 bg-slate-100 rounded-full overflow-hidden w-20">
+                  <div className="h-full bg-indigo-600 transition-all duration-500 ease-out" style={{ width: `${((currentStep) / steps.length) * 100}%` }} />
                 </div>
               </div>
             </div>
@@ -457,64 +457,64 @@ export default function Profile() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2, duration: 0.5 }}
-              className="hidden lg:flex lg:w-[400px] xl:w-[480px] bg-slate-900 p-12 flex-col justify-between relative overflow-hidden flex-shrink-0"
+              className="hidden lg:flex lg:w-[400px] xl:w-[480px] bg-white p-12 flex-col justify-between relative overflow-hidden flex-shrink-0 border-r border-slate-100"
             >
-              {/* Decorative circles */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/20 blur-[100px] rounded-full pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 blur-[100px] rounded-full pointer-events-none" />
+              {/* Decorative subtle gradients */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/50 blur-[100px] rounded-full pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-slate-50 blur-[100px] rounded-full pointer-events-none" />
 
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-12">
-                  <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10">
+                  <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
                     <GraduationCap className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-sm font-black text-white tracking-widest uppercase">
-                      Smart College Finder
+                    <h1 className="text-xs font-bold text-slate-900 tracking-widest uppercase">
+                      IKIGAI CORE
                     </h1>
-                    <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Profile Setup</p>
+                    <p className="text-indigo-600 text-xs uppercase tracking-wider font-bold italic">Admission Hub</p>
                   </div>
                 </div>
 
                 <div className="mb-12">
-                  <h2 className="text-3xl lg:text-4xl font-black text-white mb-6 leading-[1.1] tracking-tight">
-                    Let's Build Your <br />
-                    <span className="text-rose-500 italic">Dream Profile.</span>
+                  <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-6 leading-tight tracking-tight uppercase">
+                    Configuring Your <br />
+                    <span className="text-indigo-600">Digital Identity.</span>
                   </h2>
 
                   <div className="space-y-8">
                     <div className="flex items-start gap-4 group">
-                      <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-rose-500/20 transition-colors border border-white/10">
-                        <Target className="w-6 h-6 text-white group-hover:text-rose-400 transition-colors" />
+                      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-50 transition-colors border border-slate-100">
+                        <Target className="w-6 h-6 text-slate-400 group-hover:text-indigo-600 transition-colors" />
                       </div>
                       <div>
-                        <h4 className="text-base font-bold text-white mb-1">Accurate Predictions</h4>
-                        <p className="text-white/60 text-xs leading-relaxed">
-                          Get precise college admission predictions based on your academic scores
+                        <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-1">Precision Modeling</h4>
+                        <p className="text-slate-500 text-[11px] leading-relaxed font-medium">
+                          Our engines analyze millions of data points to map your perfect institutional fit.
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-4 group">
-                      <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-rose-500/20 transition-colors border border-white/10">
-                        <BookOpen className="w-6 h-6 text-white group-hover:text-rose-400 transition-colors" />
+                      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-50 transition-colors border border-slate-100">
+                        <BookOpen className="w-6 h-6 text-slate-400 group-hover:text-indigo-600 transition-colors" />
                       </div>
                       <div>
-                        <h4 className="text-base font-bold text-white mb-1">Smart Matching</h4>
-                        <p className="text-white/60 text-xs leading-relaxed">
-                          Find colleges that perfectly align with your preferred branches and location
+                        <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-1">Academic Synergy</h4>
+                        <p className="text-slate-500 text-[11px] leading-relaxed font-medium">
+                          Link your credentials to generate high-fidelity prediction matrices.
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-4 group">
-                      <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-rose-500/20 transition-colors border border-white/10">
-                        <Award className="w-6 h-6 text-white group-hover:text-rose-400 transition-colors" />
+                      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-50 transition-colors border border-slate-100">
+                        <Award className="w-6 h-6 text-slate-400 group-hover:text-indigo-600 transition-colors" />
                       </div>
                       <div>
-                        <h4 className="text-base font-bold text-white mb-1">Success Roadmap</h4>
-                        <p className="text-white/60 text-xs leading-relaxed">
-                          Your profile is the key to unlocking personalized admission insights
+                        <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-1">Merit Insights</h4>
+                        <p className="text-slate-500 text-[11px] leading-relaxed font-medium">
+                          Discover scholarships and grants tailored specifically to your merit profile.
                         </p>
                       </div>
                     </div>
@@ -522,7 +522,14 @@ export default function Profile() {
                 </div>
 
                 {/* Progress Indicatior */}
-                <StepIndicator currentStep={currentStep + 1} steps={steps} />
+                <div className="mt-auto">
+                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Current Module</p>
+                   <div className="flex gap-2">
+                     {steps.map((_, idx) => (
+                       <div key={idx} className={`h-1 rounded-full transition-all duration-500 ${idx === currentStep ? 'w-12 bg-indigo-600' : 'w-4 bg-slate-100'}`} />
+                     ))}
+                   </div>
+                </div>
               </div>
             </motion.div>
 
@@ -535,14 +542,14 @@ export default function Profile() {
             >
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900 mb-2">
+                  <h2 className="text-xl font-bold text-slate-900 mb-1">
                     {steps[currentStep]}
                   </h2>
                   <p className="text-slate-500 text-sm font-medium">Please provide your details below</p>
                 </div>
                 <div className="hidden sm:flex gap-2">
                   {steps.map((_, idx) => (
-                    <div key={idx} className={`w-2.5 h-2.5 rounded-full transition-all ${idx === currentStep ? 'bg-rose-500 w-8' : idx < currentStep ? 'bg-rose-500/40' : 'bg-slate-200'}`} />
+                    <div key={idx} className={`w-2.5 h-2.5 rounded-full transition-all ${idx === currentStep ? 'bg-indigo-600 w-8' : idx < currentStep ? 'bg-indigo-600/40' : 'bg-slate-200'}`} />
                   ))}
                 </div>
               </div>
@@ -572,7 +579,7 @@ export default function Profile() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div className="space-y-1.5">
                           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                            First Name <span className="text-rose-500">*</span>
+                            First Name <span className="text-indigo-500">*</span>
                           </label>
                           <input
                             type="text"
@@ -582,15 +589,15 @@ export default function Profile() {
                               setForm({ ...form, name: `${e.target.value} ${lastName}`.trim() });
                             }}
                             placeholder="First Name"
-                            className={`w-full bg-white border ${errors.name ? 'border-red-500' : 'border-slate-200'} rounded-xl px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm`}
+                            className={`w-full bg-white border ${errors.name ? 'border-red-500' : 'border-slate-200'} rounded-xl px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm`}
                             required
                           />
-                          {errors.name && <p className="text-rose-500 text-xs mt-1 font-medium">{errors.name}</p>}
+                          {errors.name && <p className="text-red-500 text-xs mt-1 font-medium">{errors.name}</p>}
                         </div>
 
                         <div className="space-y-1.5">
                           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                            Last Name <span className="text-rose-500">*</span>
+                            Last Name <span className="text-indigo-500">*</span>
                           </label>
                           <input
                             type="text"
@@ -600,7 +607,7 @@ export default function Profile() {
                               setForm({ ...form, name: `${firstName} ${e.target.value}`.trim() });
                             }}
                             placeholder="Last Name"
-                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                             required
                           />
                         </div>
@@ -608,22 +615,22 @@ export default function Profile() {
 
                       <div className="space-y-1.5">
                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          Email Address <span className="text-rose-500">*</span>
+                          Email Address <span className="text-indigo-500">*</span>
                         </label>
                         <input
                           type="email"
                           value={form.email}
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
                           placeholder="john@example.com"
-                          className={`w-full bg-white border ${errors.email ? 'border-red-500' : 'border-slate-200'} rounded-xl px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm`}
+                          className={`w-full bg-white border ${errors.email ? 'border-red-500' : 'border-slate-200'} rounded-xl px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm`}
                           required
                         />
-                        {errors.email && <p className="text-rose-500 text-xs mt-1 font-medium">{errors.email}</p>}
+                        {errors.email && <p className="text-red-500 text-xs mt-1 font-medium">{errors.email}</p>}
                       </div>
 
                       <div className="space-y-1.5">
                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          State <span className="text-rose-500">*</span>
+                          State <span className="text-indigo-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -642,13 +649,13 @@ export default function Profile() {
                           value={form.address}
                           onChange={(e) => setForm({ ...form, address: e.target.value })}
                           rows={2}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm resize-none"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm resize-none"
                         />
                       </div>
 
                       <div className="space-y-3">
                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          Category <span className="text-rose-500">*</span>
+                          Category <span className="text-indigo-500">*</span>
                         </label>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           {categories.map((cat) => (
@@ -660,7 +667,7 @@ export default function Profile() {
                                 if (errors.category) setErrors(prev => ({ ...prev, category: '' }));
                               }}
                               className={`p-2.5 rounded-lg border text-center transition-all duration-200 text-xs font-bold ${form.category === cat
-                                ? "border-rose-500 bg-rose-50 text-rose-600 shadow-sm"
+                                ? "border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm"
                                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                                 }`}
                             >
@@ -668,7 +675,7 @@ export default function Profile() {
                             </button>
                           ))}
                         </div>
-                        {errors.category && <p className="text-rose-500 text-xs mt-1 font-medium">{errors.category}</p>}
+                        {errors.category && <p className="text-red-500 text-xs mt-1 font-medium">{errors.category}</p>}
                       </div>
                     </motion.div>
                   )}
@@ -684,7 +691,7 @@ export default function Profile() {
                     >
                       <div className="space-y-3">
                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          Exam Type <span className="text-rose-500">*</span>
+                          Exam Type <span className="text-indigo-500">*</span>
                         </label>
                         <div className="flex gap-4">
                           {["CET", "Diploma"].map((type) => (
@@ -692,7 +699,7 @@ export default function Profile() {
                               key={type}
                               onClick={() => handleExamTypeChange(type)}
                               className={`flex-1 p-4 rounded-xl border-2 transition-all ${form.examType === type
-                                ? "border-rose-500 bg-rose-50 text-rose-700 shadow-sm"
+                                ? "border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm"
                                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                                 } ${type === "CET" ? "opacity-60 cursor-not-allowed" : ""}`}
                             >
@@ -712,7 +719,7 @@ export default function Profile() {
                           <div className="grid grid-cols-2 gap-5">
                             <div className="space-y-1.5">
                               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                Diploma Rank <span className="text-rose-500">*</span>
+                                Diploma Rank <span className="text-indigo-500">*</span>
                               </label>
                               <input
                                 type="number"
@@ -724,14 +731,14 @@ export default function Profile() {
                                   setForm({ ...form, diplomaRank: e.target.value });
                                   if (errors.diplomaRank) setErrors(prev => ({ ...prev, diplomaRank: '' }));
                                 }}
-                                className={`w-full bg-white border ${errors.diplomaRank ? 'border-red-500' : 'border-slate-200'} rounded-xl px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm`}
+                                className={`w-full bg-white border ${errors.diplomaRank ? 'border-red-500' : 'border-slate-200'} rounded-xl px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm`}
                                 required
                               />
-                              {errors.diplomaRank && <p className="text-rose-500 text-xs mt-1 font-medium">{errors.diplomaRank}</p>}
+                              {errors.diplomaRank && <p className="text-red-500 text-xs mt-1 font-medium">{errors.diplomaRank}</p>}
                             </div>
                             <div className="space-y-1.5">
                               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                Diploma Score <span className="text-rose-500">*</span>
+                                Diploma Score <span className="text-indigo-500">*</span>
                               </label>
                               <input
                                 type="number"
@@ -744,10 +751,10 @@ export default function Profile() {
                                   setForm({ ...form, diplomaScore: e.target.value });
                                   if (errors.diplomaScore) setErrors(prev => ({ ...prev, diplomaScore: '' }));
                                 }}
-                                className={`w-full bg-white border ${errors.diplomaScore ? 'border-red-500' : 'border-slate-200'} rounded-xl px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm`}
+                                className={`w-full bg-white border ${errors.diplomaScore ? 'border-red-500' : 'border-slate-200'} rounded-xl px-4 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm`}
                                 required
                               />
-                              {errors.diplomaScore && <p className="text-rose-500 text-xs mt-1 font-medium">{errors.diplomaScore}</p>}
+                              {errors.diplomaScore && <p className="text-red-500 text-xs mt-1 font-medium">{errors.diplomaScore}</p>}
                             </div>
                           </div>
                         </>
@@ -774,7 +781,7 @@ export default function Profile() {
                             placeholder="e.g. DSE20131841"
                             value={form.applicationId}
                             onChange={(e) => setForm({ ...form, applicationId: e.target.value })}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -786,7 +793,7 @@ export default function Profile() {
                             placeholder="e.g. Mechanical Engineering"
                             value={form.diplomaCourseGroup}
                             onChange={(e) => setForm({ ...form, diplomaCourseGroup: e.target.value })}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                           />
                         </div>
                       </div>
@@ -799,7 +806,7 @@ export default function Profile() {
                           <select
                             value={form.gender}
                             onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                           >
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
@@ -813,7 +820,7 @@ export default function Profile() {
                           <select
                             value={form.ewsStatus}
                             onChange={(e) => setForm({ ...form, ewsStatus: e.target.value })}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                           >
                             <option value="Yes">Yes</option>
                             <option value="No">No</option>
@@ -828,7 +835,7 @@ export default function Profile() {
                         <select
                           value={form.candidatureType}
                           onChange={(e) => setForm({ ...form, candidatureType: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                         >
                           <option value="Maharashtra State Candidate - Type A">Maharashtra State Candidate - Type A</option>
                           <option value="Maharashtra State Candidate - Type B">Maharashtra State Candidate - Type B</option>
@@ -850,7 +857,7 @@ export default function Profile() {
                             placeholder="e.g. N.A."
                             value={form.pwdType}
                             onChange={(e) => setForm({ ...form, pwdType: e.target.value })}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -862,7 +869,7 @@ export default function Profile() {
                             placeholder="e.g. N.A."
                             value={form.defenceType}
                             onChange={(e) => setForm({ ...form, defenceType: e.target.value })}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                           />
                         </div>
                       </div>
@@ -877,7 +884,7 @@ export default function Profile() {
                             placeholder="e.g. N.A."
                             value={form.religiousMinority}
                             onChange={(e) => setForm({ ...form, religiousMinority: e.target.value })}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -889,7 +896,7 @@ export default function Profile() {
                             placeholder="e.g. N.A."
                             value={form.linguisticMinority}
                             onChange={(e) => setForm({ ...form, linguisticMinority: e.target.value })}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                           />
                         </div>
                       </div>
@@ -907,7 +914,7 @@ export default function Profile() {
                     >
                       <div className="space-y-3">
                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          Preferred Branches <span className="text-rose-500">*</span>
+                          Preferred Branches <span className="text-indigo-500">*</span>
                         </label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                           {branches.map((b) => (
@@ -916,21 +923,21 @@ export default function Profile() {
                               type="button"
                               onClick={() => handleBranchToggle(b)}
                               className={`p-3 rounded-xl border text-left transition-all group ${form.preferredBranches.includes(b)
-                                ? "border-rose-500 bg-rose-50 text-rose-700 shadow-sm"
+                                ? "border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm"
                                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                                 }`}
                             >
                               <div className="flex justify-between items-center">
                                 <span className="text-xs font-bold leading-tight">{b}</span>
                                 {form.preferredBranches.includes(b) && (
-                                  <Check className="w-4 h-4 text-rose-500" />
+                                  <Check className="w-4 h-4 text-indigo-500" />
                                 )}
                               </div>
                             </button>
                           ))}
                         </div>
                         {errors.preferredBranches && (
-                          <p className="text-rose-500 text-xs mt-1 font-medium">{errors.preferredBranches}</p>
+                          <p className="text-indigo-500 text-xs mt-1 font-medium">{errors.preferredBranches}</p>
                         )}
                         <p className="text-xs text-slate-400 font-medium">
                           {form.preferredBranches.length} branches selected
@@ -939,11 +946,11 @@ export default function Profile() {
 
                       <div className="space-y-3">
                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          Home University <span className="text-rose-500">*</span>
+                          Home University <span className="text-indigo-500">*</span>
                         </label>
                         <div className="relative group">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <GraduationCap className="h-5 w-5 text-slate-400 group-focus-within:text-rose-500 transition-colors" />
+                            <GraduationCap className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                           </div>
                           <select
                             value={form.homeUniversity}
@@ -951,7 +958,7 @@ export default function Profile() {
                               setForm({ ...form, homeUniversity: e.target.value });
                               if (errors.homeUniversity) setErrors(prev => ({ ...prev, homeUniversity: '' }));
                             }}
-                            className={`w-full bg-white border ${errors.homeUniversity ? 'border-red-500' : 'border-slate-200'} rounded-xl pl-11 pr-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm appearance-none cursor-pointer`}
+                            className={`w-full bg-white border ${errors.homeUniversity ? 'border-red-500' : 'border-slate-200'} rounded-xl pl-11 pr-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm appearance-none cursor-pointer`}
                           >
                             <option value="" disabled>Select your Home University</option>
                             {maharashtraUniversities.map((uni) => (
@@ -962,7 +969,7 @@ export default function Profile() {
                             <ChevronDown className="h-4 w-4 text-slate-400" />
                           </div>
                         </div>
-                        {errors.homeUniversity && <p className="text-rose-500 text-xs mt-1 font-medium">{errors.homeUniversity}</p>}
+                        {errors.homeUniversity && <p className="text-indigo-500 text-xs mt-1 font-medium">{errors.homeUniversity}</p>}
                       </div>
 
                       <div className="space-y-3">
@@ -974,16 +981,16 @@ export default function Profile() {
                             <label
                               key={option}
                               className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${form.universityPreference === option
-                                ? "border-rose-500 bg-rose-50 ring-1 ring-rose-500"
+                                ? "border-indigo-600 bg-indigo-50 ring-1 ring-indigo-500 shadow-lg shadow-indigo-500/10"
                                 : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                                 }`}
                             >
                               <div className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${form.universityPreference === option
-                                ? "border-rose-600 bg-white"
+                                ? "border-indigo-600 bg-white"
                                 : "border-slate-300 bg-white"
                                 }`}>
                                 {form.universityPreference === option && (
-                                  <div className="w-2.5 h-2.5 rounded-full bg-rose-600" />
+                                  <div className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
                                 )}
                               </div>
                               <input
@@ -994,7 +1001,7 @@ export default function Profile() {
                                 onChange={(e) => setForm({ ...form, universityPreference: e.target.value })}
                                 className="hidden"
                               />
-                              <span className={`text-sm font-bold ${form.universityPreference === option ? "text-rose-900" : "text-slate-700"
+                              <span className={`text-sm font-bold ${form.universityPreference === option ? "text-indigo-900" : "text-slate-700"
                                 }`}>
                                 {option}
                               </span>
@@ -1005,7 +1012,7 @@ export default function Profile() {
 
                       <div className="pt-4 border-t border-slate-100">
                         <label className="flex items-start gap-3 cursor-pointer group">
-                          <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${form.receiveUpdates ? 'bg-rose-600 border-rose-600' : 'border-slate-300 bg-white group-hover:border-slate-400'
+                          <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${form.receiveUpdates ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 bg-white group-hover:border-slate-400'
                             }`}>
                             {form.receiveUpdates && <Check className="w-3.5 h-3.5 text-white" />}
                           </div>
