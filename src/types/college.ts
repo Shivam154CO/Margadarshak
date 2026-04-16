@@ -195,9 +195,19 @@ export interface College extends CollegeContact, CollegeInfrastructure, Placemen
     duration_years?: number;
     shift?: string;
     hostel_fees?: number;
+    hostel_type?: string;
     bus_fees?: number;
     location_data?: { lat: number; lng: number };
     clubs_count?: number;
+    image_url?: string;
+    
+    // Academic & Extracurricular Data
+    scholarship_opportunities?: string;
+    international_collaborations?: string;
+    industry_tie_ups?: number;
+    research_papers?: number;
+    patents?: number;
+    alumni_strength?: number;
 }
 
 export interface RawCollege extends College {
