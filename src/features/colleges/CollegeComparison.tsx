@@ -55,8 +55,6 @@ ChartJS.register(
   Title
 );
 
-// Smart scoring algorithm with weighted criteria
-
 function CollegeComparison() {
   const navigate = useNavigate();
   const [colleges, setColleges] = useState<College[]>([]);
