@@ -56,46 +56,6 @@ ChartJS.register(
 );
 
 // Smart scoring algorithm with weighted criteria
-const calculateSmartScore = (college: College, weights: Record<string, number> = {}): {
-  total: number;
-  breakdown: Record<string, number>;
-} => {
-  const defaultWeights = {
-    placement_rate: 0.25,
-    average_package_lpa: 0.20,
-    highest_package_lpa: 0.10,
-    fees: 0.15,
-    cutoff_percentile: 0.15,
-    total_intake: 0.10,
-    rating: 0.05,
-  };
-
-  const finalWeights = { ...defaultWeights, ...weights };
-  let totalScore = 0;
-  const breakdown: Record<string, number> = {};
-
-  COMPARISON_METRICS.forEach((metric) => {
-    const value = Number(college[metric.key]) || 0;
-    let normalizedScore = 0;
-
-    if (value > 0) {
-      if (metric.key === "fees") {
-        normalizedScore = Math.max(0, 100 - (value / 100000));
-      } else {
-        normalizedScore = Math.min(100, value);
-      }
-    }
-
-    const weightedScore = normalizedScore * (finalWeights[metric.key as keyof typeof finalWeights] || 0);
-    breakdown[metric.key] = weightedScore;
-    totalScore += weightedScore;
-  });
-
-  return {
-    total: Math.round(totalScore),
-    breakdown
-  };
-};
 
 function CollegeComparison() {
   const navigate = useNavigate();
@@ -155,7 +115,7 @@ function CollegeComparison() {
           .range(page * pageSize, (page + 1) * pageSize - 1);
 
         if (error) throw error;
-        
+
         if (data && data.length > 0) {
           allData = [...allData, ...data];
           if (data.length < pageSize) {
@@ -404,26 +364,7 @@ function CollegeComparison() {
                         </div>
                         <div className="p-5 flex-1 flex flex-col">
                           <div className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">
-                            {college.city}{college.district ? `, ${college.district}` : ""}
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 mb-6">
-                            <div className="bg-slate-50 p-2 rounded-xl text-center">
-                              <div className="text-indigo-600 font-black">₹{(college.fees / 1000).toFixed(0)}K</div>
-                              <div className="text-[9px] font-bold text-gray-400 uppercase">Fees</div>
-                            </div>
-                            <div className="bg-slate-50 p-2 rounded-xl text-center">
-                              <div className="text-emerald-600 font-black">{college.placement_rate}%</div>
-                              <div className="text-[9px] font-bold text-gray-400 uppercase">Placed</div>
-                            </div>
-                          </div>
-                          <div className="mt-auto">
-                            <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase mb-1">
-                              <span>Smart Score</span>
-                              <span className="text-indigo-600">{calculateSmartScore(college, smartWeights).total}%</span>
-                            </div>
-                            <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                              <motion.div initial={{ width: 0 }} animate={{ width: `${calculateSmartScore(college, smartWeights).total}%` }} className="h-full bg-indigo-500" />
-                            </div>
+                            {college.district ? `${college.district}` : ""}
                           </div>
                         </div>
                       </motion.div>
@@ -434,7 +375,7 @@ function CollegeComparison() {
 
               {visibleCount < filteredColleges.length && (
                 <div className="flex justify-center pt-8">
-                  <button 
+                  <button
                     onClick={() => setVisibleCount(prev => prev + 500)}
                     className="px-8 py-3 bg-white border border-gray-200 text-indigo-600 font-bold rounded-xl shadow-sm hover:shadow-md transition-all hover:bg-gray-50 flex items-center justify-center gap-2"
                   >
