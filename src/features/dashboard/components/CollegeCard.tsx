@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { MapPin, Bookmark, BookmarkCheck, ExternalLink, Trophy, Layers, Award, Zap, CheckCircle, Target, TrendingUp, AlertCircle, AlertTriangle } from 'lucide-react';
 import type { College } from '@/types/college';
 import { ROUTES } from '@/constants/routes';
+import { CollegeCardImage } from '@/features/colleges/components/CollegeCardImage';
 
 interface CollegeCardProps {
   college: College;
@@ -12,22 +13,6 @@ interface CollegeCardProps {
   toggleSaveCollege: (college: College) => void;
   getAdmissionInfo: (college: College) => any;
 }
-
-const CollegeImage: React.FC<{ collegeCode: string; className?: string; alt?: string; priority?: boolean }> = ({ collegeCode, className, alt, priority }) => {
-  // Local getCollegeImage logic if needed, but we pass it as prop or import it
-  const imagePath = `/src/assets/${collegeCode}/campus.png`;
-  return (
-    <img
-      src={imagePath}
-      alt={alt}
-      className={className}
-      loading={priority ? "eager" : "lazy"}
-      onError={(e) => {
-        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=2064&q=80";
-      }}
-    />
-  );
-};
 
 const CollegeCardComponent: React.FC<CollegeCardProps> = ({
   college,
@@ -60,11 +45,13 @@ const CollegeCardComponent: React.FC<CollegeCardProps> = ({
     >
       {/* Image Header with Heavy Glassmorphism */}
       <div className="relative h-56 overflow-hidden">
-        <CollegeImage
+        <CollegeCardImage
           collegeCode={college.college_code}
+          src={college.image}
+          fallbackIndex={index}
           className="w-full h-full object-cover group-hover:scale-[1.07] transition-transform duration-700 ease-out"
           alt={`${college.college_name} campus`}
-          priority={index < 4}
+          loading={index < 4 ? "eager" : "lazy"}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent"></div>
 

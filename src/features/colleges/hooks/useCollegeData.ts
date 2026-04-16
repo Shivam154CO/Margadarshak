@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import axios from "axios";
@@ -7,9 +8,10 @@ const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? "http://127.0.0.1:5001";
 
 // Removing hardcoded mapping to make it 100% dynamic.
 // The region/state should come from the ML API or Supabase backend.
-const getStateFromCity = (city: string, rawRegion?: string): string => {
+const getStateFromCity = (rawRegion?: string): string => {
     return rawRegion || "Unknown";
 };
+
 
 // Groups raw ML prediction rows by college_code
 const groupCollegesByCode = (rawColleges: RawCollege[]): College[] => {
@@ -31,7 +33,7 @@ const groupCollegesByCode = (rawColleges: RawCollege[]): College[] => {
                 highest_package_lpa: rawCollege.highest_package_lpa,
                 branches: [],
                 is_predicted: true,
-                region: getStateFromCity(rawCollege.city, rawCollege.region || rawCollege.state),
+                region: getStateFromCity(rawCollege.region || rawCollege.state),
                 established_year: rawCollege.established_year || undefined,
                 naac_grade: rawCollege.naac_grade || undefined,
                 website: rawCollege.website || rawCollege.website_url || undefined,
@@ -135,7 +137,7 @@ const fetchAllColleges = async (): Promise<College[]> => {
                 highest_package_lpa: parseFloat(row.highest_package_lpa || row.Highest_Package_LPA || 0),
                 branches: [],
                 is_predicted: false,
-                region: getStateFromCity(row.city || row.City, row.region || row.Region || row.state || row.State),
+                region: getStateFromCity(row.region || row.Region || row.state || row.State),
                 website: row.website_url || row.Website_Url,
                 address: row.address || `${row.college_name || row.College_Name}, ${row.city || row.City}`
             } as College);
@@ -219,9 +221,11 @@ export function useCollegeData() {
         staleTime: 1000 * 60 * 60, // 1 hour
     });
 
-    // Merge predicted into all colleges for the consumer
-    const mergedColleges = (() => {
+    // 3. Merge predicted into all colleges — Memoized for performance
+    const mergedColleges = useMemo(() => {
         if (predictedColleges.length === 0) return allColleges;
+        
+        console.time("merging_colleges");
         const allMap = new Map(allColleges.map((c) => [c.college_code, c]));
         predictedColleges.forEach((p) => {
             if (allMap.has(p.college_code)) {
@@ -230,8 +234,11 @@ export function useCollegeData() {
                 allMap.set(p.college_code, p);
             }
         });
-        return Array.from(allMap.values());
-    })();
+        const result = Array.from(allMap.values());
+        console.timeEnd("merging_colleges");
+        return result;
+    }, [allColleges, predictedColleges]);
+
 
     return {
         colleges: predictedColleges,

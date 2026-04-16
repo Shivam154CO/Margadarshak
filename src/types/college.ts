@@ -189,6 +189,15 @@ export interface College extends CollegeContact, CollegeInfrastructure, Placemen
     admission_process?: AdmissionStep[];
     scholarships?: Scholarship[];
     feedback?: Feedback[];
+    
+    // Additional Info
+    degree_type?: string;
+    duration_years?: number;
+    shift?: string;
+    hostel_fees?: number;
+    bus_fees?: number;
+    location_data?: { lat: number; lng: number };
+    clubs_count?: number;
 }
 
 export interface RawCollege extends College {

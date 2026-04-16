@@ -93,8 +93,8 @@ export function computeBI(colleges: College[], _profile: any) {
     const amenityStack = [
         { name: 'WiFi', val: (pred.filter(c => c.wifi_available || c.wifi_campus).length / pred.length) * 100 },
         { name: 'Hostel', val: (pred.filter(c => c.hostel_available?.toLowerCase() === 'yes').length / pred.length) * 100 },
-        { name: 'Transport', val: (pred.filter(c => c.transport_facility || c.transport_facilities).length / pred.length) * 100 },
-        { name: 'Clubs', val: (pred.filter(c => c.clubs?.length || c.clubs_count).length / pred.length) * 100 },
+        { name: 'Transport', val: (pred.filter(c => c.transport_facility).length / pred.length) * 100 },
+        { name: 'Clubs', val: (pred.filter(c => c.clubs_count).length / pred.length) * 100 },
     ];
 
     // 8. Heatmap Grid (36 districts or clusters)
