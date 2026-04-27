@@ -22,7 +22,7 @@ import Loader from "./components/Loader";
 import { ROUTES } from "./constants/routes";
 
 // Lazy Pages
-const Landing = lazy(() => import("./pages/Landing"));
+import Landing from "./pages/Landing";
 const Signup = lazy(() => import("@/features/auth/Signup"));
 const Login = lazy(() => import("@/features/auth/Login"));
 const Profile = lazy(() => import("@/features/profile/Profile"));
@@ -49,6 +49,13 @@ const CutoffTrends = lazy(() => import("@/features/colleges/CutoffTrends"));
 const PostAdmission = lazy(() => import("@/features/admission/PostAdmission"));
 const DseOptionForm = lazy(() => import("@/features/admission/DseOptionForm"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Setup missing components
+const Pricing = lazy(() => import("./pages/Pricing"));
+const MentorshipBooking = lazy(() => import("@/features/support/MentorshipBooking"));
+const AdminOverview = lazy(() => import("@/features/admin/AdminOverview"));
+const BlogList = lazy(() => import("@/features/blog/BlogList"));
+const BlogPost = lazy(() => import("@/features/blog/BlogPost"));
 
 // Scroll restorer
 const ScrollToTopOnRoute = () => {
@@ -100,6 +107,10 @@ const AnimatedRoutes = () => {
         <Route path={ROUTES.LOGIN} element={<PageTransition><Login /></PageTransition>} />
         <Route path={ROUTES.HELP} element={<PageTransition><Help /></PageTransition>} />
         <Route path={ROUTES.COMMUNITY} element={<PageTransition><Community /></PageTransition>} />
+        <Route path={ROUTES.PRICING} element={<PageTransition><Pricing /></PageTransition>} />
+        <Route path={ROUTES.MENTORSHIP} element={<PageTransition><MentorshipBooking /></PageTransition>} />
+        <Route path={ROUTES.BLOG} element={<PageTransition><BlogList /></PageTransition>} />
+        <Route path={ROUTES.BLOG_POST} element={<PageTransition><BlogPost /></PageTransition>} />
 
         {/* Protected Routes */}
         <Route path={ROUTES.DSE_OPTION_FORM} element={<Protected><DseOptionForm /></Protected>} />
@@ -109,6 +120,7 @@ const AnimatedRoutes = () => {
         <Route path={ROUTES.ANALYTICS} element={<Protected><Analytics /></Protected>} />
         <Route path={ROUTES.DASHBOARD} element={<Protected><Dashboard /></Protected>} />
         <Route path={ROUTES.OVERVIEW} element={<Protected><OverviewScreen /></Protected>} />
+        <Route path={ROUTES.ADMIN} element={<Protected><AdminOverview /></Protected>} />
         <Route path={ROUTES.COLLEGE_DETAILS} element={<Protected><CollegeDetails /></Protected>} />
         <Route path={ROUTES.COLLEGE_BY_CODE} element={<Protected><CollegeDetails /></Protected>} />
         <Route path={ROUTES.COLLEGE_MAP} element={<Protected><InteractiveCollegeMap /></Protected>} />

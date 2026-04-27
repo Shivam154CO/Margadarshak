@@ -31,6 +31,10 @@ def create_app() -> Flask:
     # ── Load Dataset once at startup ──────────────────────────────────────────
     app.df = load_dataframe()
 
+    # ── Pre-calculate expensive mappings ──────────────────────────────────────
+    # This prevents high CPU usage by avoiding a full groupby on every API request
+    app.college_branches = app.df.groupby('college_code')['branch_name'].unique().apply(list).to_dict()
+
     # ── Register Blueprints ───────────────────────────────────────────────────
     from app.routes.college_routes     import college_bp
     from app.routes.prediction_routes  import prediction_bp

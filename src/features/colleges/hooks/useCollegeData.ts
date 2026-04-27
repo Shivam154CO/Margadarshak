@@ -4,7 +4,10 @@ import { supabase } from "@/lib/supabase";
 import axios from "axios";
 import type { College, RawCollege } from "@/types/college";
 
-const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? "http://127.0.0.1:5001";
+const ML_API_URL = import.meta.env.VITE_ML_API_URL;
+if (!ML_API_URL) {
+    console.warn("VITE_ML_API_URL is not defined. Predictions will be disabled.");
+}
 
 // Removing hardcoded mapping to make it 100% dynamic.
 // The region/state should come from the ML API or Supabase backend.
@@ -92,7 +95,8 @@ const fetchAllColleges = async (): Promise<College[]> => {
     let allRows: any[] = [];
     
     console.log("Fetching colleges from high-speed API cache...");
-    const API_URL = import.meta.env.VITE_ML_API_URL || "http://localhost:5001";
+    const API_URL = import.meta.env.VITE_ML_API_URL;
+    if (!API_URL) throw new Error("VITE_ML_API_URL is missing");
     
     try {
         const response = await fetch(`${API_URL}/colleges/all_raw`);
@@ -164,9 +168,15 @@ const fetchAllColleges = async (): Promise<College[]> => {
     // Save to local cache if results were found — don't cache empty results
     if (finalColleges.length > 0) {
         try {
-            localStorage.setItem(CACHE_KEY, JSON.stringify(finalColleges));
-            localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
-            console.log("College data cached successfully");
+            const dataString = JSON.stringify(finalColleges);
+            // Limit cache to 4MB to avoid localStorage quota errors (5MB limit)
+            if (dataString.length < 4 * 1024 * 1024) {
+                localStorage.setItem(CACHE_KEY, dataString);
+                localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+                console.log("College data cached successfully");
+            } else {
+                console.warn("College data too large for localStorage (>4MB), skipping cache.");
+            }
         } catch (e) {
             console.warn("Storage limit exceeded, not caching all colleges", e);
         }

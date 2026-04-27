@@ -94,7 +94,8 @@ def predict_admission():
         if len(filtered_df) == 0:
             return jsonify({"total": 0, "message": "No colleges match all your criteria. Try adjusting filters.", "colleges": []})
 
-        other_branches = df.groupby('college_code')['branch_name'].unique().apply(list).to_dict()
+        # Use pre-calculated mappings for performance
+        other_branches = current_app.college_branches
 
         print(f"\nProcessing {len(filtered_df):,} matching records...")
         results   = []

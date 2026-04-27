@@ -15,6 +15,8 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { CollegeCardImage } from "@/features/colleges/components/CollegeCardImage";
 import NoResultsFoundImg from "@/assets/No-results-found.svg";
+import { useFavorites } from "@/hooks/useFavorites";
+import { APP_CONFIG } from "@/constants/config";
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 
@@ -24,8 +26,8 @@ import type { College } from "@/types/college";
 // ---------- MAIN COMPONENT ----------
 export default function CollegeSearch() {
   const { colleges: predictedColleges, allColleges, userProfile, loading } = useCollegeData();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [search, setSearch] = useState("");
-  const [saved, setSaved] = useState<string[]>([]);
   const [branchModal, setBranchModal] = useState<College | null>(null);
   const [viewMode, setViewMode] = useState<"predicted" | "all">("all");
   const [sortBy, setSortBy] = useState("match_score");
@@ -123,17 +125,6 @@ export default function CollegeSearch() {
   const clearFilters = () => {
     setFilters({ collegeType: "All Types", branch: "All Branches", location: "", minFees: "", maxFees: "", admissionChance: "", placementRate: "" });
     setSearch("");
-  };
-
-  useEffect(() => {
-    const savedColleges = JSON.parse(localStorage.getItem("savedColleges") || "[]");
-    setSaved(savedColleges);
-  }, []);
-
-  const toggleSaved = (code: string) => {
-    const newSaved = saved.includes(code) ? saved.filter(c => c !== code) : [...saved, code];
-    setSaved(newSaved);
-    localStorage.setItem("savedColleges", JSON.stringify(newSaved));
   };
 
   if (loading) {
@@ -287,8 +278,8 @@ export default function CollegeSearch() {
                     key={college.college_code}
                     college={college}
                     index={i}
-                    saved={saved.includes(college.college_code)}
-                    onToggleSaved={() => toggleSaved(college.college_code)}
+                    saved={isFavorite(college.college_code, college.branches?.[0]?.branch_name || "N/A")}
+                    onToggleSaved={() => toggleFavorite({ ...college, branch: college.branch || college.branches?.[0]?.branch_name || "N/A" } as any)}
                     onOpenBranches={() => setBranchModal(college)}
                     isPredicted={viewMode === "predicted"}
                     userProfile={userProfile}
@@ -298,8 +289,8 @@ export default function CollegeSearch() {
                     key={college.college_code}
                     college={college}
                     index={i}
-                    saved={saved.includes(college.college_code)}
-                    onToggleSaved={() => toggleSaved(college.college_code)}
+                    saved={isFavorite(college.college_code, college.branches?.[0]?.branch_name || "N/A")}
+                    onToggleSaved={() => toggleFavorite({ ...college, branch: college.branch || college.branches?.[0]?.branch_name || "N/A" } as any)}
                     onOpenBranches={() => setBranchModal(college)}
                     isPredicted={viewMode === "predicted"}
                     userProfile={userProfile}
@@ -611,7 +602,7 @@ const BranchModal = memo(({ college, onClose }: any) => {
         </div>
         
         <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-center">
-          <p className="text-[10px] text-slate-400 font-medium italic">Cutoff data is based on 2024-25 CAP Rounds</p>
+          <p className="text-[10px] text-slate-400 font-medium italic">{APP_CONFIG.DATA_SOURCE_LABEL}</p>
         </div>
       </motion.div>
     </motion.div>

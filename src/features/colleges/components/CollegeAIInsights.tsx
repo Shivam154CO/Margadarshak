@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { exportDetailedCollegeReport } from '@/utils/exportUtils';
-import { 
-  PieChart, MessageSquare, BarChart2, FileText, 
+import {
+  PieChart, MessageSquare, BarChart2, FileText,
   CheckCircle2, Download, AlertCircle, Activity
 } from 'lucide-react';
 
@@ -34,7 +34,7 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
 
   // Parsed values
   const predictionScore = collegeInsights ? (parseInt(collegeInsights.match(/\d+/)?.[0] || "85")) : 85;
-  
+
   const sentimentTags = [
     { text: "Rigorous Academics", positive: true },
     { text: "Strong Coding Culture", positive: true },
@@ -59,7 +59,7 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
 
   return (
     <div className="space-y-6">
-      
+
       {/* ─── Top Control Bar ─── */}
       <div className="bg-white rounded-2xl flex flex-col sm:flex-row justify-between items-center p-4 border border-slate-200 shadow-sm gap-4">
         <div>
@@ -77,7 +77,7 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
         {/* ─── Admission Probability ─── */}
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col">
           <div className="flex items-center gap-3 mb-6">
@@ -98,13 +98,12 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
           </div>
 
           <div className="relative h-2.5 bg-slate-100 rounded-full overflow-hidden mb-3">
-            <motion.div 
+            <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${predictionScore}%` }}
               transition={{ duration: 1, ease: "easeOut" }}
-              className={`absolute top-0 left-0 h-full rounded-full ${
-                predictionScore > 80 ? 'bg-emerald-500' : predictionScore > 50 ? 'bg-amber-500' : 'bg-rose-500'
-              }`}
+              className={`absolute top-0 left-0 h-full rounded-full ${predictionScore > 80 ? 'bg-emerald-500' : predictionScore > 50 ? 'bg-amber-500' : 'bg-rose-500'
+                }`}
             />
           </div>
           <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
@@ -154,13 +153,13 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
             </p>
           </div>
         </div>
-        <button 
+        <button
           onClick={handleGenerateOptionForm}
           disabled={isGeneratingSheet}
           className="w-full md:w-auto whitespace-nowrap px-6 py-3 bg-white text-indigo-700 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-50 transition-colors disabled:opacity-90 disabled:cursor-wait shadow-sm"
         >
           {isGeneratingSheet ? (
-            <><div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"/> Processing...</>
+            <><div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" /> Processing...</>
           ) : (
             <>Generate PDF Sheet <Download className="w-4 h-4" /></>
           )}
@@ -168,7 +167,7 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
         {/* ─── Sentiment Analysis ─── */}
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col">
           <div className="flex items-center gap-3 mb-6">
@@ -180,18 +179,17 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
               <h3 className="text-base font-bold text-slate-900">Sentiment Analysis</h3>
             </div>
           </div>
-          
+
           <p className="text-sm text-slate-600 font-medium leading-relaxed mb-6">
             Based on clustered analysis of 140+ student reviews and web sentiment, this college maps highly to professional ambition but requires heavy academic dedication.
           </p>
 
           <div className="flex flex-wrap gap-2 mt-auto">
             {sentimentTags.map((vibe, idx) => (
-              <div key={idx} className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${
-                vibe.positive 
-                  ? 'bg-emerald-50 border-emerald-100 text-emerald-700' 
+              <div key={idx} className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${vibe.positive
+                  ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
                   : 'bg-slate-50 border-slate-200 text-slate-600'
-              }`}>
+                }`}>
                 {vibe.text}
               </div>
             ))}
@@ -200,11 +198,11 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
 
         {/* ─── Raw Evaluation Log ─── */}
         <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200 shadow-sm">
-           <div className="flex items-center gap-2 mb-4">
-             <AlertCircle className="w-4 h-4 text-slate-400" />
-             <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Evaluation Log</h3>
-           </div>
-           <div className="space-y-3">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertCircle className="w-4 h-4 text-slate-400" />
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Evaluation Log</h3>
+          </div>
+          <div className="space-y-3">
             {(collegeInsights || "").split('\n').filter(l => !l.includes('Verdict:') && l.trim() !== '').map((line, i) => (
               <div key={i} className="flex gap-3 items-start">
                 <span className="text-slate-400 font-mono text-[10px] uppercase font-bold mt-1 shrink-0">[{String(i + 1).padStart(2, '0')}]</span>
@@ -214,7 +212,7 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
               </div>
             ))}
             {(!collegeInsights || collegeInsights.trim() === '') && (
-               <p className="text-sm text-slate-500 italic">No detailed execution logs available for this session.</p>
+              <p className="text-sm text-slate-500 italic">No detailed execution logs available for this session.</p>
             )}
           </div>
         </div>

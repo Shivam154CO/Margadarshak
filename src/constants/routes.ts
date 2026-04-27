@@ -35,6 +35,14 @@ export const ROUTES = {
   DSE_OPTION_FORM: '/dse-option-form',
   
   DATA_PIPELINE: '/data-pipeline', // Admin / dev only
+  ADMIN: '/admin',
+  
+  // New features
+  PRICING: '/pricing',
+  MENTORSHIP: '/mentorship',
+  BLOG: '/blog',
+  BLOG_POST: '/blog/:slug',
+
   NOT_FOUND: '*',
 } as const;
 

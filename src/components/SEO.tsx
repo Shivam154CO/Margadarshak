@@ -1,6 +1,8 @@
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 
+import { APP_CONFIG } from "@/constants/config";
+
 interface SEOProps {
     title?: string;
     description?: string;
@@ -13,13 +15,13 @@ interface SEOProps {
  * Standardizes titles and meta tags across the application.
  */
 export default function SEO({
-    title = "SmartCF | Engineering Admission Intelligence",
-    description = "Advanced engine for engineering college predictions and admission assistance in Maharashtra.",
+    title = `${APP_CONFIG.PLATFORM_NAME} | Engineering Admission Intelligence`,
+    description = APP_CONFIG.PLATFORM_TAGLINE,
     keywords = "engineering, admission, CET, percentile, cutoff, engineering colleges, Maharashtra",
     ogImage = "/og-image.jpg"
 }: SEOProps) {
     const location = useLocation();
-    const siteTitle = title.includes("SmartCF") ? title : `${title} | SmartCF`;
+    const siteTitle = title.includes(APP_CONFIG.PLATFORM_NAME) ? title : `${title} | ${APP_CONFIG.PLATFORM_NAME}`;
     const canonicalUrl = `${window.location.origin}${location.pathname}`;
 
     return (

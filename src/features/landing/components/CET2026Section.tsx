@@ -1,10 +1,12 @@
+import { APP_CONFIG } from "@/constants/config";
+
 export default function CET2026Section() {
   return (
     <section className="py-16 md:py-24 px-4 md:px-6 relative bg-white" data-theme="light">
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center space-y-8 md:space-y-12">
           <h2 className="text-4xl md:text-7xl lg:text-[100px] font-black text-slate-900 tracking-tighter leading-none">
-            CET 2026 <br /> <span className="italic text-rose-600">Live Soon.</span>
+            CET {APP_CONFIG.NEXT_YEAR} <br /> <span className="italic text-rose-600">Live Soon.</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
             {[

@@ -5,7 +5,7 @@ import axios from "axios";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Briefcase, IndianRupee, X, CheckCircle2, FileText, Calendar, ShieldCheck, AlertCircle, ChevronRight, ChevronDown } from "lucide-react";
+import { Briefcase, IndianRupee, X, CheckCircle2, FileText, Calendar, ShieldCheck, AlertCircle, ChevronRight, ChevronDown, Globe, Activity, Bell, ArrowUpRight, BookOpen, Zap, Award, Search, MapPin } from "lucide-react";
 import { CollegeCardImage } from "@/features/colleges/components/CollegeCardImage";
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
@@ -353,80 +353,6 @@ export default function OverviewScreen() {
           </div>
         </div>
 
-        {/* ═══════════ CAP Round Countdown ═══════════ */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-[2.5rem] p-8 md:p-10 mb-10 text-white shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest mb-4 backdrop-blur-md border border-white/10">
-                <Calendar className="w-3.5 h-3.5" /> DSE Admission 2025
-              </div>
-              <h2 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">CAP Option Form Filling</h2>
-              <p className="text-indigo-100 font-semibold max-w-md">The window for Round 1 option form submission is approaching. Keep your preferences ready.</p>
-            </div>
-            <div className="flex gap-3 md:gap-4 flex-shrink-0">
-              {[ { label: "Days", val: "12" }, { label: "Hours", val: "08" }, { label: "Mins", val: "45" } ].map((t, i) => (
-                <div key={i} className="bg-black/20 backdrop-blur-md rounded-2xl p-4 md:p-5 min-w-[70px] md:min-w-[90px] text-center border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
-                  <div className="text-3xl md:text-4xl font-black tabular-nums tracking-tight">{t.val}</div>
-                  <div className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mt-1 md:mt-2">{t.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ═══════════ Profile Summary Bar ═══════════ */}
-        {/* ═══════════ Overall Live Intelligence Feed ═══════════ */}
-        <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-12 mb-10 overflow-hidden relative shadow-2xl">
-          <div className="relative z-10">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 border-b border-slate-800 pb-8">
-              <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-white">
-                  Live Admission Intelligence
-                </h2>
-                <p className="text-slate-400 font-medium text-sm mt-2">Overall news, scholarship alerts, and real-time admission cycle updates from across Maharashtra.</p>
-              </div>
-              <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-5 py-3 rounded-xl">
-                <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">System Status: Connected</span>
-              </div>
-            </div>
-
-            {newsLoading ? (
-              [...Array(4)].map((_, i) => (
-                <div key={i} className="h-32 bg-white/5 border border-white/10 rounded-2xl animate-pulse" />
-              ))
-            ) : (
-              (newsItems || []).map((news: any, i: number) => (
-                <div
-                  key={i}
-                  onClick={() => window.open(news.url, '_blank')}
-                  className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 hover:border-slate-500 transition-all cursor-pointer group"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest ${news.type === 'URGENT' ? 'bg-white text-slate-900 uppercase font-black' : 'bg-slate-800 text-slate-300 border border-slate-700'
-                      }`}>
-                      {news.type}
-                    </span>
-                    <span className="text-[9px] font-bold text-slate-500">{news.date}</span>
-                  </div>
-                  <h4 className="text-sm font-bold text-slate-200 mb-4 group-hover:text-white transition-colors line-clamp-2 leading-snug">
-                    {news.title}
-                  </h4>
-                  <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                    <span className="text-[10px] font-bold text-slate-500 italic">via {news.source}</span>
-                  </div>
-                </div>
-              ))
-            )}
-
-            <div className="mt-10 flex flex-wrap gap-4">
-              <div className="bg-white/5 border border-white/10 rounded-xl px-5 py-3">
-                <span className="text-[11px] font-medium text-slate-400 italic">Intelligence Note: Most colleges in Pune are reporting a 15% increase in AI/ML seats this year.</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {profile && (
           <div className="bg-white rounded-xl border border-slate-200 p-5 mb-8 shadow-sm">
@@ -911,63 +837,104 @@ export default function OverviewScreen() {
             </div>
 
             {/* ═══════════ SECTION 5.5: AI Mad-Libs Query Engine ═══════════ */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8 mb-8 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/30 rounded-full blur-3xl -mr-20 -mt-20 z-0 pointer-events-none"></div>
+            <div className="bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl p-6 md:p-10 mb-10 relative overflow-hidden text-white">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px] pointer-events-none" />
+              
               <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-indigo-50 border border-indigo-100 flex items-center justify-center rounded-xl">
-                    <Briefcase className="w-5 h-5 text-indigo-600" />
+                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/10 pb-6 mb-8 gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/10 shadow-lg">
+                      <Briefcase className="w-6 h-6 text-indigo-300" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black tracking-tight text-white">AI Strategy Sandbox</h3>
+                      <p className="text-slate-400 font-medium text-sm mt-1">Build your exact goal. The AI will find it instantly.</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">AI Strategy Sandbox</h3>
-                    <p className="text-sm text-slate-500 mt-0.5">Build your exact goal. The AI will find it instantly.</p>
+                  <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-lg backdrop-blur-sm">
+                    <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-400 flex items-center gap-2">
+                       <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> Live Filtering
+                    </span>
                   </div>
                 </div>
 
-                <div className="text-xl sm:text-2xl md:text-3xl font-medium leading-[2.5] sm:leading-[2.5] text-slate-600">
-                  "I am looking for a
-                  <select value={mlTier} onChange={(e) => setMlTier(e.target.value)} className="mx-2 bg-indigo-50/50 border-b-2 border-indigo-400 text-indigo-600 font-bold px-3 py-1 rounded-t-md hover:bg-indigo-50 cursor-pointer outline-none transition-colors appearance-none text-center min-w-[140px]">
-                    {["Any Tier", "Most Probable", "Best Fit", "Good Fit", "Stretch"].map(t => <option key={t} value={t} className="bg-white text-slate-800 text-base">{t}</option>)}
-                  </select>
-                  college in
-                  <select value={mlCity} onChange={(e) => setMlCity(e.target.value)} className="mx-2 bg-pink-50/50 border-b-2 border-pink-400 text-pink-600 font-bold px-3 py-1 rounded-t-md hover:bg-pink-50 cursor-pointer outline-none transition-colors appearance-none text-center">
-                    {mlCities.map(c => <option key={c} value={c} className="bg-white text-slate-800 text-base">{c}</option>)}
-                  </select>
-                  for
-                  <select value={mlBranch} onChange={(e) => setMlBranch(e.target.value)} className="mx-2 bg-emerald-50/50 border-b-2 border-emerald-400 text-emerald-600 font-bold px-3 py-1 rounded-t-md hover:bg-emerald-50 cursor-pointer outline-none transition-colors appearance-none text-center max-w-[200px] truncate">
-                    {mlBranches.map(b => <option key={b} value={b} className="bg-white text-slate-800 text-base">{b}</option>)}
-                  </select>
-                  with fees
-                  <select value={mlFee} onChange={(e) => setMlFee(e.target.value)} className="mx-2 bg-amber-50/50 border-b-2 border-amber-400 text-amber-600 font-bold px-3 py-1 rounded-t-md hover:bg-amber-50 cursor-pointer outline-none transition-colors appearance-none text-center">
-                    {["Any Fee", "Under ₹50K", "Under ₹1 Lakh", "Under ₹2 Lakhs"].map(f => <option key={f} value={f} className="bg-white text-slate-800 text-base">{f}</option>)}
-                  </select>."
+                {/* Mad-libs Interface */}
+                <div className="bg-black/20 p-6 md:p-8 rounded-3xl border border-white/5 backdrop-blur-xl mb-10 text-center md:text-left">
+                  <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black leading-[2] sm:leading-[2] text-slate-300 tracking-tight">
+                    "I am looking for a
+                    <select value={mlTier} onChange={(e) => setMlTier(e.target.value)} className="mx-3 inline-block bg-indigo-500 text-white font-bold px-4 py-1.5 rounded-xl border border-indigo-400 shadow-lg shadow-indigo-500/20 hover:bg-indigo-600 cursor-pointer outline-none transition-all appearance-none text-center min-w-[160px] align-baseline">
+                      {["Any Tier", "Most Probable", "Best Fit", "Good Fit", "Stretch"].map(t => <option key={t} value={t} className="bg-slate-800 text-white text-lg">{t}</option>)}
+                    </select>
+                    college in
+                    <select value={mlCity} onChange={(e) => setMlCity(e.target.value)} className="mx-3 inline-block bg-rose-500 text-white font-bold px-4 py-1.5 rounded-xl border border-rose-400 shadow-lg shadow-rose-500/20 hover:bg-rose-600 cursor-pointer outline-none transition-all appearance-none text-center min-w-[200px] align-baseline">
+                      {mlCities.map(c => <option key={c} value={c} className="bg-slate-800 text-white text-lg">{c}</option>)}
+                    </select>
+                    <br className="hidden md:block"/>
+                    for
+                    <select value={mlBranch} onChange={(e) => setMlBranch(e.target.value)} className="mx-3 inline-block bg-emerald-500 text-white font-bold px-4 py-1.5 rounded-xl border border-emerald-400 shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 cursor-pointer outline-none transition-all appearance-none text-center max-w-[250px] truncate align-baseline">
+                      {mlBranches.map(b => <option key={b} value={b} className="bg-slate-800 text-white text-lg">{b}</option>)}
+                    </select>
+                    with fees
+                    <select value={mlFee} onChange={(e) => setMlFee(e.target.value)} className="mx-3 inline-block bg-amber-500 text-white font-bold px-4 py-1.5 rounded-xl border border-amber-400 shadow-lg shadow-amber-500/20 hover:bg-amber-600 cursor-pointer outline-none transition-all appearance-none text-center min-w-[160px] align-baseline">
+                      {["Any Fee", "Under ₹50K", "Under ₹1 Lakh", "Under ₹2 Lakhs"].map(f => <option key={f} value={f} className="bg-slate-800 text-white text-lg">{f}</option>)}
+                    </select>."
+                  </p>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-slate-100">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Found {mlResults.length} Exact Matches</p>
+                <div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase tracking-widest">
+                      Found {mlResults.length} Exact Matches
+                    </h4>
+                    <div className="h-px bg-white/10 flex-1" />
+                  </div>
 
                   {mlResults.length === 0 ? (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
-                      <p className="font-semibold text-slate-600">No colleges perfectly match your sentence.</p>
-                      <p className="text-sm text-slate-400 mt-1">Try changing a word to expand the search.</p>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-10 text-center">
+                      <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
+                        <Search className="w-6 h-6 text-slate-400" />
+                      </div>
+                      <p className="text-lg font-bold text-white mb-2">No perfect matches found.</p>
+                      <p className="text-sm text-slate-400">Try adjusting your criteria to find alternative institutions.</p>
                     </div>
                   ) : (
-                    <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar snap-x">
+                    <div className="flex gap-5 overflow-x-auto pb-6 pt-2 custom-scrollbar snap-x">
                       {mlResults.map((c, idx) => {
                         const fc = fitColor(c.probability_level || c.fit || "Stretch");
                         return (
-                          <div key={idx} onClick={() => navigate("/college-details", { state: { college_code: c.college_code, branch: c.branch, college: c } })} className="snap-start flex-shrink-0 w-72 bg-white border border-slate-200 hover:border-indigo-300 shadow-sm hover:shadow-md rounded-xl p-4 cursor-pointer transition-all group">
-                            <div className="flex justify-between items-start mb-3">
-                              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-md whitespace-nowrap ${fc.bg} ${fc.text}`}>
+                          <div 
+                            key={idx} 
+                            onClick={() => navigate("/college-details", { state: { college_code: c.college_code, branch: c.branch, college: c } })} 
+                            className="snap-start flex-shrink-0 w-80 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/50 rounded-2xl p-6 cursor-pointer transition-all duration-300 group hover:-translate-y-2 relative overflow-hidden"
+                          >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-2xl rounded-full translate-x-1/2 -translate-y-1/2" />
+                            
+                            <div className="flex justify-between items-start mb-6">
+                              <span className={`text-[10px] uppercase font-black px-2.5 py-1 rounded-lg tracking-widest border bg-black/40 backdrop-blur-md ${fc.text} ${fc.bg.replace('bg-', 'border-')}`}>
                                 {c.probability_level || c.fit}
                               </span>
-                              <span className="text-sm font-black text-indigo-600">{c.admission_chance_percentage}</span>
+                              <div className="flex flex-col items-end">
+                                <span className="text-2xl font-black text-white group-hover:text-indigo-300 transition-colors">{c.admission_chance_percentage}</span>
+                                <span className="text-[9px] uppercase tracking-widest font-bold text-slate-400">Chance</span>
+                              </div>
                             </div>
-                            <p className="text-sm font-bold text-slate-800 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors">{c.college_name}</p>
-                            <p className="text-xs text-slate-500 mt-2 truncate">{c.branch}</p>
-                            <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-50">
-                              <p className="text-xs font-medium text-slate-400">{c.city}</p>
-                              <p className="text-xs font-bold text-emerald-600">₹{((c.fees ?? 0) / 1000).toFixed(0)}K</p>
+                            
+                            <p className="text-lg font-bold text-white line-clamp-2 leading-snug group-hover:text-indigo-200 transition-colors mb-2">
+                              {c.college_name}
+                            </p>
+                            <p className="text-sm text-slate-400 line-clamp-1 mb-6 font-medium">
+                              {c.branch}
+                            </p>
+                            
+                            <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                              <div className="flex items-center gap-1.5 text-slate-300">
+                                <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                                <p className="text-xs font-bold">{c.city}</p>
+                              </div>
+                              <p className="text-sm font-black text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-md border border-emerald-500/20">
+                                ₹{((c.fees ?? 0) / 1000).toFixed(0)}K
+                              </p>
                             </div>
                           </div>
                         );
@@ -1189,6 +1156,142 @@ export default function OverviewScreen() {
             </div>
           </>
         )}
+
+        {/* ═══════════ CAP Round Countdown ═══════════ */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-[2.5rem] p-8 md:p-10 mb-10 text-white shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest mb-4 backdrop-blur-md border border-white/10">
+                <Calendar className="w-3.5 h-3.5" /> DSE Admission 2025
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">CAP Option Form Filling</h2>
+              <p className="text-indigo-100 font-semibold max-w-md">The window for Round 1 option form submission is approaching. Keep your preferences ready.</p>
+            </div>
+            <div className="flex gap-3 md:gap-4 flex-shrink-0">
+              {[ { label: "Days", val: "12" }, { label: "Hours", val: "08" }, { label: "Mins", val: "45" } ].map((t, i) => (
+                <div key={i} className="bg-black/20 backdrop-blur-md rounded-2xl p-4 md:p-5 min-w-[70px] md:min-w-[90px] text-center border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
+                  <div className="text-3xl md:text-4xl font-black tabular-nums tracking-tight">{t.val}</div>
+                  <div className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mt-1 md:mt-2">{t.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ═══════════ Profile Summary Bar ═══════════ */}
+        {/* ═══════════ Overall Live Intelligence Feed ═══════════ */}
+        <div className="bg-slate-900 rounded-[2.5rem] p-6 lg:p-10 mb-10 overflow-hidden relative shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] border border-slate-800">
+          {/* Animated Background Elements */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/10 rounded-full blur-[80px] pointer-events-none" />
+          
+          <div className="relative z-10">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-3">
+                  <Globe className="w-full h-full text-indigo-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+                    Intelligence Feed
+                  </h2>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <p className="text-slate-400 font-medium text-xs uppercase tracking-widest">Live Updates & Alerts</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Grid Content */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+              {newsLoading ? (
+                [...Array(3)].map((_, i) => (
+                  <div key={i} className={`bg-white/5 border border-white/10 rounded-3xl animate-pulse ${i === 0 ? "md:col-span-2 min-h-[300px]" : "min-h-[200px]"}`} />
+                ))
+              ) : (
+                (newsItems || []).map((news: any, i: number) => {
+                  const isFeatured = i === 0;
+                  
+                  // Icon picking logic based on type
+                  let TypeIcon = Bell;
+                  if (news.type === 'URGENT') TypeIcon = AlertCircle;
+                  if (news.type === 'ACADEMIC') TypeIcon = BookOpen;
+                  if (news.type === 'SCHOLARSHIP') TypeIcon = Award;
+                  
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => window.open(news.url, '_blank')}
+                      className={`relative overflow-hidden group cursor-pointer transition-all duration-500 hover:-translate-y-1 ${
+                        isFeatured 
+                          ? "md:col-span-2 md:row-span-2 bg-gradient-to-br from-indigo-900/40 to-slate-900/40 border-indigo-500/30" 
+                          : "bg-white/5 border-white/10 hover:bg-white/10"
+                      } border rounded-3xl p-6 lg:p-8 flex flex-col justify-between`}
+                    >
+                      {/* Glow effect on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+
+                      <div className="relative z-10 flex flex-col h-full">
+                        <div className="flex justify-between items-start mb-6">
+                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
+                            news.type === 'URGENT' 
+                              ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
+                              : isFeatured 
+                                ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' 
+                                : 'bg-slate-800 text-slate-300 border-slate-700'
+                          }`}>
+                            <TypeIcon className="w-3.5 h-3.5" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">
+                              {news.type}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-900/50 px-2 py-1 rounded-md">{news.date}</span>
+                        </div>
+                        
+                        <div className="mt-auto">
+                          <h4 className={`font-black text-white mb-3 leading-snug group-hover:text-indigo-200 transition-colors ${
+                            isFeatured ? "text-2xl md:text-3xl lg:text-4xl" : "text-lg md:text-xl line-clamp-3"
+                          }`}>
+                            {news.title}
+                          </h4>
+                          
+                          {isFeatured && (
+                            <p className="text-slate-400 font-medium text-sm md:text-base leading-relaxed mb-6 line-clamp-2 md:line-clamp-3">
+                              {news.desc}
+                            </p>
+                          )}
+                          
+                          <div className="flex items-center justify-between pt-5 border-t border-white/10 mt-auto">
+                            <span className="text-xs font-bold text-slate-400">via <span className="text-slate-300">{news.source}</span></span>
+                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                              <ArrowUpRight className="w-4 h-4" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* AI Summary note */}
+            <div className="mt-6 flex justify-start">
+              <div className="inline-flex items-center gap-3 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl px-5 py-3 text-indigo-200">
+                <Zap className="w-4 h-4 text-indigo-400" />
+                <span className="text-xs font-semibold">AI Generated feed based on live state data. Always verify critical deadlines via official portals.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <Footer />

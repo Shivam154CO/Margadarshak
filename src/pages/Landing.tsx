@@ -12,6 +12,7 @@ import VisualUSP from "../features/landing/components/VisualUSP";
 import FeaturesGrid from "../features/landing/components/FeaturesGrid";
 import Journey from "../features/landing/components/Journey";
 import CET2026Section from "../features/landing/components/CET2026Section";
+import PricingSection from "../features/landing/components/PricingSection";
 import FinalCTA from "../features/landing/components/FinalCTA";
 
 const ProblemShowcase = lazy(() => import("../features/landing/components/spatial-product-showcase"));
@@ -145,27 +146,31 @@ export default function Landing() {
           <IkigaiLogo size={isScrolled ? "sm" : "sm"} showText={!isScrolled} lightText={isNavDark} className={`${isScrolled ? 'scale-75 md:scale-100' : 'scale-100'} transition-all duration-500`} />
 
           {/* Desktop Menu */}
-          <div className={`hidden md:flex items-center gap-12 transition-all duration-500 ${isScrolled ? 'opacity-0 scale-90 pointer-events-none w-0 overflow-hidden' : 'opacity-100 scale-100'}`}>
+          <div className={`hidden md:flex items-center gap-10 transition-all duration-500 ${isScrolled ? 'opacity-0 scale-90 pointer-events-none w-0 overflow-hidden' : 'opacity-100 scale-100'}`}>
             {[
               { label: 'Home', id: 'predictor' },
               { label: 'Features', id: 'features' },
               { label: 'Colleges', id: 'colleges' },
               { label: 'Gallery', id: 'gallery' },
-              { label: 'Journey', id: 'how-it-works' }
+              { label: 'Pricing', id: 'pricing' }
             ].map(item => (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
-                className={`font-semibold text-xs uppercase tracking-[0.2em] transition-colors ${isNavDark ? 'text-white/60 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
+                className={`relative group font-extrabold text-[11px] uppercase tracking-widest transition-colors py-2 ${isNavDark ? 'text-white/80 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 {item.label}
+                <span className={`absolute bottom-0 left-0 w-full h-[2px] rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left ${isNavDark ? 'bg-white' : 'bg-slate-900'}`} />
               </button>
             ))}
           </div>
 
-          <div className={`hidden md:flex items-center gap-8 transition-all duration-500 ${isScrolled ? 'opacity-0 scale-90 pointer-events-none w-0 overflow-hidden' : 'opacity-100 scale-100'}`}>
-            <button onClick={() => navigate("/login")} className={`font-extrabold text-xs uppercase tracking-widest hover:opacity-70 transition-all ${isNavDark ? 'text-white' : 'text-slate-900'}`}>Login</button>
-            <button onClick={() => navigate("/signup")} className={`px-8 py-3 rounded-xl font-extrabold text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95 ${isNavDark ? 'bg-white text-slate-900 hover:bg-white/90' : 'bg-slate-900 text-white hover:bg-black'}`}>Get Started</button>
+          <div className={`hidden md:flex items-center gap-6 transition-all duration-500 ${isScrolled ? 'opacity-0 scale-90 pointer-events-none w-0 overflow-hidden' : 'opacity-100 scale-100'}`}>
+            <button onClick={() => navigate("/login")} className={`relative group font-extrabold text-[11px] uppercase tracking-widest transition-colors py-2 ${isNavDark ? 'text-white' : 'text-slate-900'}`}>
+               Login
+               <span className={`absolute bottom-0 left-0 w-full h-[2px] rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left ${isNavDark ? 'bg-indigo-400' : 'bg-indigo-600'}`} />
+            </button>
+            <button onClick={() => navigate("/signup")} className={`px-7 py-2.5 rounded-[14px] font-extrabold text-[11px] uppercase tracking-widest hover:-translate-y-0.5 transition-all shadow-[0_8px_20px_-6px_rgba(0,0,0,0.2)] active:scale-95 ${isNavDark ? 'bg-white text-slate-900 hover:shadow-[0_8px_25px_-6px_rgba(255,255,255,0.4)]' : 'bg-slate-900 text-white hover:bg-black hover:shadow-[0_8px_25px_-6px_rgba(0,0,0,0.3)]'}`}>Get Started</button>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -199,7 +204,7 @@ export default function Landing() {
                   { label: 'Home', id: 'predictor' },
                   { label: 'Features', id: 'features' },
                   { label: 'Gallery', id: 'gallery' },
-                  { label: 'Journey', id: 'how-it-works' }
+                  { label: 'Pricing', id: 'pricing' }
                 ].map(item => (
                   <button
                     key={item.id}
@@ -256,6 +261,7 @@ export default function Landing() {
         </div>
       </section>
 
+      <PricingSection />
       <FinalCTA />
 
       <Suspense fallback={<div className="h-64 bg-slate-900" />}>
