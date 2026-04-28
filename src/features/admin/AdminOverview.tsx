@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Users, Activity, AlertTriangle, Database, Ban, LayoutDashboard, Calendar, Edit3, Settings, Save, X, BrainCircuit, RefreshCw, UploadCloud, DollarSign, Megaphone, FileDown, ShieldHalf, Play, Settings2, LogOut, TerminalSquare } from "lucide-react";
+import { Users, Activity, AlertTriangle, Database, Ban, LayoutDashboard, Calendar, Edit3, Settings, Save, X, BrainCircuit, RefreshCw, UploadCloud, DollarSign, Megaphone, FileDown, ShieldHalf, Play, Settings2, TerminalSquare } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import axios from "axios";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -21,12 +21,10 @@ export default function AdminOverview() {
   const [editForm, setEditForm] = useState({ placement_rate: 0, average_package_lpa: 0 });
 
   // System State
-  const [retrainStatus, setRetrainStatus] = useState<string | null>(null);
-
-  // New High-Authority States
+  // High-Authority States
   const [broadcastText, setBroadcastText] = useState("");
+  const [revenueStats] = useState({ mrr: 124500, activeSubs: 842 });
   const [mlStrictness, setMlStrictness] = useState(0.85);
-  const [revenueStats, setRevenueStats] = useState({ mrr: 12450, activeSubs: 84 });
   const [mlLogs, setMlLogs] = useState<string[]>(["[SYSTEM] Active monitoring initialized. Python backend connected."]);
   const logEndRef = useRef<HTMLDivElement>(null);
 
@@ -182,14 +180,11 @@ export default function AdminOverview() {
 
     try {
       setMlLogs(prev => [...prev, "[RUN] Force retrain command initiated...", "[RUN] Connecting to http://127.0.0.1:5001/train..."]);
-      setRetrainStatus("Training Pipeline Initializing...");
       const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
       // Mocks the call to `train_model.py` which is active in backend
       const res = await axios.post(`${ML_API_URL}/train`);
-      setRetrainStatus(`Success: ${res.data.status || 'Model retrained to 95.7% accuracy.'}`);
       setMlLogs(prev => [...prev, `[SUCCESS] ${res.data.status || 'Model retrained to 95.7% accuracy.'}`]);
     } catch (e) {
-      setRetrainStatus("Error: Could not connect to Python Machine Learning Backend. Ensure `run.py` is running natively.");
       setMlLogs(prev => [...prev, "[FAIL] Request rejected: connection refused by port 5001."]);
     }
   };

@@ -3,7 +3,7 @@
  */
 
 import { supabase } from '../../lib/supabase';
-import type { College } from '../../types/college';
+import type { College, Feedback } from '../../types/college';
 
 export async function fetchAllColleges(limit = 100000): Promise<College[]> {
   const { data, error } = await supabase
@@ -15,7 +15,7 @@ export async function fetchAllColleges(limit = 100000): Promise<College[]> {
     console.error('[CollegeService] fetchAllColleges error:', error);
     throw error;
   }
-  return data as College[];
+  return (data as College[]) || [];
 }
 
 export async function fetchCollegeByCode(collegeCode: string): Promise<College | null> {
@@ -32,7 +32,7 @@ export async function fetchCollegeByCode(collegeCode: string): Promise<College |
   return data as College;
 }
 
-export async function fetchCollegeReviews(collegeCode: string): Promise<any[]> {
+export async function fetchCollegeReviews(collegeCode: string): Promise<Feedback[]> {
   const { data, error } = await supabase
     .from('college_reviews_with_profiles')
     .select('*')
@@ -43,10 +43,10 @@ export async function fetchCollegeReviews(collegeCode: string): Promise<any[]> {
     console.error('[CollegeService] fetchCollegeReviews error:', error);
     throw error;
   }
-  return data;
+  return (data as Feedback[]) || [];
 }
 
-export async function fetchAllReviews(limit = 50): Promise<any[]> {
+export async function fetchAllReviews(limit = 50): Promise<Feedback[]> {
   const { data, error } = await supabase
     .from('college_reviews_with_profiles')
     .select('*')
@@ -57,7 +57,7 @@ export async function fetchAllReviews(limit = 50): Promise<any[]> {
     console.error('[CollegeService] fetchAllReviews error:', error);
     throw error;
   }
-  return data;
+  return (data as Feedback[]) || [];
 }
 
 export async function upvoteReview(reviewId: string, userId: string): Promise<void> {

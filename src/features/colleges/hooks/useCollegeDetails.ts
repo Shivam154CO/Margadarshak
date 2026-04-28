@@ -3,7 +3,9 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useQuery } from '@tanstack/react-query';
 import { normalizeCollegeData, getCityCoordinates, calculateDistance } from '@/utils/collegeHelpers';
-import type { College } from '@/types/college';
+import type { College, BranchInfo, BranchSeatMatrix } from '@/types/college';
+import type { UserProfile } from '@/types/user';
+import type { Review } from '../components/ReviewsSection';
 import { useFavorites } from '../../../hooks/useFavorites';
 import seatMatrixMap from '@/assets/seat_matrix_map.json';
 import {
@@ -33,10 +35,10 @@ export function useCollegeDetails() {
   const urlCollegeCode = searchParams.get('code') || pathCode;
   const urlBranchName = searchParams.get('branch');
 
-  const getInitialCollege = useCallback((): any => {
+  const getInitialCollege = useCallback((): Partial<College> | null => {
     // 1. Priority: Location state (passed from Search/Dashboard)
     if (location.state?.college) {
-      const stateCollege = location.state.college;
+      const stateCollege = location.state.college as College;
       localStorage.setItem('selectedCollege', JSON.stringify(stateCollege));
       return stateCollege;
     }
@@ -57,21 +59,21 @@ export function useCollegeDetails() {
     return null;
   }, [location.state, urlCollegeCode, urlBranchName]);
 
-  const [college, setCollege] = useState<College>(() => normalizeCollegeData(getInitialCollege()));
+  const [college, setCollege] = useState<College>(() => normalizeCollegeData(getInitialCollege() as any));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const [collegeReviews, setCollegeReviews] = useState<any[]>([]);
+  const [collegeReviews, setCollegeReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
-  const { data: profile } = useQuery<any>({
+  const { data: profile } = useQuery<UserProfile | null>({
     queryKey: ['userProfile'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
       const { data } = await supabase.from('users').select('*').eq('id', session.user.id).single();
-      return data;
+      return data as UserProfile;
     },
     staleTime: 1000 * 60 * 10,
   });
@@ -142,7 +144,7 @@ export function useCollegeDetails() {
           const targetBranch = primaryRow.branch_name;
 
           // 2. Aggregate available branches and their specific seat matrices
-          const branchMap = new Map<string, any>();
+          const branchMap = new Map<string, BranchInfo>();
 
           rows.forEach(row => {
             // Robust field access for branching
@@ -157,7 +159,7 @@ export function useCollegeDetails() {
               });
             }
 
-            const b = branchMap.get(bKey);
+            const b = branchMap.get(bKey)!;
             // Universal seat and category mapping (case-insensitive)
             const rawSeats = row.seats ?? row.Seats ?? row.SEATS ?? 0;
             const rowSeats = typeof rawSeats === 'number' ? rawSeats : (parseInt(rawSeats as any) || 0);
@@ -168,22 +170,23 @@ export function useCollegeDetails() {
             const rowIntakeVal = typeof rawIntake === 'number' ? rawIntake : (parseInt(rawIntake as any) || 0);
             
             if (rowIntakeVal > 0) {
-              if (b.total_intake === 0 || rowIntakeVal < b.total_intake) {
+              if (b.total_intake === 0 || rowIntakeVal < (b.total_intake || 0)) {
                 b.total_intake = rowIntakeVal;
               }
             } else if (b.total_intake === 0) {
               // Only sum seats if total_intake is missing
               if (rowCategory !== 'EWS' && rowCategory !== 'TFWS' && !rowCategory.includes('ORPHAN')) {
-                b.total_intake += rowSeats;
+                b.total_intake = (b.total_intake || 0) + rowSeats;
               }
             }
 
             // Add category to this branch's seat matrix
             if (rowCategory && rowSeats > 0) {
-              b.categories.push({
+              b.categories!.push({
                 category: rowCategory,
                 seats: rowSeats,
-                color: getCategoryColor(rowCategory)
+                color: getCategoryColor(rowCategory),
+                percentage: 0 // Placeholder
               });
             }
           });
@@ -193,12 +196,12 @@ export function useCollegeDetails() {
             const intake = b.total_intake || 1;
             return {
               ...b,
-              categories: b.categories.map((c: any) => ({
+              categories: b.categories!.map((c: BranchSeatMatrix) => ({
                 ...c,
                 percentage: (c.seats / intake) * 100
               }))
             };
-          }).sort((a, b) => b.total_intake - a.total_intake);
+          }).sort((a, b) => (b.total_intake || 0) - (a.total_intake || 0));
 
           const currentBranchData = branches.find(b => b.branch_name === targetBranch) || branches[0];
           const totalIntake = currentBranchData?.total_intake || 0;

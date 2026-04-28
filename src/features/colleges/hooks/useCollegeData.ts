@@ -4,9 +4,10 @@ import { supabase } from "@/lib/supabase";
 import axios from "axios";
 import type { College, RawCollege } from "@/types/college";
 
-const ML_API_URL = import.meta.env.VITE_ML_API_URL;
-if (!ML_API_URL) {
-    console.warn("VITE_ML_API_URL is not defined. Predictions will be disabled.");
+const ML_API_URL = import.meta.env.VITE_ML_API_URL || 'http://localhost:5000';
+
+if (!import.meta.env.VITE_ML_API_URL && import.meta.env.PROD) {
+  console.warn("Production Warning: VITE_ML_API_URL is not defined. Falling back to localhost.");
 }
 
 // Removing hardcoded mapping to make it 100% dynamic.
@@ -175,10 +176,23 @@ const fetchAllColleges = async (): Promise<College[]> => {
                 localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
                 console.log("College data cached successfully");
             } else {
-                console.warn("College data too large for localStorage (>4MB), skipping cache.");
+                console.warn("College data too large for localStorage (>4MB), attempting to clear other keys.");
+                // Emergency cleanup: clear everything except essential auth/theme
+                const essentialKeys = ['sb-access-token', 'sb-refresh-token', 'theme'];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && !essentialKeys.some(k => key.includes(k))) {
+                        localStorage.removeItem(key);
+                    }
+                }
+                // Try again after cleanup
+                if (dataString.length < 4.5 * 1024 * 1024) {
+                    localStorage.setItem(CACHE_KEY, dataString);
+                    localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+                }
             }
         } catch (e) {
-            console.warn("Storage limit exceeded, not caching all colleges", e);
+            console.warn("Storage limit exceeded even after cleanup, skipping cache.", e);
         }
     } else {
         console.warn("No colleges found in database, not caching.");

@@ -135,67 +135,27 @@ class NewsEngine:
 
     @staticmethod
     def _fallback_campus(college_name: str) -> list:
-        first = college_name.split()[0] if college_name and college_name != "General" else "College"
+        # Reduced mock content to avoid misleading users in production
         return [
             {
-                "title":  f"Direct Second Year Admission — Orientation at {first}",
-                "source": "Academic Office",
-                "date":   "Today",
+                "title":  f"Information Request: {college_name}",
+                "source": "Ikigai System",
+                "date":   "System",
                 "type":   "ACADEMIC",
-                "desc":   f"Mandatory orientation for new DSE batch. Original documents required: Diploma Marksheets, LC, Category Certificate.",
-                "url":    "https://dte.maharashtra.gov.in",
-            },
-            {
-                "title":  f"Industry Lab Inauguration at {first}",
-                "source": "Campus Press",
-                "date":   "3 days ago",
-                "type":   "NEWS",
-                "desc":   f"The institute inaugurates a state-of-the-art lab for emerging technology domains, expanding research infrastructure for students.",
+                "desc":   f"We are currently verifying the latest specific updates for {college_name}. Check the official website for real-time circulars.",
                 "url":    "",
-            },
-            {
-                "title":  f"Placement Drive Update — {first} Engineering",
-                "source": "Training & Placement Cell",
-                "date":   "1 week ago",
-                "type":   "BLOG",
-                "desc":   "Campus recruitment drive for the 2024 batch is underway. Students are advised to complete their resume verification before reporting.",
-                "url":    "",
-            },
+            }
         ]
 
     @staticmethod
     def _fallback_central() -> list:
         return [
             {
-                "title":  "DTE Maharashtra: DSE 2025 Provisional Merit List Released",
-                "source": "CET Cell Official",
-                "date":   "Real-Time",
+                "title":  "Official DTE/CET Portal Links",
+                "source": "Government",
+                "date":   "Always Available",
                 "type":   "URGENT",
-                "desc":   "The Provisional Merit List for Direct Second Year Engineering (DSE) has been published on the official DTE portal. Check your rank now.",
+                "desc":   "Please refer to the official CET Cell website for the most accurate and up-to-date admission schedules and merit lists.",
                 "url":    "https://fe2024.mahacet.org",
-            },
-            {
-                "title":  "Bridge Course in Mathematics — Mandatory for Diploma Students",
-                "source": "MSBTE / DTE Circular",
-                "date":   "2 days ago",
-                "type":   "ACADEMIC",
-                "desc":   "All diploma students joining second-year degree programs must complete a bridge course in Engineering Mathematics as per SPPU/RTMNU norms.",
-                "url":    "https://dte.maharashtra.gov.in",
-            },
-            {
-                "title":  "MahaDBT Scholarship: Last Date for Fee Reimbursement Application",
-                "source": "MahaDBT Portal",
-                "date":   "4 days ago",
-                "type":   "SCHOLARSHIP",
-                "desc":   "EBC, OBC, SC/ST students must apply for fee reimbursement on mahadbt.maharashtra.gov.in before the deadline. Original fee receipt required.",
-                "url":    "https://mahadbt.maharashtra.gov.in",
-            },
-            {
-                "title":  "CAP Round 1 Allotment Result — Check Your Seat",
-                "source": "CET Cell Portal",
-                "date":   "5 days ago",
-                "type":   "URGENT",
-                "desc":   "Round 1 seat allotment results are live. Log in to the portal to view your allotted institute. Report to the college by the deadline to confirm admission.",
-                "url":    "https://fe2024.mahacet.org",
-            },
+            }
         ]

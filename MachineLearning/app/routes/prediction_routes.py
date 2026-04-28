@@ -24,6 +24,20 @@ def predict_admission():
         df   = current_app.df
         data = request.get_json()
 
+        # Basic Validation to prevent crashes or bad data processing
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        try:
+            user_score = float(data.get("score", 0))
+            user_rank = int(data.get("rank", 0))
+            if user_score < 0 or user_score > 100:
+                return jsonify({"error": "Score must be between 0 and 100"}), 400
+            if user_rank < 0:
+                return jsonify({"error": "Rank cannot be negative"}), 400
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid score or rank format"}), 400
+
         print("\n" + "="*70)
         print("ADVANCED PREDICTION REQUEST")
         print("="*70)

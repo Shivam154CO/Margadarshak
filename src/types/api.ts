@@ -41,3 +41,21 @@ export interface OCRResponse {
   };
   error?: string;
 }
+
+export interface CapFormItem {
+  college_code: string;
+  college_name: string;
+  branch_name: string;
+  cutoff_rank: number;
+  admission_chance: number;
+  probability_level: string;
+  fit: string;
+}
+
+export interface CapFormResponse {
+  form: {
+    dream: CapFormItem[];
+    best_fit: CapFormItem[];
+    safe: CapFormItem[];
+  };
+}

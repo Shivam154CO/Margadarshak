@@ -210,6 +210,8 @@ export interface College extends CollegeContact, CollegeInfrastructure, Placemen
     alumni_strength?: number;
 }
 
+export const _TYPE_MARKER = true;
+
 export interface RawCollege extends College {
     // Used for data mapping from Supabase/Machine Learning
     [key: string]: any;

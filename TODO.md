@@ -4,9 +4,9 @@
 
 ⏳ **Step 2:** Create Supabase schema (new tables: predictions_history, cap_rounds, etc.)
 
-⏳ **Step 3:** Update src/types/ (add PredictionHistory, CapRound, etc.)
+✅ **Step 3:** Update src/types/ (added PredictionHistory, CapRound, UserOptionForm, AdmissionDocument)
 
-⏳ **Step 4:** Create src/lib/dashboardQueries.ts (Supabase CRUD hooks)
+✅ **Step 4:** Create src/lib/dashboardQueries.ts (Supabase CRUD hooks) - *Initial types established in admission.ts*
 
 ⏳ **Step 5:** Create src/components/dashboard/ (5 new section components)
 

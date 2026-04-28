@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { MessageSquare, Star, CheckCircle, ThumbsUp, AlertTriangle } from 'lucide-react';
 
-interface Review {
+export interface Review {
   id: string;
   user_id?: string;
   reviewer_name: string;

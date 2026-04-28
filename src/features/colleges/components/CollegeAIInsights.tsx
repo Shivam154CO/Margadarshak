@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { exportDetailedCollegeReport } from '@/utils/exportUtils';
+import { exportDetailedCollegeReport, exportDreamList } from '@/utils/exportUtils';
 import {
   PieChart, MessageSquare, BarChart2, FileText,
   CheckCircle2, Download, AlertCircle, Activity
@@ -11,8 +11,6 @@ interface AIInsightsProps {
   collegeInsights: string;
   isInsightsLoading: boolean;
   profile: any;
-  placementData: any;
-  seatData: any;
 }
 
 export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
@@ -20,32 +18,58 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
   collegeInsights,
   isInsightsLoading,
   profile,
-  placementData,
 }) => {
   const [isGeneratingSheet, setIsGeneratingSheet] = useState(false);
 
   const handleGenerateOptionForm = () => {
     setIsGeneratingSheet(true);
+    // Real action: Generate a targeted dream list for this specific college/branch combo
+    // plus related colleges if we had them. For now, we generate a specific report.
     setTimeout(() => {
+      exportDreamList([college], profile, `option-form-${college.college_code}.pdf`);
       setIsGeneratingSheet(false);
-      alert("Option form sequence successfully generated and saved to your Downloads!");
-    }, 2000);
+    }, 1000);
   };
 
   // Parsed values
   const predictionScore = collegeInsights ? (parseInt(collegeInsights.match(/\d+/)?.[0] || "85")) : 85;
 
+  // Dynamic Sentiment Analysis based on real metrics
   const sentimentTags = [
-    { text: "Rigorous Academics", positive: true },
-    { text: "Strong Coding Culture", positive: true },
-    { text: "Average Extracurriculars", positive: false },
-    { text: "Good Placement Cell", positive: true }
+    { 
+      text: college.placement_rate > 75 ? "Strong Placements" : "Standard Placements", 
+      positive: college.placement_rate > 60 
+    },
+    { 
+      text: college.autonomy_status?.toLowerCase().includes('autonomous') ? "Autonomous Flexibility" : "University Affiliated", 
+      positive: true 
+    },
+    { 
+      text: college.average_package_lpa > 5 ? "High ROI Potential" : "Standard ROI", 
+      positive: college.average_package_lpa > 4 
+    },
+    { 
+      text: college.hostel_available?.toLowerCase() === 'yes' ? "Residential Campus" : "Day Scholar Focused", 
+      positive: college.hostel_available?.toLowerCase() === 'yes'
+    }
   ];
 
   const comparePoints = [
-    { label: "Placement Rate", value: placementData.placementRate > 80 ? "Top 15% in Region" : "Regional Average", better: placementData.placementRate > 80 },
-    { label: "Infrastructure", value: "Modern Facilities", better: true },
-    { label: "Competition", value: "High Peer Quality", better: true }
+    { 
+      label: "Placement Rate", 
+      value: college.placement_rate > 80 ? "Top 15% in Region" : "Regional Average", 
+      better: college.placement_rate > 70 
+    },
+    { 
+      label: "Status", 
+      value: college.autonomy_status || "Affiliated", 
+      better: college.autonomy_status?.toLowerCase().includes('autonomous') 
+    },
+    { 
+      label: "Package", 
+      value: college.average_package_lpa > 0 ? `${college.average_package_lpa} LPA Avg` : "Data Pending", 
+      better: college.average_package_lpa > 4.5 
+    }
   ];
 
   if (isInsightsLoading) {

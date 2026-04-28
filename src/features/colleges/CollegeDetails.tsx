@@ -115,8 +115,15 @@ export default function CollegeDetails() {
     <div className="space-y-8">
       {/* Quick Stats Grid */}
       {quickStats.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-[1fr_3fr_3fr_1fr] gap-4">
-          {quickStats.map((stat, idx) => <StatCard key={idx} {...stat} />)}
+        <div className="flex flex-wrap gap-4 w-full">
+          {quickStats.map((stat, idx) => (
+            <div 
+              key={idx} 
+              className="flex-1 min-w-[200px]"
+            >
+              <StatCard {...stat} />
+            </div>
+          ))}
         </div>
       )}
 
@@ -282,8 +289,6 @@ export default function CollegeDetails() {
                 collegeInsights={collegeInsights}
                 isInsightsLoading={isInsightsLoading}
                 profile={profile}
-                placementData={placementData}
-                seatData={seatData}
               />
             )}
             {activeTab === "placement" && <PlacementStats stats={placementData} />}
@@ -319,7 +324,7 @@ export default function CollegeDetails() {
         onClose={() => setShowFeedbackModal(false)}
         collegeCode={college.college_code || ''}
         collegeName={college.college_name}
-        profile={profile}
+        profile={profile || null}
         onSuccess={() => window.location.reload()}
       />
 

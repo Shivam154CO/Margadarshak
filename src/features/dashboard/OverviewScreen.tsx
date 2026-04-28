@@ -5,7 +5,7 @@ import axios from "axios";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Briefcase, IndianRupee, X, CheckCircle2, FileText, Calendar, ShieldCheck, AlertCircle, ChevronRight, ChevronDown, Globe, Activity, Bell, ArrowUpRight, BookOpen, Zap, Award, Search, MapPin } from "lucide-react";
+import { Briefcase, IndianRupee, X, CheckCircle2, FileText, Calendar, ShieldCheck, AlertCircle, ChevronRight, ChevronDown, Globe, Bell, ArrowUpRight, BookOpen, Zap, Award, Search, MapPin } from "lucide-react";
 import { CollegeCardImage } from "@/features/colleges/components/CollegeCardImage";
 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
