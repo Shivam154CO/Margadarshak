@@ -840,7 +840,7 @@ export default function OverviewScreen() {
             <div className="bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl p-6 md:p-10 mb-10 relative overflow-hidden text-white">
               <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px] pointer-events-none" />
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px] pointer-events-none" />
-              
+
               <div className="relative z-10">
                 <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/10 pb-6 mb-8 gap-4">
                   <div className="flex items-center gap-4">
@@ -854,7 +854,7 @@ export default function OverviewScreen() {
                   </div>
                   <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-lg backdrop-blur-sm">
                     <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-400 flex items-center gap-2">
-                       <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> Live Filtering
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> Live Filtering
                     </span>
                   </div>
                 </div>
@@ -870,7 +870,7 @@ export default function OverviewScreen() {
                     <select value={mlCity} onChange={(e) => setMlCity(e.target.value)} className="mx-3 inline-block bg-rose-500 text-white font-bold px-4 py-1.5 rounded-xl border border-rose-400 shadow-lg shadow-rose-500/20 hover:bg-rose-600 cursor-pointer outline-none transition-all appearance-none text-center min-w-[200px] align-baseline">
                       {mlCities.map(c => <option key={c} value={c} className="bg-slate-800 text-white text-lg">{c}</option>)}
                     </select>
-                    <br className="hidden md:block"/>
+                    <br className="hidden md:block" />
                     for
                     <select value={mlBranch} onChange={(e) => setMlBranch(e.target.value)} className="mx-3 inline-block bg-emerald-500 text-white font-bold px-4 py-1.5 rounded-xl border border-emerald-400 shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 cursor-pointer outline-none transition-all appearance-none text-center max-w-[250px] truncate align-baseline">
                       {mlBranches.map(b => <option key={b} value={b} className="bg-slate-800 text-white text-lg">{b}</option>)}
@@ -903,13 +903,13 @@ export default function OverviewScreen() {
                       {mlResults.map((c, idx) => {
                         const fc = fitColor(c.probability_level || c.fit || "Stretch");
                         return (
-                          <div 
-                            key={idx} 
-                            onClick={() => navigate("/college-details", { state: { college_code: c.college_code, branch: c.branch, college: c } })} 
+                          <div
+                            key={idx}
+                            onClick={() => navigate("/college-details", { state: { college_code: c.college_code, branch: c.branch, college: c } })}
                             className="snap-start flex-shrink-0 w-80 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-500/50 rounded-2xl p-6 cursor-pointer transition-all duration-300 group hover:-translate-y-2 relative overflow-hidden"
                           >
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-2xl rounded-full translate-x-1/2 -translate-y-1/2" />
-                            
+
                             <div className="flex justify-between items-start mb-6">
                               <span className={`text-[10px] uppercase font-black px-2.5 py-1 rounded-lg tracking-widest border bg-black/40 backdrop-blur-md ${fc.text} ${fc.bg.replace('bg-', 'border-')}`}>
                                 {c.probability_level || c.fit}
@@ -919,14 +919,14 @@ export default function OverviewScreen() {
                                 <span className="text-[9px] uppercase tracking-widest font-bold text-slate-400">Chance</span>
                               </div>
                             </div>
-                            
+
                             <p className="text-lg font-bold text-white line-clamp-2 leading-snug group-hover:text-indigo-200 transition-colors mb-2">
                               {c.college_name}
                             </p>
                             <p className="text-sm text-slate-400 line-clamp-1 mb-6 font-medium">
                               {c.branch}
                             </p>
-                            
+
                             <div className="flex items-center justify-between pt-4 border-t border-white/10">
                               <div className="flex items-center gap-1.5 text-slate-300">
                                 <MapPin className="w-3.5 h-3.5 text-slate-500" />
@@ -1170,7 +1170,7 @@ export default function OverviewScreen() {
               <p className="text-indigo-100 font-semibold max-w-md">The window for Round 1 option form submission is approaching. Keep your preferences ready.</p>
             </div>
             <div className="flex gap-3 md:gap-4 flex-shrink-0">
-              {[ { label: "Days", val: "12" }, { label: "Hours", val: "08" }, { label: "Mins", val: "45" } ].map((t, i) => (
+              {[{ label: "Days", val: "12" }, { label: "Hours", val: "08" }, { label: "Mins", val: "45" }].map((t, i) => (
                 <div key={i} className="bg-black/20 backdrop-blur-md rounded-2xl p-4 md:p-5 min-w-[70px] md:min-w-[90px] text-center border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
                   <div className="text-3xl md:text-4xl font-black tabular-nums tracking-tight">{t.val}</div>
                   <div className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mt-1 md:mt-2">{t.label}</div>
@@ -1186,7 +1186,7 @@ export default function OverviewScreen() {
           {/* Animated Background Elements */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/10 rounded-full blur-[80px] pointer-events-none" />
-          
+
           <div className="relative z-10">
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
@@ -1218,35 +1218,33 @@ export default function OverviewScreen() {
               ) : (
                 (newsItems || []).map((news: any, i: number) => {
                   const isFeatured = i === 0;
-                  
+
                   // Icon picking logic based on type
                   let TypeIcon = Bell;
                   if (news.type === 'URGENT') TypeIcon = AlertCircle;
                   if (news.type === 'ACADEMIC') TypeIcon = BookOpen;
                   if (news.type === 'SCHOLARSHIP') TypeIcon = Award;
-                  
+
                   return (
                     <div
                       key={i}
                       onClick={() => window.open(news.url, '_blank')}
-                      className={`relative overflow-hidden group cursor-pointer transition-all duration-500 hover:-translate-y-1 ${
-                        isFeatured 
-                          ? "md:col-span-2 md:row-span-2 bg-gradient-to-br from-indigo-900/40 to-slate-900/40 border-indigo-500/30" 
+                      className={`relative overflow-hidden group cursor-pointer transition-all duration-500 hover:-translate-y-1 ${isFeatured
+                          ? "md:col-span-2 md:row-span-2 bg-gradient-to-br from-indigo-900/40 to-slate-900/40 border-indigo-500/30"
                           : "bg-white/5 border-white/10 hover:bg-white/10"
-                      } border rounded-3xl p-6 lg:p-8 flex flex-col justify-between`}
+                        } border rounded-3xl p-6 lg:p-8 flex flex-col justify-between`}
                     >
                       {/* Glow effect on hover */}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
 
                       <div className="relative z-10 flex flex-col h-full">
                         <div className="flex justify-between items-start mb-6">
-                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
-                            news.type === 'URGENT' 
-                              ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
-                              : isFeatured 
-                                ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' 
+                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${news.type === 'URGENT'
+                              ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                              : isFeatured
+                                ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
                                 : 'bg-slate-800 text-slate-300 border-slate-700'
-                          }`}>
+                            }`}>
                             <TypeIcon className="w-3.5 h-3.5" />
                             <span className="text-[10px] font-black uppercase tracking-widest">
                               {news.type}
@@ -1254,20 +1252,19 @@ export default function OverviewScreen() {
                           </div>
                           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-900/50 px-2 py-1 rounded-md">{news.date}</span>
                         </div>
-                        
+
                         <div className="mt-auto">
-                          <h4 className={`font-black text-white mb-3 leading-snug group-hover:text-indigo-200 transition-colors ${
-                            isFeatured ? "text-2xl md:text-3xl lg:text-4xl" : "text-lg md:text-xl line-clamp-3"
-                          }`}>
+                          <h4 className={`font-black text-white mb-3 leading-snug group-hover:text-indigo-200 transition-colors ${isFeatured ? "text-2xl md:text-3xl lg:text-4xl" : "text-lg md:text-xl line-clamp-3"
+                            }`}>
                             {news.title}
                           </h4>
-                          
+
                           {isFeatured && (
                             <p className="text-slate-400 font-medium text-sm md:text-base leading-relaxed mb-6 line-clamp-2 md:line-clamp-3">
                               {news.desc}
                             </p>
                           )}
-                          
+
                           <div className="flex items-center justify-between pt-5 border-t border-white/10 mt-auto">
                             <span className="text-xs font-bold text-slate-400">via <span className="text-slate-300">{news.source}</span></span>
                             <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-colors">

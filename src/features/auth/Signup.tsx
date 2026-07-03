@@ -54,21 +54,21 @@ export default function Signup() {
       if (error) throw error;
 
       if (data.user) {
-        // Create basic user profile — academic fields filled in Profile step
+        // Upsert basic user profile — safe even if trigger already created the row
         const { error: profileError } = await supabase
           .from('users')
-          .insert([{
+          .upsert([{
             id: data.user.id,
             email: form.email,
             name: form.name,
             address: form.address || null,
             receive_updates: receiveUpdates,
             profile_complete: false
-          }]);
+          }], { onConflict: 'id', ignoreDuplicates: true });
 
-        if (profileError && profileError.code !== '23505') {
-          // 23505 = unique_violation (user already exists), safe to ignore
-          console.error("Profile insert error:", profileError);
+        if (profileError) {
+          // Log but don't block the user — trigger may have already handled it
+          console.error("Profile upsert error:", profileError);
         }
 
         success(

@@ -152,7 +152,74 @@ export const exportDreamList = (
   profile: any, 
   filename: string = 'ikigai-dream-list.pdf'
 ) => {
-  if (!colleges.length) return;
+  const getChance = (c: College): number => {
+    if (typeof c.admission_chance === 'number') return c.admission_chance;
+    if (typeof c.admission_chance === 'string') return parseFloat(c.admission_chance) || 0;
+    if (c.admission_chance_percentage) return parseFloat(c.admission_chance_percentage) || 0;
+    return 0;
+  };
+
+  // 1. Filter only realistic chances (exclude reach, unlikely fit, or chance < 25%)
+  const realisticColleges = colleges.filter(c => {
+    const fit = (c.fit || c.probability_level || '').toLowerCase();
+    if (fit.includes('reach') || fit.includes('unlikely')) {
+      return false;
+    }
+    const chance = getChance(c);
+    if (chance > 0 && chance < 25) {
+      return false;
+    }
+    return true;
+  });
+
+  if (!realisticColleges.length) return;
+
+  // 2. Group by college
+  interface GroupedCollege {
+    college_code: string;
+    college_name: string;
+    city: string;
+    maxChance: number;
+    branches: {
+      branch: string;
+      cutoff_rank: number | string;
+      admission_chance: number;
+      fit: string;
+    }[];
+  }
+
+  const groups: { [key: string]: GroupedCollege } = {};
+  realisticColleges.forEach(c => {
+    const key = c.college_code || c.college_name;
+    const chance = getChance(c);
+    const branchInfo = {
+      branch: c.branch || c.branch_name || 'General',
+      cutoff_rank: c.cutoff_rank || 'N/A',
+      admission_chance: chance,
+      fit: c.fit || c.probability_level || 'N/A'
+    };
+
+    if (!groups[key]) {
+      groups[key] = {
+        college_code: c.college_code || '',
+        college_name: c.college_name,
+        city: c.city || 'N/A',
+        maxChance: chance,
+        branches: [branchInfo]
+      };
+    } else {
+      groups[key].branches.push(branchInfo);
+      if (chance > groups[key].maxChance) {
+        groups[key].maxChance = chance;
+      }
+    }
+  });
+
+  // 3. Sort colleges by max chance descending, and branches within colleges descending
+  const sortedColleges = Object.values(groups).sort((a, b) => b.maxChance - a.maxChance);
+  sortedColleges.forEach(c => {
+    c.branches.sort((a, b) => b.admission_chance - a.admission_chance);
+  });
 
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -169,7 +236,7 @@ export const exportDreamList = (
   
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text("Strategic targets based on competitive proximity | Exact -> Nearly -> Risk", margin, 32);
+  doc.text("Strategic targets based on competitive proximity | Excludes out-of-reach choices", margin, 32);
 
   // Profile
   doc.setTextColor(50, 50, 50);
@@ -177,35 +244,35 @@ export const exportDreamList = (
   doc.text(`Student: ${profile?.name || 'Candidate'}`, margin, 50);
   doc.text(`Rank: ${profile?.exam_type === 'CET' ? profile?.cet_rank : profile?.diploma_rank || 'N/A'}`, pageWidth - 60, 50);
 
-  const tableData = colleges.map((c) => [
-    c.college_code,
-    c.college_name,
-    c.branch || 'N/A',
-    c.city || 'N/A',
-    profile?.exam_type === 'CET' ? profile?.cet_rank : profile?.diploma_rank || 'N/A',
-    c.cutoff_rank || 'N/A',
-    c.fit || 'Unknown',
-    `${c.admission_chance || 'N/A'}%`,
-    c.available_branches?.slice(0, 3).join(', ') || 'N/A'
-  ]);
+  const tableData = sortedColleges.map((c) => {
+    const branchesText = c.branches.map(b => b.branch).join('\n');
+    const cutoffText = c.branches.map(b => typeof b.cutoff_rank === 'number' ? b.cutoff_rank.toLocaleString() : b.cutoff_rank).join('\n');
+    const chanceText = c.branches.map(b => `${b.admission_chance.toFixed(3)}%`).join('\n');
+    const remarksText = c.branches.map(b => b.fit).join('\n');
+    const collegeDisplay = `${c.college_name}\n(${c.city}${c.college_code ? ' | Code: ' + c.college_code : ''})`;
+
+    return [
+      collegeDisplay,
+      branchesText,
+      cutoffText,
+      chanceText,
+      remarksText
+    ];
+  });
 
   autoTable(doc, {
     startY: 60,
-    head: [['Code', 'College', 'Branch', 'City', 'Your Rank', 'Cutoff', 'Fit', 'Chance', 'Available Branches']],
+    head: [['College Name', 'Branches', 'Expected Cutoff', 'My Chance', 'Remarks']],
     body: tableData,
     theme: 'grid',
-    headStyles: { fillColor: [79, 70, 229], textColor: 255 },
-    styles: { fontSize: 7, cellPadding: 2 },
+    headStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold' },
+    styles: { fontSize: 8, cellPadding: 3, valign: 'middle' },
     columnStyles: {
-      0: { cellWidth: 12 },
-      1: { cellWidth: 40 },
-      2: { cellWidth: 30 },
-      3: { cellWidth: 20 },
-      4: { cellWidth: 15 },
-      5: { cellWidth: 15 },
-      6: { cellWidth: 18 },
-      7: { cellWidth: 12 },
-      8: { cellWidth: 30 }
+      0: { cellWidth: 70 }, // College Name
+      1: { cellWidth: 50 }, // Branches
+      2: { cellWidth: 20 }, // Expected Cutoff
+      3: { cellWidth: 22 }, // My Chance (exactly 3 decimal digits)
+      4: { cellWidth: 20 }  // Remarks
     }
   });
 
@@ -222,27 +289,90 @@ export const exportDreamList = (
 
 export const exportDreamCSV = (
   colleges: College[], 
-  profile: any, 
+  _profile?: any, 
   filename: string = 'ikigai-dream-list.csv'
 ) => {
-  if (!colleges.length) return;
+  const getChance = (c: College): number => {
+    if (typeof c.admission_chance === 'number') return c.admission_chance;
+    if (typeof c.admission_chance === 'string') return parseFloat(c.admission_chance) || 0;
+    if (c.admission_chance_percentage) return parseFloat(c.admission_chance_percentage) || 0;
+    return 0;
+  };
+
+  // 1. Filter only realistic chances (exclude reach, unlikely fit, or chance < 25%)
+  const realisticColleges = colleges.filter(c => {
+    const fit = (c.fit || c.probability_level || '').toLowerCase();
+    if (fit.includes('reach') || fit.includes('unlikely')) {
+      return false;
+    }
+    const chance = getChance(c);
+    if (chance > 0 && chance < 25) {
+      return false;
+    }
+    return true;
+  });
+
+  if (!realisticColleges.length) return;
+
+  // 2. Group by college
+  interface GroupedCollege {
+    college_code: string;
+    college_name: string;
+    city: string;
+    maxChance: number;
+    branches: {
+      branch: string;
+      cutoff_rank: number | string;
+      admission_chance: number;
+      fit: string;
+    }[];
+  }
+
+  const groups: { [key: string]: GroupedCollege } = {};
+  realisticColleges.forEach(c => {
+    const key = c.college_code || c.college_name;
+    const chance = getChance(c);
+    const branchInfo = {
+      branch: c.branch || c.branch_name || 'General',
+      cutoff_rank: c.cutoff_rank || 'N/A',
+      admission_chance: chance,
+      fit: c.fit || c.probability_level || 'N/A'
+    };
+
+    if (!groups[key]) {
+      groups[key] = {
+        college_code: c.college_code || '',
+        college_name: c.college_name,
+        city: c.city || 'N/A',
+        maxChance: chance,
+        branches: [branchInfo]
+      };
+    } else {
+      groups[key].branches.push(branchInfo);
+      if (chance > groups[key].maxChance) {
+        groups[key].maxChance = chance;
+      }
+    }
+  });
+
+  const sortedColleges = Object.values(groups).sort((a, b) => b.maxChance - a.maxChance);
+  sortedColleges.forEach(c => {
+    c.branches.sort((a, b) => b.admission_chance - a.admission_chance);
+  });
 
   const headers = [
-    'College Code', 'College Name', 'Branch', 'City', 
-    'Your Rank', 'Cutoff Rank', 'Fit Category', 'Admission Chance', 
-    'Other Available Branches'
+    'College Code', 'College Name', 'City', 'Branches', 
+    'Expected Cutoffs', 'My Chance (Probability)', 'Remarks (Fit)'
   ];
 
-  const rows = colleges.map(c => [
+  const rows = sortedColleges.map(c => [
     `"${c.college_code}"`,
     `"${c.college_name}"`,
-    `"${c.branch || 'N/A'}"`,
-    `"${c.city || 'N/A'}"`,
-    profile?.exam_type === 'CET' ? profile?.cet_rank : profile?.diploma_rank || 'N/A',
-    c.cutoff_rank || 0,
-    `"${c.fit || 'Unknown'}"`,
-    `"${c.admission_chance || 0}%"`,
-    `"${c.available_branches?.slice(0, 5).join(', ') || ''}"`
+    `"${c.city}"`,
+    `"${c.branches.map(b => b.branch).join('; ')}"`,
+    `"${c.branches.map(b => b.cutoff_rank).join('; ')}"`,
+    `"${c.branches.map(b => `${b.admission_chance.toFixed(3)}%`).join('; ')}"`,
+    `"${c.branches.map(b => b.fit).join('; ')}"`
   ]);
 
   const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');

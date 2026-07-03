@@ -151,6 +151,7 @@ def predict_admission():
                     'autonomy_status': str(row.get('autonomy_status', 'N/A')),
                     'university':      str(row.get('university', 'N/A')),
                     'district':        str(row.get('district', 'N/A')),
+                    'region':          str(row.get('region', 'N/A')),
                     'contact_phone':   str(row.get('contact_phone', '')),
                     'website_url':     str(row.get('website_url', '')),
                     'display_fees':    f"₹{float(row.get('fees', 0)):,.0f}/year",

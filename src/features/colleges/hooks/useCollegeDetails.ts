@@ -34,6 +34,7 @@ export function useCollegeDetails() {
 
   const urlCollegeCode = searchParams.get('code') || pathCode;
   const urlBranchName = searchParams.get('branch');
+  const urlCategory = searchParams.get('category');
 
   const getInitialCollege = useCallback((): Partial<College> | null => {
     // 1. Priority: Location state (passed from Search/Dashboard)
@@ -47,7 +48,8 @@ export function useCollegeDetails() {
     if (urlCollegeCode) {
       return {
         college_code: urlCollegeCode,
-        branch_name: urlBranchName || 'N/A'
+        branch_name: urlBranchName || 'N/A',
+        category: urlCategory || undefined
       };
     }
 
@@ -57,7 +59,7 @@ export function useCollegeDetails() {
       if (savedCollege) return JSON.parse(savedCollege);
     } catch (e) { console.error(e); }
     return null;
-  }, [location.state, urlCollegeCode, urlBranchName]);
+  }, [location.state, urlCollegeCode, urlBranchName, urlCategory]);
 
   const [college, setCollege] = useState<College>(() => normalizeCollegeData(getInitialCollege() as any));
   const [loading, setLoading] = useState(true);
@@ -132,99 +134,182 @@ export function useCollegeDetails() {
         if (fetchError) throw fetchError;
 
         if (rows && rows.length > 0) {
+          // Identify category prioritizing URL/State, then profile category
+          const targetCategory = urlCategory || college.category || profile?.category || 'GOPEN';
+
           // 1. Identify primary branch (prioritize URL/State)
           const searchBranch = (urlBranchName || college.branch_name || college.branch || rows[0].branch_name || '').toLowerCase().replace(/engineering/g, '').replace(/engg/g, '').trim();
 
-          // Case-insensitive match find
+          // Case-insensitive match find prioritizing both branch and category
           const primaryRow = rows.find(r => {
+            const rowBranch = (r.branch_name || '').toLowerCase().replace(/engineering/g, '').replace(/engg/g, '').trim();
+            const branchMatches = rowBranch.includes(searchBranch) || searchBranch.includes(rowBranch);
+            const rowCat = (r.category || '').toUpperCase().trim();
+            const targetCatUpper = targetCategory.toUpperCase().trim();
+            return branchMatches && (rowCat === targetCatUpper);
+          }) || rows.find(r => {
+            const rowBranch = (r.branch_name || '').toLowerCase().replace(/engineering/g, '').replace(/engg/g, '').trim();
+            const branchMatches = rowBranch.includes(searchBranch) || searchBranch.includes(rowBranch);
+            const rowCat = (r.category || '').toUpperCase().trim();
+            const targetCatUpper = targetCategory.toUpperCase().trim();
+            // Relaxed category match; e.g. if targetCategory is 'OPEN', match 'GOPEN' or 'LOPEN'
+            return branchMatches && (rowCat.includes(targetCatUpper) || targetCatUpper.includes(rowCat));
+          }) || rows.find(r => {
             const rowBranch = (r.branch_name || '').toLowerCase().replace(/engineering/g, '').replace(/engg/g, '').trim();
             return rowBranch.includes(searchBranch) || searchBranch.includes(rowBranch);
           }) || rows[0];
 
           const targetBranch = primaryRow.branch_name;
 
-          // 2. Aggregate available branches and their specific seat matrices
+          // 2. Aggregate available branches with independent EWS validation rules
           const branchMap = new Map<string, BranchInfo>();
-
+          
+          // Group rows by branch first
+          const branchRowsMap = new Map<string, any[]>();
           rows.forEach(row => {
-            // Robust field access for branching
             const bName = row.branch_name || row.Branch_Name || 'N/A';
             const bKey = bName.toLowerCase().trim();
-            if (!branchMap.has(bKey)) {
-              branchMap.set(bKey, {
-                branch_name: bName,
-                branch_code: row.branch_code || row.Branch_Code,
-                total_intake: 0,
-                categories: []
-              });
+            if (!branchRowsMap.has(bKey)) {
+              branchRowsMap.set(bKey, []);
             }
-
-            const b = branchMap.get(bKey)!;
-            // Universal seat and category mapping (case-insensitive)
-            const rawSeats = row.seats ?? row.Seats ?? row.SEATS ?? 0;
-            const rowSeats = typeof rawSeats === 'number' ? rawSeats : (parseInt(rawSeats as any) || 0);
-            const rawCategory = row.category || row.Category || row.CATEGORY || '';
-            const rowCategory = String(rawCategory).toUpperCase().trim();
-
-            const rawIntake = row.total_intake || row.Total_Intake || row.TOTAL_INTAKE || 0;
-            const rowIntakeVal = typeof rawIntake === 'number' ? rawIntake : (parseInt(rawIntake as any) || 0);
-            
-            if (rowIntakeVal > 0) {
-              if (b.total_intake === 0 || rowIntakeVal < (b.total_intake || 0)) {
-                b.total_intake = rowIntakeVal;
-              }
-            } else if (b.total_intake === 0) {
-              // Only sum seats if total_intake is missing
-              if (rowCategory !== 'EWS' && rowCategory !== 'TFWS' && !rowCategory.includes('ORPHAN')) {
-                b.total_intake = (b.total_intake || 0) + rowSeats;
-              }
-            }
-
-            // Add category to this branch's seat matrix
-            if (rowCategory && rowSeats > 0) {
-              b.categories!.push({
-                category: rowCategory,
-                seats: rowSeats,
-                color: getCategoryColor(rowCategory),
-                percentage: 0 // Placeholder
-              });
-            }
+            branchRowsMap.get(bKey)!.push(row);
           });
 
-          // Sort and compute percentages
-          const branches = Array.from(branchMap.values()).map(b => {
-            const intake = b.total_intake || 1;
-            return {
-              ...b,
-              categories: b.categories!.map((c: BranchSeatMatrix) => ({
-                ...c,
-                percentage: (c.seats / intake) * 100
-              }))
-            };
-          }).sort((a, b) => (b.total_intake || 0) - (a.total_intake || 0));
+          branchRowsMap.forEach((rowsForBranch, bKey) => {
+            const firstRow = rowsForBranch[0];
+            const bName = firstRow.branch_name || firstRow.Branch_Name || 'N/A';
+            const bCode = firstRow.branch_code || firstRow.Branch_Code || 'N/A';
+
+            // Calculate existingTotalIntake
+            let existingTotalIntake = 0;
+            rowsForBranch.forEach(row => {
+              const rawIntake = row.total_intake || row.Total_Intake || row.TOTAL_INTAKE || 0;
+              const intakeVal = typeof rawIntake === 'number' ? rawIntake : (parseInt(rawIntake as any) || 0);
+              if (intakeVal > 0) {
+                if (existingTotalIntake === 0 || intakeVal < existingTotalIntake) {
+                  existingTotalIntake = intakeVal;
+                }
+              }
+            });
+
+            // If existingTotalIntake is 0, sum non-supernumerary seats
+            if (existingTotalIntake === 0) {
+              rowsForBranch.forEach(row => {
+                const rawSeats = row.seats ?? row.Seats ?? row.SEATS ?? 0;
+                const rowSeats = typeof rawSeats === 'number' ? rawSeats : (parseInt(rawSeats as any) || 0);
+                const rawCategory = row.category || row.Category || row.CATEGORY || '';
+                const catUpper = String(rawCategory).toUpperCase().trim();
+                if (catUpper !== 'EWS' && catUpper !== 'TFWS' && !catUpper.includes('ORPHAN') && !catUpper.includes('J&K') && !catUpper.includes('JK')) {
+                  existingTotalIntake += rowSeats;
+                }
+              });
+            }
+
+            // Check if EWS category exists and verify intake
+            let ewsSeats = 0;
+            let hasEws = false;
+            rowsForBranch.forEach(row => {
+              const rawCategory = row.category || row.Category || row.CATEGORY || '';
+              const catUpper = String(rawCategory).toUpperCase().trim();
+              if (catUpper === 'EWS') {
+                hasEws = true;
+                const rawSeats = row.seats ?? row.Seats ?? row.SEATS ?? 0;
+                const rowSeats = typeof rawSeats === 'number' ? rawSeats : (parseInt(rawSeats as any) || 0);
+                ewsSeats = rowSeats;
+              }
+            });
+
+            // Sum of non-EWS, non-supernumerary categories to verify EWS inclusion
+            let totalCategorySeatsNonEWS = 0;
+            rowsForBranch.forEach(row => {
+              const rawSeats = row.seats ?? row.Seats ?? row.SEATS ?? 0;
+              const rowSeats = typeof rawSeats === 'number' ? rawSeats : (parseInt(rawSeats as any) || 0);
+              const rawCategory = row.category || row.Category || row.CATEGORY || '';
+              const catUpper = String(rawCategory).toUpperCase().trim();
+              if (catUpper !== 'EWS' && catUpper !== 'TFWS' && !catUpper.includes('ORPHAN') && !catUpper.includes('J&K') && !catUpper.includes('JK')) {
+                totalCategorySeatsNonEWS += rowSeats;
+              }
+            });
+
+            let finalTotalIntake = existingTotalIntake;
+            if (hasEws && ewsSeats > 0) {
+              // Verify if the displayed Total Intake already includes the EWS seats
+              const alreadyIncludesEws = existingTotalIntake >= (totalCategorySeatsNonEWS + ewsSeats);
+              if (!alreadyIncludesEws) {
+                finalTotalIntake = existingTotalIntake + ewsSeats;
+              }
+            }
+
+            // Populate categories seat matrix
+            const categories: BranchSeatMatrix[] = [];
+            rowsForBranch.forEach(row => {
+              const rawCategory = row.category || row.Category || row.CATEGORY || '';
+              const rowCategory = String(rawCategory).toUpperCase().trim();
+              const rawSeats = row.seats ?? row.Seats ?? row.SEATS ?? 0;
+              const rowSeats = typeof rawSeats === 'number' ? rawSeats : (parseInt(rawSeats as any) || 0);
+
+              if (rowCategory && rowSeats > 0) {
+                categories.push({
+                  category: rowCategory,
+                  seats: rowSeats,
+                  color: getCategoryColor(rowCategory),
+                  percentage: 0
+                });
+              }
+            });
+
+            // Compute percentages
+            const intakeForPercentage = finalTotalIntake || 1;
+            const updatedCategories = categories.map(c => ({
+              ...c,
+              percentage: (c.seats / intakeForPercentage) * 100
+            }));
+
+            branchMap.set(bKey, {
+              branch_name: bName,
+              branch_code: bCode,
+              total_intake: finalTotalIntake,
+              categories: updatedCategories
+            });
+          });
+
+          // Sort branches by total intake descending
+          const branches = Array.from(branchMap.values()).sort((a, b) => (b.total_intake || 0) - (a.total_intake || 0));
 
           const currentBranchData = branches.find(b => b.branch_name === targetBranch) || branches[0];
           const totalIntake = currentBranchData?.total_intake || 0;
 
+          // Find seats count for the target category in the selected branch
+          const targetCategoryUpper = targetCategory.toUpperCase().trim();
+          const categorySeats = currentBranchData?.categories?.find(c => c.category === targetCategoryUpper)?.seats || primaryRow.seats || 0;
+
           const fullCollege = normalizeCollegeData({
             ...primaryRow,
             total_intake: totalIntake,
-            seats: totalIntake,
+            seats: categorySeats,
             branches,
-            seat_matrix: currentBranchData?.categories?.map((c: any) => ({
-              ...c,
-              percentage: (c.seats / (totalIntake || 1)) * 100
-            })) || []
+            seat_matrix: currentBranchData?.categories || []
           });
 
           setCollege(fullCollege);
           localStorage.setItem('selectedCollege', JSON.stringify(fullCollege));
 
           // Update URL silently if possible to reflect the state
-          if (!urlCollegeCode) {
-            const newUrl = new URL(window.location.href);
+          const newUrl = new URL(window.location.href);
+          let urlChanged = false;
+          if (!newUrl.searchParams.get('code')) {
             newUrl.searchParams.set('code', code);
+            urlChanged = true;
+          }
+          if (!newUrl.searchParams.get('branch')) {
             newUrl.searchParams.set('branch', targetBranch);
+            urlChanged = true;
+          }
+          if (!newUrl.searchParams.get('category') && primaryRow.category) {
+            newUrl.searchParams.set('category', primaryRow.category);
+            urlChanged = true;
+          }
+          if (urlChanged) {
             window.history.replaceState({}, '', newUrl.toString());
           }
         } else {
@@ -239,7 +324,7 @@ export function useCollegeDetails() {
     };
 
     fetchFullData();
-  }, [college.college_code, urlCollegeCode]);
+  }, [college.college_code, urlCollegeCode, urlBranchName, urlCategory, profile?.category]);
 
   useEffect(() => {
     if (profile && college?.college_code) {
@@ -420,13 +505,16 @@ export function useCollegeDetails() {
   const updateBranch = useCallback((newBranchName: string) => {
     setCollege(prev => {
       const branchData = prev.branches?.find(b => b.branch_name === newBranchName);
+      const catUpper = (prev.category || 'GOPEN').toUpperCase().trim();
+      const matchCat = branchData?.categories?.find(c => c.category.toUpperCase().trim() === catUpper);
+      const catSeats = matchCat ? matchCat.seats : 0;
       return {
         ...prev,
         branch_name: newBranchName,
         branch_code: branchData?.branch_code || prev.branch_code,
         seat_matrix: branchData?.categories || [],
         total_intake: branchData?.total_intake || prev.total_intake,
-        seats: branchData?.total_intake || prev.seats
+        seats: catSeats
       };
     });
     // Update URL

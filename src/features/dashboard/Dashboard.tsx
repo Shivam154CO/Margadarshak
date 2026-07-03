@@ -7,10 +7,11 @@ import Loader from "@/components/Loader";
 import { supabase } from "@/lib/supabase";
 import { useColleges } from "@/context/CollegesContext";
 import { useFavorites } from "../../hooks/useFavorites";
-import { useDashboardFilters } from "@/features/dashboard/hooks/useDashboardFilters";
+import { useDashboardFilters, getCollegeType, getGenderType } from "@/features/dashboard/hooks/useDashboardFilters";
 import { fetchUserProfile } from "@/services/supabase/users";
 import { predictAdmission } from "@/services/ml-api/predictions";
 import { exportToPDF, exportToCSV, exportDreamList, exportDreamCSV, exportStrategicForm } from "@/utils/exportUtils";
+import { useToast } from "@/context/ToastContext";
 
 // Components
 import Footer from "@/components/Footer";
@@ -24,7 +25,7 @@ import { CollegeCard } from "@/features/dashboard/components/CollegeCard";
 // Types & Constants
 import type { College } from "@/types/college";
 import { ROUTES } from "@/constants/routes";
-import { FileDown, FileText, ClipboardList } from "lucide-react";
+import { FileDown, FileText, ClipboardList, AlertTriangle } from "lucide-react";
 
 
 
@@ -151,12 +152,20 @@ export default function Dashboard() {
     }
   }, [predictionsData, setColleges]);
 
+  const { warning } = useToast();
+
   // ── Filters & Formatting ───────────────────────────────────────────────────
   const {
     activeFilter, setActiveFilter,
     selectedBranch, setSelectedBranch,
     selectedCity, setSelectedCity,
     selectedDistrict, setSelectedDistrict,
+    selectedRegion, setSelectedRegion,
+    selectedState, setSelectedState,
+    selectedCollegeType, setSelectedCollegeType,
+    selectedUniversity, setSelectedUniversity,
+    selectedCategory, setSelectedCategory,
+    selectedGender, setSelectedGender,
     searchInput, handleSearch,
     filtered, onClearFilters
   } = useDashboardFilters(colleges);
@@ -268,9 +277,66 @@ export default function Dashboard() {
     return result;
   }, [filtered, activeFilter, isFavorite, getAdmissionInfo]);
 
-  const branches = useMemo(() => [...new Set(colleges.map((c) => c.branch!))].sort(), [colleges]);
-  const cities = useMemo(() => [...new Set(colleges.map((c) => c.city))].sort(), [colleges]);
+  const branches = useMemo(() => [...new Set(colleges.map((c) => c.branch || c.branch_name || ''))].filter(Boolean).sort(), [colleges]);
+  const cities = useMemo(() => [...new Set(colleges.map((c) => c.city))].filter(Boolean).sort(), [colleges]);
   const districts = useMemo(() => [...new Set(colleges.map((c) => c.district!).filter(Boolean))].sort(), [colleges]);
+  const regions = useMemo(() => [...new Set(colleges.map((c) => c.region!).filter(Boolean))].sort(), [colleges]);
+  const states = useMemo(() => [...new Set(colleges.map((c) => c.state || 'Maharashtra').filter(Boolean))].sort(), [colleges]);
+  const collegeTypes = useMemo(() => ['Government', 'Government-Aided', 'Private', 'Autonomous', 'Deemed'], []);
+  const universities = useMemo(() => [...new Set(colleges.map((c) => c.university!).filter(Boolean))].sort(), [colleges]);
+  const categories = useMemo(() => [...new Set(colleges.map((c) => c.category!).filter(Boolean))].sort(), [colleges]);
+  const genders = useMemo(() => ['Co-ed', 'Girls Only'], []);
+
+  // Filtered Dream List computation matching active filters
+  const filteredDreamList = useMemo(() => {
+    let result = dreamList;
+
+    if (selectedBranch) {
+      result = result.filter((c) => (c.branch || c.branch_name) === selectedBranch);
+    }
+    if (selectedCity) {
+      result = result.filter((c) => c.city.toLowerCase() === selectedCity.toLowerCase());
+    }
+    if (selectedDistrict) {
+      result = result.filter((c) => c.district?.toLowerCase() === selectedDistrict.toLowerCase());
+    }
+    if (selectedRegion) {
+      result = result.filter((c) => c.region?.toLowerCase() === selectedRegion.toLowerCase());
+    }
+    if (selectedState) {
+      result = result.filter((c) => (c.state || 'Maharashtra').toLowerCase() === selectedState.toLowerCase());
+    }
+    if (selectedCollegeType) {
+      result = result.filter((c) => getCollegeType(c).toLowerCase() === selectedCollegeType.toLowerCase());
+    }
+    if (selectedUniversity) {
+      result = result.filter((c) => c.university?.toLowerCase() === selectedUniversity.toLowerCase());
+    }
+    if (selectedCategory) {
+      result = result.filter((c) => c.category?.toLowerCase() === selectedCategory.toLowerCase());
+    }
+    if (selectedGender) {
+      result = result.filter((c) => getGenderType(c).toLowerCase() === selectedGender.toLowerCase());
+    }
+    if (searchInput) {
+      const term = searchInput.toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.college_name.toLowerCase().includes(term) ||
+          c.city.toLowerCase().includes(term) ||
+          c.district?.toLowerCase().includes(term) ||
+          c.region?.toLowerCase().includes(term) ||
+          c.college_code.toLowerCase().includes(term) ||
+          (c.branch || c.branch_name)?.toLowerCase().includes(term)
+      );
+    }
+
+    return result;
+  }, [
+    dreamList, selectedBranch, selectedCity, selectedDistrict,
+    selectedRegion, selectedState, selectedCollegeType,
+    selectedUniversity, selectedCategory, selectedGender, searchInput
+  ]);
 
   // ── Pagination ─────────────────────────────────────────────────────────────
   const [currentPage, setCurrentPage] = useState(1);
@@ -278,7 +344,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeFilter, searchInput, selectedBranch, selectedCity, selectedDistrict]);
+  }, [
+    activeFilter, searchInput, selectedBranch, selectedCity, selectedDistrict,
+    selectedRegion, selectedState, selectedCollegeType, selectedUniversity,
+    selectedCategory, selectedGender
+  ]);
 
   const totalPages = Math.ceil(sortedColleges.length / itemsPerPage);
   const paginatedColleges = sortedColleges.slice(
@@ -310,14 +380,18 @@ export default function Dashboard() {
   };
 
   const handleExportDream = () => {
-    if (dreamList.length) {
-      exportDreamList(dreamList.slice(0, dreamLimit), profile);
+    if (filteredDreamList.length) {
+      exportDreamList(filteredDreamList.slice(0, dreamLimit), profile);
+    } else {
+      warning("Empty List", "No colleges match your active filters to generate a Dream List.");
     }
   };
 
   const handleExportDreamCSV = () => {
-    if (dreamList.length) {
-      exportDreamCSV(dreamList.slice(0, dreamLimit), profile);
+    if (filteredDreamList.length) {
+      exportDreamCSV(filteredDreamList.slice(0, dreamLimit), profile);
+    } else {
+      warning("Empty List", "No colleges match your active filters to generate a Dream CSV.");
     }
   };
 
@@ -359,15 +433,43 @@ export default function Dashboard() {
           stats={stats}
           searchInput={searchInput}
           handleSearch={handleSearch}
+          
           selectedBranch={selectedBranch}
           handleBranchFilter={setSelectedBranch}
           branches={branches}
+          
           selectedCity={selectedCity}
           handleCityFilter={setSelectedCity}
           cities={cities}
+          
           selectedDistrict={selectedDistrict}
           handleDistrictFilter={setSelectedDistrict}
           districts={districts}
+
+          selectedRegion={selectedRegion}
+          handleRegionFilter={setSelectedRegion}
+          regions={regions}
+
+          selectedState={selectedState}
+          handleStateFilter={setSelectedState}
+          states={states}
+
+          selectedCollegeType={selectedCollegeType}
+          handleCollegeTypeFilter={setSelectedCollegeType}
+          collegeTypes={collegeTypes}
+
+          selectedUniversity={selectedUniversity}
+          handleUniversityFilter={setSelectedUniversity}
+          universities={universities}
+
+          selectedCategory={selectedCategory}
+          handleCategoryFilter={setSelectedCategory}
+          categories={categories}
+
+          selectedGender={selectedGender}
+          handleGenderFilter={setSelectedGender}
+          genders={genders}
+          
           onClearFilters={onClearFilters}
         />
 
@@ -428,26 +530,42 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {paginatedColleges.map((college, index) => (
-            <CollegeCard
-              key={`${college.college_code}_${college.branch}_${index}`}
-              college={college}
-              index={index}
-              isSaved={isFavorite(college.college_code, college.branch || '')}
-              toggleSaveCollege={() => toggleFavorite({
-                ...college,
-                branch: college.branch || '',
-                branch_name: college.branch_name || '',
-                branch_code: college.branch_code || '',
-                display_fees: `₹${(college.fees || 0).toLocaleString()}`,
-                display_seats: `${college.seats || 0}`,
-                display_cutoff: `${college.cutoff_rank || 0}`,
-              } as any)}
-              getAdmissionInfo={getAdmissionInfo}
-            />
-          ))}
-        </div>
+        {paginatedColleges.length === 0 ? (
+          <div className="py-16 px-4 bg-white rounded-2xl border border-slate-200 text-center max-w-2xl mx-auto shadow-sm w-full my-4">
+            <AlertTriangle className="w-12 h-12 text-amber-505 mx-auto mb-4" />
+            <h4 className="text-lg font-bold text-slate-800 mb-2">No Matching Colleges Found</h4>
+            <p className="text-slate-500 text-sm mb-6">
+              We couldn't find any colleges matching your active filters. Try broadening your criteria by selecting nearby cities, selecting all branches, or using a larger region.
+            </p>
+            <button
+              onClick={onClearFilters}
+              className="px-5 py-2.5 bg-indigo-650 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-all focus:outline-none shadow-sm font-semibold"
+            >
+              Reset All Filters
+            </button>
+          </div>
+        ) : (
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {paginatedColleges.map((college, index) => (
+              <CollegeCard
+                key={`${college.college_code}_${college.branch}_${index}`}
+                college={college}
+                index={index}
+                isSaved={isFavorite(college.college_code, college.branch || '')}
+                toggleSaveCollege={() => toggleFavorite({
+                  ...college,
+                  branch: college.branch || '',
+                  branch_name: college.branch_name || '',
+                  branch_code: college.branch_code || '',
+                  display_fees: `₹${(college.fees || 0).toLocaleString()}`,
+                  display_seats: `${college.seats || 0}`,
+                  display_cutoff: `${college.cutoff_rank || 0}`,
+                } as any)}
+                getAdmissionInfo={getAdmissionInfo}
+              />
+            ))}
+          </div>
+        )}
 
         {totalPages > 1 && (
           <div className="mt-10 flex flex-wrap justify-center items-center gap-2 sm:gap-4">

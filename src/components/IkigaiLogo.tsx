@@ -78,7 +78,7 @@ export default function IkigaiLogo({
 
                         {/* Radar Ping Effect */}
                         <motion.circle
-                            cx="50" cy="30"
+                            cx="50" cy="30" r="4.5"
                             initial={{ r: 4.5, opacity: 0.8 }}
                             animate={{ r: [4.5, 18], opacity: [0.8, 0] }}
                             fill="none"

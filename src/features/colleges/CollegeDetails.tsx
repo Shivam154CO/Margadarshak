@@ -149,12 +149,12 @@ export default function CollegeDetails() {
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest mb-1">Avg Package</p>
-                <p className="text-lg font-black text-slate-900">₹{placementData.averagePackage} LPA</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Avg Package</p>
+                <p className="text-lg font-bold text-slate-900">₹{placementData.averagePackage} LPA</p>
               </div>
               <div>
-                <p className="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest mb-1">Placement Rate</p>
-                <p className="text-lg font-black text-slate-900">{formatPercentage(placementData.placementRate)}</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Placement Rate</p>
+                <p className="text-lg font-bold text-slate-900">{formatPercentage(placementData.placementRate)}</p>
               </div>
             </div>
           </div>

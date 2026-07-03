@@ -55,6 +55,8 @@ export default function LiveFeatureIcon({
                                     />
                                     {/* Energy dot flowing along line */}
                                     <motion.circle
+                                        cx="50"
+                                        cy="50"
                                         r="2"
                                         className="fill-rose-600"
                                         animate={{
@@ -223,6 +225,8 @@ export default function LiveFeatureIcon({
                             transition={{ duration: 2, repeat: Infinity }}
                         />
                         <motion.circle
+                            cx="25"
+                            cy="70"
                             r="3"
                             className="fill-rose-600"
                             animate={{

@@ -1,0 +1,128 @@
+{
+    "summary": {
+        "total_rows": 13597,
+        "total_columns": 44
+    },
+    "quality_scores": {
+        "completeness": 29.36125615944694
+    },
+    "smells": [
+        {
+            "type": "High Missingness",
+            "columns": [
+                "short_name",
+                "district",
+                "region",
+                "university",
+                "established_year",
+                "branch_code",
+                "degree_type",
+                "duration_years",
+                "shift",
+                "accreditation",
+                "total_intake",
+                "Seats",
+                "fees",
+                "hostel_fees",
+                "bus_fees",
+                "placement_rate",
+                "average_package_lpa",
+                "highest_package_lpa",
+                "internship_rate",
+                "foreign_offers",
+                "top_recruiters",
+                "placement_cell_contact",
+                "hostel_available",
+                "hostel_type",
+                "labs_count",
+                "wifi_campus",
+                "transport_facility",
+                "medical_facility",
+                "hostel_capacity",
+                "image_url",
+                "logo_url",
+                "contact_email",
+                "contact_phone",
+                "website_url"
+            ],
+            "severity": "High",
+            "impact": "Reduces model training effectiveness"
+        },
+        {
+            "type": "Statistical Outliers",
+            "details": {
+                "established_year": 77,
+                "cutoff_percentile": 31,
+                "total_intake": 146,
+                "Seats": 145,
+                "foreign_offers": 8
+            },
+            "severity": "Medium",
+            "impact": "Potential predictive bias in regression/classification"
+        },
+        {
+            "type": "Class Imbalance",
+            "details": {
+                "GOPEN": 0.14694417886298447,
+                "LOPEN": 0.13811870265499743,
+                "GOBC": 0.10134588512171802,
+                "GSC": 0.08722512318893874,
+                "LOBC": 0.07075090093402957,
+                "GSEBC": 0.06405824814297272,
+                "EWS": 0.0601603294844451,
+                "LSC": 0.05582113701551813,
+                "LSEBC": 0.0392733691255424,
+                "GNTC": 0.03691990880341252,
+                "GNTA": 0.028976980216224166,
+                "GNTB": 0.02750606751489299,
+                "GST": 0.024122968301831287,
+                "LNTC": 0.01787158932117379,
+                "GNTD": 0.017356769875707875,
+                "MI": 0.01706258733544164,
+                "LNTA": 0.015076855188644553,
+                "LST": 0.012208575421048761,
+                "LNTB": 0.011914392880782526,
+                "LNTD": 0.007428109141722439,
+                "DEFR-OBC": 0.003971464293594175,
+                "PWDR-OBC": 0.0038979186585276163,
+                "PWD-O": 0.0038979186585276163,
+                "DEF-O": 0.003015371037728911,
+                "DEFR-SEBC": 0.0019857321467970875,
+                "PWDR-SC": 0.001103184525998382,
+                "ORP": 0.000735456350665588,
+                "PWDR-SEBC": 0.0006619107155990292,
+                "DEFR-SC": 0.0005148194454659116,
+                "PWDR-ST": 7.35456350665588e-05
+            },
+            "severity": "High",
+            "impact": "Model may fail to predict minority categories (e.g., ST, NTB)"
+        },
+        {
+            "type": "Redundant Features (Multicollinearity)",
+            "pairs": [
+                [
+                    "cutoff_percentile",
+                    "cutoff_rank"
+                ],
+                [
+                    "Seats",
+                    "total_intake"
+                ],
+                [
+                    "hostel_fees",
+                    "fees"
+                ],
+                [
+                    "bus_fees",
+                    "fees"
+                ],
+                [
+                    "bus_fees",
+                    "hostel_fees"
+                ]
+            ],
+            "severity": "Low",
+            "impact": "Feature redundancy increases complexity without adding value"
+        }
+    ]
+}

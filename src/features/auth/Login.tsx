@@ -51,13 +51,13 @@ export default function Login() {
         }
 
         if (!existingProfile) {
-          // New user — create basic record
-          await supabase.from('users').insert([{
+          // New user — upsert profile row (safe if trigger already created it)
+          await supabase.from('users').upsert([{
             id: data.user.id,
             email: data.user.email,
             name: data.user.user_metadata?.name || "",
             profile_complete: false
-          }]);
+          }], { onConflict: 'id', ignoreDuplicates: true });
           info("Welcome!", "Please complete your profile to get started.");
           navigate("/profile");
           return;

@@ -128,46 +128,59 @@ export default function ReviewModal({ isOpen, onClose, collegeCode, collegeName,
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+                className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm"
             >
                 <motion.div
-                    initial={{ scale: 0.95, y: 20 }}
-                    animate={{ scale: 1, y: 0 }}
-                    exit={{ scale: 0.95, y: 20 }}
+                    initial={{ scale: 0.98, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.98, opacity: 0 }}
                     className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border border-slate-200"
                 >
-                    <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
+                    {/* Header */}
+                    <div className="p-6 flex items-center justify-between border-b border-slate-100">
                         <div>
-                            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">{initialReview ? 'Edit Your Voice' : 'Add Your Voice'}</h2>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{collegeName}</p>
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                {initialReview ? 'Edit Review' : 'Write a Review'}
+                            </h2>
+                            <p className="text-xs text-slate-500 mt-0.5">{collegeName}</p>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                            <X className="w-4 h-4 text-slate-400" />
+                        <button 
+                            onClick={onClose} 
+                            className="p-2 hover:bg-slate-50 rounded-lg transition-colors"
+                        >
+                            <X className="w-5 h-5 text-slate-400" />
                         </button>
                     </div>
 
-                    <div className="flex-grow overflow-y-auto p-6 scroll-smooth">
+                    <div className="flex-grow overflow-y-auto p-6 space-y-8">
                         {step === 1 ? (
                             <div className="space-y-6">
-                                <div className="space-y-4">
+                                <div className="space-y-5">
                                     {categories.map((cat) => (
-                                        <div key={cat.key} className="space-y-2">
-                                            <div className="flex items-center gap-2">
-                                                <cat.icon className="w-3.5 h-3.5 text-slate-400" />
-                                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider">{cat.label}</span>
+                                        <div key={cat.key} className="flex flex-col gap-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <cat.icon className="w-4 h-4 text-slate-400" />
+                                                    <span className="text-xs font-medium text-slate-600">{cat.label}</span>
+                                                </div>
+                                                <span className="text-xs font-semibold text-indigo-600">
+                                                    {ratings[cat.key as keyof typeof ratings] || 0}/5
+                                                </span>
                                             </div>
                                             <div className="flex gap-2">
                                                 {[1, 2, 3, 4, 5].map((star) => (
                                                     <button
                                                         key={star}
                                                         onClick={() => handleRating(cat.key as any, star)}
-                                                        className={`p-1.5 rounded-lg border transition-all ${
-                                                            ratings[cat.key as keyof typeof ratings] >= star
-                                                                ? 'bg-indigo-600 border-indigo-600'
-                                                                : 'bg-white border-slate-200 hover:border-indigo-200'
-                                                        }`}
+                                                        className="transition-transform active:scale-90"
                                                     >
-                                                        <Star className={`w-3.5 h-3.5 ${ratings[cat.key as keyof typeof ratings] >= star ? 'text-white fill-current' : 'text-slate-300'}`} />
+                                                        <Star 
+                                                            className={`w-6 h-6 transition-colors ${
+                                                                ratings[cat.key as keyof typeof ratings] >= star 
+                                                                    ? 'text-amber-400 fill-amber-400' 
+                                                                    : 'text-slate-200 fill-transparent'
+                                                            }`} 
+                                                        />
                                                     </button>
                                                 ))}
                                             </div>
@@ -179,43 +192,45 @@ export default function ReviewModal({ isOpen, onClose, collegeCode, collegeName,
                             <div className="space-y-6">
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <div className="flex items-center gap-2">
-                                            <ThumbsUp className="w-3.5 h-3.5 text-emerald-500/50" />
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">The Best Part</span>
-                                        </div>
+                                        <label className="text-xs font-medium text-slate-600 flex items-center gap-2">
+                                            <ThumbsUp className="w-3.5 h-3.5" />
+                                            What's the best thing?
+                                        </label>
                                         <textarea
                                             value={textReviews.best}
                                             onChange={e => setTextReviews(p => ({ ...p, best: e.target.value }))}
-                                            placeholder="What makes this college special?"
-                                            className="w-full min-h-[100px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500/20 focus:outline-none transition-all placeholder:text-slate-300"
+                                            placeholder="Share what you liked most..."
+                                            className="w-full min-h-[100px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 focus:outline-none transition-all placeholder:text-slate-400"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <div className="flex items-center gap-2">
-                                            <AlertTriangle className="w-3.5 h-3.5 text-rose-500/50" />
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Reality Check</span>
-                                        </div>
+                                        <label className="text-xs font-medium text-slate-600 flex items-center gap-2">
+                                            <AlertTriangle className="w-3.5 h-3.5" />
+                                            Any reality checks?
+                                        </label>
                                         <textarea
                                             value={textReviews.worst}
                                             onChange={e => setTextReviews(p => ({ ...p, worst: e.target.value }))}
-                                            placeholder="What should new students be careful about?"
-                                            className="w-full min-h-[100px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500/20 focus:outline-none transition-all placeholder:text-slate-300"
+                                            placeholder="Anything students should know beforehand?"
+                                            className="w-full min-h-[100px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 focus:outline-none transition-all placeholder:text-slate-400"
                                         />
                                     </div>
 
                                     <button
                                         onClick={() => setIsVerified(!isVerified)}
                                         className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
-                                            isVerified ? 'bg-indigo-50/50 border-indigo-200' : 'bg-slate-50 border-slate-100'
+                                            isVerified 
+                                                ? 'bg-indigo-50 border-indigo-200' 
+                                                : 'bg-white border-slate-200 hover:bg-slate-50'
                                         }`}
                                     >
                                         <div className="text-left">
-                                            <div className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Verified Student Status</div>
-                                            <p className="text-[9px] font-medium text-slate-500 mt-0.5">I confirm that I am/was a student of this institution</p>
+                                            <span className="text-xs font-semibold text-slate-900">Verified Student</span>
+                                            <p className="text-[10px] text-slate-500">I confirm I am/was a student here</p>
                                         </div>
-                                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
-                                            isVerified ? 'bg-indigo-600 border-indigo-600 shadow-sm' : 'bg-white border-slate-200'
+                                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                                            isVerified ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-slate-300'
                                         }`}>
                                             {isVerified && <Check className="w-3 h-3 text-white" />}
                                         </div>
@@ -225,11 +240,11 @@ export default function ReviewModal({ isOpen, onClose, collegeCode, collegeName,
                         )}
                     </div>
 
-                    <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3 shrink-0">
+                    <div className="p-6 border-t border-slate-100 flex gap-3">
                         {step === 2 && (
                             <button
                                 onClick={handlePrev}
-                                className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50 transition-all"
+                                className="px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all"
                             >
                                 Back
                             </button>
@@ -237,9 +252,13 @@ export default function ReviewModal({ isOpen, onClose, collegeCode, collegeName,
                         <button
                             onClick={step === 1 ? handleNext : handleSubmit}
                             disabled={submitting || (step === 1 && !Object.values(ratings).some(v => v > 0))}
-                            className="flex-[2] py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-slate-900/10 hover:bg-slate-800 disabled:opacity-50 transition-all"
+                            className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                         >
-                            {submitting ? 'Processing...' : (step === 1 ? 'Continue' : initialReview ? 'Update Review' : 'Submit Voice')}
+                            {submitting ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                step === 1 ? 'Next' : (initialReview ? 'Update Review' : 'Submit Review')
+                            )}
                         </button>
                     </div>
                 </motion.div>

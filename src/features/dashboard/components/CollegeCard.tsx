@@ -168,7 +168,7 @@ const CollegeCardComponent: React.FC<CollegeCardProps> = ({
 
         {/* Call to Action Button */}
         <button
-          onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(college.branch || college.branch_name || '')}`, { state: { college } })}
+          onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(college.branch || college.branch_name || '')}&category=${encodeURIComponent(college.category || '')}`, { state: { college } })}
           className="w-full bg-slate-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-indigo-600 transition-colors duration-300 shadow-sm flex items-center justify-center space-x-2 group/btn mt-auto"
         >
           <span>View Details</span>

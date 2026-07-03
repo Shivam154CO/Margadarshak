@@ -34,7 +34,7 @@ export const CollegeHero: React.FC<CollegeHeroProps> = ({ college, academicData 
           </div>
         </div>
         {college.is_most_probable && (
-          <div className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-black text-sm shadow-lg shadow-emerald-500/20">
+          <div className="px-6 py-3 bg-emerald-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-500/20">
             🎯 Most Probable
           </div>
         )}

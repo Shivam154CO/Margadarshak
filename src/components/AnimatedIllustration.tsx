@@ -374,7 +374,7 @@ export default function AnimatedIllustration({
                         ))}
                         {/* Pulsing effect on center node */}
                         <motion.circle
-                            cx="100" cy="120"
+                            cx="100" cy="120" r="15"
                             initial={{ r: 15, opacity: 0.8 }}
                             animate={{ r: [15, 25, 15], opacity: [0.8, 0, 0.8] }}
                             stroke="#ec4899"

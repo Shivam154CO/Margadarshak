@@ -222,16 +222,15 @@ export default function Profile() {
         else if (isNaN(Number(form.diplomaScore)) || Number(form.diplomaScore) <= 0)
           newErrors.diplomaScore = "Enter a valid score greater than 0";
       }
-      if (form.preferredBranches.length === 0) {
-        newErrors.preferredBranches = "Please select at least one branch";
-      }
+      // Note: preferredBranches is on step 3 (Preferences), not here
     } else if (step === 2) {
-      if (!form.homeUniversity) {
-        newErrors.homeUniversity = "Please select your Home University";
-      }
+      // Formal Info step — no required fields (all optional)
     } else if (step === 3) {
       if (form.preferredBranches.length === 0) {
         newErrors.preferredBranches = "Please select at least one branch";
+      }
+      if (!form.homeUniversity) {
+        newErrors.homeUniversity = "Please select your Home University";
       }
     }
 

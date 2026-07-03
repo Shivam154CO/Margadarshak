@@ -450,7 +450,7 @@ const CollegeCard = memo(({ college, index, saved, onToggleSaved, onOpenBranches
                 Branches
               </button>
               <button 
-                onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch_name || "")}`, { state: { college } })} 
+                onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch_name || "")}&category=${encodeURIComponent(college.category || userProfile?.category || "")}`, { state: { college } })} 
                 className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-bold hover:bg-slate-800 transition-colors flex items-center gap-1"
               >
                 View Details <ArrowRight className="w-3 h-3" />
@@ -524,7 +524,7 @@ const CollegeListCard = memo(({ college, index, saved, onToggleSaved, onOpenBran
             </button>
             <button onClick={onOpenBranches} className="p-3 hover:bg-slate-50 rounded-xl transition-colors border border-slate-100 text-slate-400 hover:text-indigo-600"><Layers className="w-5 h-5" /></button>
             <button 
-                onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch_name || "")}`, { state: { college } })} 
+                onClick={() => navigate(`${ROUTES.COLLEGE_DETAILS}?code=${college.college_code}&branch=${encodeURIComponent(bestBranch.branch_name || "")}&category=${encodeURIComponent(college.category || userProfile?.category || "")}`, { state: { college } })} 
                 className="px-5 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all flex items-center gap-2 text-xs font-bold"
             >
                 View <ArrowRight className="w-4 h-4" />
