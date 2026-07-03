@@ -10,7 +10,7 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({ selectedColleg
   // Format value for display
   const formatValue = (value: any, metric: ComparisonMetric): string => {
     if (value === undefined || value === null) return 'N/A';
-    if (metric.key === 'fees') return `₹${Number(value).toLocaleString()}`;
+    if (metric.key === 'fees') return `₹${Number(value).toLocaleString('en-IN')}`;
     return `${value}${metric.unit || ''}`;
   };
 
@@ -40,7 +40,8 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({ selectedColleg
               <th className="text-left py-2 font-medium text-gray-700">Metric</th>
               {selectedColleges.map((college) => (
                 <th key={college.college_code} className="text-center py-2 font-medium text-gray-700">
-                  {college.college_name}
+                  <div>{college.college_name}</div>
+                  {college.city && <div className="text-xs text-indigo-500 font-normal mt-0.5">{college.city}</div>}
                 </th>
               ))}
             </tr>

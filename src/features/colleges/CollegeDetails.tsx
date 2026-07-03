@@ -44,6 +44,7 @@ export default function CollegeDetails() {
   const [activeTab, setActiveTab] = useState("overview");
   const [showImageModal, setShowImageModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
   const {
     college,
@@ -227,10 +228,20 @@ export default function CollegeDetails() {
               <Share2 className="w-4 h-4" /> Share
             </button>
             <button
-              onClick={() => exportDetailedCollegeReport(college, collegeInsights, profile)}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 border border-indigo-700 rounded-xl text-white font-bold hover:bg-indigo-700 shadow-md transition-all active:scale-95"
+              onClick={() => {
+                setIsGeneratingReport(true);
+                setTimeout(() => {
+                  exportDetailedCollegeReport(college, collegeInsights, profile);
+                  setIsGeneratingReport(false);
+                }, 300);
+              }}
+              disabled={isGeneratingReport}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 border border-indigo-700 rounded-xl text-white font-bold hover:bg-indigo-700 shadow-md transition-all active:scale-95 disabled:opacity-70"
             >
-              <FileText className="w-4 h-4" /> Generate AI Report
+              {isGeneratingReport
+                ? (<><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Generating...</>)
+                : (<><FileText className="w-4 h-4" /> Generate AI Report</>)
+              }
             </button>
           </div>
         </div>

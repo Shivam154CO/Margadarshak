@@ -224,7 +224,7 @@ function CollegeComparison() {
 
     autoTable(doc, {
       head: [['College', 'City', 'Branch', 'Fees', 'Placement', 'Avg Package']] as any,
-      body: selectedColleges.map(c => [c.college_name, c.city, c.branch_name, `₹${c.fees.toLocaleString()}`, `${c.placement_rate}%`, `${c.average_package_lpa} LPA`]),
+      body: selectedColleges.map(c => [c.college_name, c.city, c.branch_name, `₹${c.fees.toLocaleString('en-IN')}`, `${c.placement_rate}%`, `${c.average_package_lpa} LPA`]),
       startY: 40,
     });
 
@@ -358,6 +358,7 @@ function CollegeComparison() {
                           </button>
                           <div className="absolute bottom-4 left-4 right-4">
                             <h3 className="text-white font-bold line-clamp-1">{college.college_name}</h3>
+                          <p className="text-white/70 text-xs mt-0.5">{(college.autonomy_status || '').replace(/autonoumous/gi, 'Autonomous')}</p>
                           </div>
                         </div>
                         <div className="p-5 flex-1 flex flex-col">

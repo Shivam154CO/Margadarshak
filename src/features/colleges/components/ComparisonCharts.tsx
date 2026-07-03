@@ -27,7 +27,7 @@ export const ComparisonCharts: React.FC<ComparisonChartsProps> = ({ selectedColl
       ];
 
       return {
-        label: college.college_name,
+        label: college.city ? `${college.college_name} (${college.city})` : college.college_name,
         data: COMPARISON_METRICS.map(metric => {
           const value = Number(college[metric.key]) || 0;
           if (metric.key === 'fees') {
@@ -50,7 +50,7 @@ export const ComparisonCharts: React.FC<ComparisonChartsProps> = ({ selectedColl
 
   // Generate bar chart data for specific metric
   const getBarChartData = (metric: ComparisonMetric) => {
-    const labels = selectedColleges.map(c => c.college_name);
+    const labels = selectedColleges.map(c => c.city ? `${c.college_name} (${c.city})` : c.college_name);
     const data = selectedColleges.map(c => Number(c[metric.key]) || 0);
 
     return {

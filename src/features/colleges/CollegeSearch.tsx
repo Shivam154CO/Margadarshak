@@ -23,6 +23,12 @@ const ML_API_URL = import.meta.env.VITE_ML_API_URL ?? 'http://127.0.0.1:5001';
 import { useCollegeData } from "./hooks/useCollegeData";
 import type { College } from "@/types/college";
 
+// Sanitize DB values that may have typos (e.g. "Autonoumous" → "Autonomous")
+const sanitizeAutonomyStatus = (status?: string): string => {
+  if (!status) return "";
+  return status.replace(/autonoumous/gi, "Autonomous");
+};
+
 // ---------- MAIN COMPONENT ----------
 export default function CollegeSearch() {
   const { colleges: predictedColleges, allColleges, userProfile, loading } = useCollegeData();
@@ -152,14 +158,18 @@ export default function CollegeSearch() {
           <p className="text-sm text-slate-500 mt-1">Discover and analyze India's premier engineering institutions</p>
         </div>
 
-        {/* Stats Strip */}
+        {/* Stats Strip — counts derived from actual loaded data for accuracy */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-          {[
-            { label: "Total Institutions", value: allColleges.length, color: "border-l-slate-400" },
-            { label: "AI Recommendations", value: predictedColleges.length, color: "border-l-indigo-500" },
-            { label: "Cities Covered", value: availableLocations.length, color: "border-l-emerald-500" },
-            { label: "Specializations", value: availableBranches.length, color: "border-l-amber-500" },
-          ].map(s => (
+          {(() => {
+            const uniqueCities = new Set(allColleges.map(c => c.city).filter(Boolean));
+            const uniqueBranches = new Set(allColleges.flatMap(c => (c.branches || []).map(b => b.branch_name).filter(Boolean)));
+            return [
+              { label: "Total Institutions", value: allColleges.length, color: "border-l-slate-400" },
+              { label: "AI Recommendations", value: predictedColleges.length, color: "border-l-indigo-500" },
+              { label: "Cities Covered", value: uniqueCities.size, color: "border-l-emerald-500" },
+              { label: "Specializations", value: uniqueBranches.size, color: "border-l-amber-500" },
+            ];
+          })().map(s => (
             <div key={s.label} className={`bg-white rounded-xl border border-slate-200 border-l-4 ${s.color} p-4 shadow-sm transition-all hover:shadow-md`}>
               <div className="text-2xl font-bold text-slate-800">{s.value}</div>
               <div className="text-xs font-semibold text-slate-500 mt-1">{s.label}</div>
@@ -412,7 +422,7 @@ const CollegeCard = memo(({ college, index, saved, onToggleSaved, onOpenBranches
         <div className="absolute bottom-3 left-3 right-3">
            <div className="flex items-center gap-2 flex-wrap">
               <span className="px-1.5 py-0.5 bg-indigo-600 text-white rounded text-[9px] font-black uppercase tracking-wider">
-                {college.autonomy_status}
+                {sanitizeAutonomyStatus(college.autonomy_status)}
               </span>
               {isPredicted && (
                 <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${prob.bg} ${prob.color} border ${prob.border}`}>
@@ -498,7 +508,7 @@ const CollegeListCard = memo(({ college, index, saved, onToggleSaved, onOpenBran
       </div>
       <div className="flex-1 min-w-0 py-2">
         <div className="flex items-center gap-2 mb-3">
-            <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded text-[10px] font-black uppercase tracking-wider">{college.autonomy_status}</span>
+            <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded text-[10px] font-black uppercase tracking-wider">{sanitizeAutonomyStatus(college.autonomy_status)}</span>
             {saved && <span className="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded text-[10px] font-black uppercase tracking-wider">Saved</span>}
         </div>
         <h3 className="text-xl md:text-2xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">{college.college_name}</h3>

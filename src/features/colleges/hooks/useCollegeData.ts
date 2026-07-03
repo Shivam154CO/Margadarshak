@@ -92,37 +92,26 @@ const fetchAllColleges = async (): Promise<College[]> => {
         console.error("Cache read error", e);
     }
 
-    const PAGE_SIZE = 500; // Smaller chunks for better reliability
+    // Always fetch from Supabase — single source of truth, no CSV/ML endpoint
+    console.log("Fetching colleges from Supabase...");
+    const PAGE_SIZE = 500;
     let allRows: any[] = [];
-    
-    console.log("Fetching colleges from high-speed API cache...");
-    const API_URL = import.meta.env.VITE_ML_API_URL;
-    if (!API_URL) throw new Error("VITE_ML_API_URL is missing");
-    
-    try {
-        const response = await fetch(`${API_URL}/colleges/all_raw`);
-        if (!response.ok) throw new Error("Failed to fetch from API Cache");
-        allRows = await response.json();
-        console.log(`Successfully fetched ${allRows.length} rows perfectly in one shot.`);
-    } catch (apiError) {
-        console.warn("API cache failed, falling back to Supabase pagination...", apiError);
-        let from = 0;
-        let hasMore = true;
+    let from = 0;
+    let hasMore = true;
 
-        while (hasMore) {
-            const { data: batch, error } = await supabase
-                .from('colleges_2025')
-                .select('*')
-                .range(from, from + PAGE_SIZE - 1);
+    while (hasMore) {
+        const { data: batch, error } = await supabase
+            .from('colleges_2025')
+            .select('*')
+            .range(from, from + PAGE_SIZE - 1);
 
-            if (error) throw error;
-            if (!batch || batch.length === 0) {
-                hasMore = false;
-            } else {
-                allRows = [...allRows, ...batch];
-                from += PAGE_SIZE;
-                if (batch.length < PAGE_SIZE) hasMore = false;
-            }
+        if (error) throw error;
+        if (!batch || batch.length === 0) {
+            hasMore = false;
+        } else {
+            allRows = [...allRows, ...batch];
+            from += PAGE_SIZE;
+            if (batch.length < PAGE_SIZE) hasMore = false;
         }
     }
 

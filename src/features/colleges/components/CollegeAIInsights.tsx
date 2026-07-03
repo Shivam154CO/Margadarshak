@@ -53,13 +53,13 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
   const comparePoints = [
     { 
       label: "Placement Rate", 
-      value: college.placement_rate > 80 ? "Top 15% in Region" : "Regional Average", 
+      value: college.placement_rate > 80 ? "Top 15% in Region" : college.placement_rate > 0 ? "Regional Average" : "Data Pending", 
       better: college.placement_rate > 70 
     },
     { 
       label: "Status", 
-      value: college.autonomy_status || "Affiliated", 
-      better: college.autonomy_status?.toLowerCase().includes('autonomous') 
+      value: (college.autonomy_status || "Affiliated").replace(/autonoumous/gi, "Autonomous"), 
+      better: (college.autonomy_status || "").toLowerCase().replace(/autonoumous/gi, "autonomous").includes('autonomous') 
     },
     { 
       label: "Package", 
@@ -67,6 +67,11 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
       better: college.average_package_lpa > 4.5 
     }
   ];
+
+  const probabilityColor = predictionScore > 80 ? 'text-emerald-600' : predictionScore > 50 ? 'text-amber-600' : 'text-red-500';
+  const probabilityBg = predictionScore > 80 ? 'bg-emerald-50' : predictionScore > 50 ? 'bg-amber-50' : 'bg-red-50';
+  const probabilityLabel = predictionScore > 80 ? 'Likely' : predictionScore > 50 ? 'Moderate' : 'Ambitious';
+  const probabilityBarColor = predictionScore > 80 ? 'bg-emerald-500' : predictionScore > 50 ? 'bg-amber-400' : 'bg-red-400';
 
   if (isInsightsLoading) {
     return (
@@ -102,19 +107,19 @@ export const CollegeAIInsights: React.FC<AIInsightsProps> = ({
         <div>
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-6">Admission Probability</h3>
           
-          <div className="flex items-baseline gap-4 mb-4">
-            <span className="text-4xl font-bold text-slate-900">{predictionScore}%</span>
-            <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-              {predictionScore > 80 ? 'Likely' : predictionScore > 50 ? 'Moderate' : 'Ambitious'}
+          <div className={`flex items-baseline gap-4 mb-4 px-4 py-3 rounded-xl ${probabilityBg}`}>
+            <span className={`text-4xl font-bold ${probabilityColor}`}>{predictionScore}%</span>
+            <span className={`text-sm font-bold uppercase tracking-wider ${probabilityColor}`}>
+              {probabilityLabel}
             </span>
           </div>
 
-          <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${predictionScore}%` }}
               transition={{ duration: 1, ease: "easeOut" }}
-              className={`h-full ${predictionScore > 80 ? 'bg-slate-900' : predictionScore > 50 ? 'bg-slate-400' : 'bg-slate-300'}`}
+              className={`h-full ${probabilityBarColor}`}
             />
           </div>
         </div>

@@ -374,7 +374,7 @@ export function useCollegeDetails() {
     { label: "Est. Year", value: academicData.establishedYear, icon: Calendar, color: "text-blue-600", bgColor: "bg-blue-50" },
     { label: "University", value: academicData.university, icon: Building, color: "text-purple-600", bgColor: "bg-purple-50" },
     { label: "Degree", value: academicData.degreeType, icon: GraduationCap, color: "text-emerald-600", bgColor: "bg-emerald-50" },
-    { label: "Intake", value: college.total_intake || college.seats || "N/A", icon: Users, color: "text-amber-600", bgColor: "bg-amber-50" }
+    { label: "Branch Intake", value: college.total_intake || college.seats || "N/A", icon: Users, color: "text-amber-600", bgColor: "bg-amber-50" }
   ];
 
   const seatData = {
@@ -397,7 +397,7 @@ export function useCollegeDetails() {
     averagePackage: college.average_package_lpa || 0,
     highestPackage: college.highest_package_lpa || 0,
     internshipRate: college.internship_rate || 0,
-    topRecruiters: college.top_recruiters?.split(',').map(s => s.trim()) || [],
+    topRecruiters: college.top_recruiters?.split(',').map(s => s.trim().replace(/^and\s+/i, '').trim()).filter(Boolean) || [],
     placementContact: "Contact Placement Cell"
   };
 

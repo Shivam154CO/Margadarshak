@@ -18,7 +18,7 @@ export const CollegeFees: React.FC<FeeStructureProps> = ({ feeData }) => {
   return (
     <div className="space-y-8">
       <div className="bg-indigo-600 rounded-3xl p-10 text-white shadow-xl shadow-indigo-600/20">
-        <h2 className="text-3xl font-black mb-2">₹{feeData.totalFees.toLocaleString()}</h2>
+        <h2 className="text-3xl font-black mb-2">₹{feeData.totalFees.toLocaleString('en-IN')}</h2>
         <p className="opacity-80 font-medium">Total Annual Fee Structure</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -33,7 +33,7 @@ export const CollegeFees: React.FC<FeeStructureProps> = ({ feeData }) => {
                 <p className="text-sm text-gray-500">Annual charge</p>
               </div>
             </div>
-            <p className="text-xl font-black text-gray-900">₹{fee.amount.toLocaleString()}</p>
+            <p className="text-xl font-black text-gray-900">₹{fee.amount.toLocaleString('en-IN')}</p>
           </div>
         ))}
       </div>

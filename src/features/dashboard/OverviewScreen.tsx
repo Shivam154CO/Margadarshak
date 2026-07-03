@@ -281,8 +281,14 @@ export default function OverviewScreen() {
   // Hostel & Autonomy
   const infraStats = useMemo(() => {
     const hostelYes = colleges.filter(c => c.hostel_available?.toLowerCase() === "yes" || c.hostel_available?.toLowerCase() === "available").length;
-    const autonomous = colleges.filter(c => c.autonomy_status?.toLowerCase().includes("autonomous")).length;
-    const affiliated = colleges.filter(c => c.autonomy_status?.toLowerCase().includes("affiliated") || (!c.autonomy_status?.toLowerCase().includes("autonomous") && c.autonomy_status)).length;
+    const autonomous = colleges.filter(c => {
+      const s = (c.autonomy_status || '').toLowerCase().replace(/autonoumous/g, 'autonomous');
+      return s.includes('autonomous');
+    }).length;
+    const affiliated = colleges.filter(c => {
+      const s = (c.autonomy_status || '').toLowerCase().replace(/autonoumous/g, 'autonomous');
+      return s.includes('affiliated') || (!s.includes('autonomous') && c.autonomy_status);
+    }).length;
     return { hostelYes, hostelNo: colleges.length - hostelYes, autonomous, affiliated, total: colleges.length };
   }, [colleges]);
 
@@ -667,7 +673,15 @@ export default function OverviewScreen() {
                       <div className="bg-indigo-50/50 rounded-xl p-4 border border-indigo-100/50">
                         <h4 className="text-sm font-bold text-indigo-900 mb-2">Why this is a great match</h4>
                         <p className="text-sm text-slate-600 leading-relaxed">
-                          Based on your profile, {spotlightCollege.college_name} in {spotlightCollege.city} is an excellent candidate for your chosen branch of {spotlightCollege.branch}. It offers a strong placement rate of {spotlightCollege.placement_rate}% and an average package of ₹{spotlightCollege.average_package_lpa} LPA. With your current academic performance, you have a solid {spotlightCollege.admission_chance_percentage} chance of admission, making this a highly recommended option for your career goals.
+                          Based on your profile, {spotlightCollege.college_name} in {spotlightCollege.city} is a strong candidate for your chosen branch of {spotlightCollege.branch}.{' '}
+                          {(spotlightCollege.placement_rate ?? 0) > 0
+                            ? `It reports a ${spotlightCollege.placement_rate}% placement rate with an avg. package of ₹${spotlightCollege.average_package_lpa} LPA.`
+                            : 'Placement data is currently not available for this institution.'
+                          }{' '}
+                          {spotlightCollege.admission_chance_percentage && spotlightCollege.admission_chance_percentage !== '0%'
+                            ? `With your current rank, you have an estimated ${spotlightCollege.admission_chance_percentage} chance of admission.`
+                            : 'Contact the college directly for admission eligibility.'
+                          }
                         </p>
                       </div>
                     </div>

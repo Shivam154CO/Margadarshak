@@ -92,7 +92,7 @@ export default function Dashboard() {
           return data.colleges.map((college: College) => ({
             ...college,
             image: getCollegeImage(college.college_code),
-            display_fees: `₹${(college.fees || 0).toLocaleString()}`,
+            display_fees: `₹${(college.fees || 0).toLocaleString('en-IN')}`,
           }));
         }
         throw new Error("API empty");
@@ -122,7 +122,7 @@ export default function Dashboard() {
               branch: branchName, // Normalize to 'branch' for the UI
               branch_name: branchName,
               image: getCollegeImage(collegeCode),
-              display_fees: `₹${(c.fees || 0).toLocaleString()}`,
+              display_fees: `₹${(c.fees || 0).toLocaleString('en-IN')}`,
             });
           }
         });
@@ -557,7 +557,7 @@ export default function Dashboard() {
                   branch: college.branch || '',
                   branch_name: college.branch_name || '',
                   branch_code: college.branch_code || '',
-                  display_fees: `₹${(college.fees || 0).toLocaleString()}`,
+                  display_fees: `₹${(college.fees || 0).toLocaleString('en-IN')}`,
                   display_seats: `${college.seats || 0}`,
                   display_cutoff: `${college.cutoff_rank || 0}`,
                 } as any)}
