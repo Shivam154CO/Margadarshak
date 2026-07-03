@@ -128,8 +128,8 @@ export const SeatMatrixSection: React.FC<SeatMatrixSectionProps> = ({
                       transition={{ delay: index * 0.03 }}
                       className={`rounded-xl border px-3 py-2.5 ${
                         isUser
-                          ? 'bg-indigo-50 border-indigo-200 ring-1 ring-indigo-300'
-                          : 'bg-white border-slate-200'
+                           ? 'bg-indigo-50 border-indigo-200 ring-1 ring-indigo-300'
+                           : 'bg-white border-slate-200'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -160,6 +160,31 @@ export const SeatMatrixSection: React.FC<SeatMatrixSectionProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Informational Note for Quota Differences */}
+      {totalIntake !== undefined && (
+        (() => {
+          const matrixTotal = seatMatrix.reduce((sum, cat) => sum + cat.seats, 0);
+          if (totalIntake > matrixTotal) {
+            return (
+              <div className="px-6 py-3 bg-indigo-50/30 border-t border-slate-100 flex items-start gap-2.5">
+                <div className="text-[11px] text-slate-500 leading-normal">
+                  <span className="font-bold text-indigo-600">Note:</span> The displayed Seat Matrix includes only the major admission categories. The remaining seats belong to special quotas such as Orphan, Minority, Defense/Military, TFWS, Institute Level, Vacant, or other reserved categories. Therefore, the Total Intake may be higher than the Seat Matrix total.
+                </div>
+              </div>
+            );
+          } else if (totalIntake < matrixTotal) {
+            return (
+              <div className="px-6 py-3 bg-indigo-50/30 border-t border-slate-100 flex items-start gap-2.5">
+                <div className="text-[11px] text-slate-500 leading-normal">
+                  <span className="font-bold text-indigo-600">Note:</span> The displayed Seat Matrix total is higher than the Sanctioned Total Intake. This is typically due to vacant seats from the first year being carried forward and added to the Direct Second Year (DSE) admission pool.
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()
+      )}
     </div>
   );
 };
