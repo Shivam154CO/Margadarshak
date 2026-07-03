@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 
 // Use Vite's glob import to get all college images (mapping of path -> url)
 const campusImages = import.meta.glob("../../../assets/*/campus.png", {
@@ -115,6 +115,12 @@ export function CollegeCardImage({
   const [imgSrc, setImgSrc] = useState(initialSrc);
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
+
+  useEffect(() => {
+    setImgSrc(initialSrc);
+    setLoaded(false);
+    setErrored(false);
+  }, [initialSrc]);
 
   // Responsive srcset — quality 90, widths: 400 / 700 / 1000 / 1400
   const srcSet = useMemo(() => 

@@ -696,7 +696,7 @@ export default function OverviewScreen() {
                           <tr key={`${c.college_code}_${c.branch}`} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => navigate("/college-details", { state: { college_code: c.college_code, branch: c.branch, college: c } })}>
                             <td className="px-4 py-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0"><MiniCollegeImg code={c.college_code} className="w-10 h-10" /></div>
+                                <div className="relative w-10 h-10 rounded-xl overflow-hidden flex-shrink-0"><MiniCollegeImg code={c.college_code} className="w-10 h-10" /></div>
                                 <span className="text-sm font-bold text-slate-800 line-clamp-1 max-w-[160px]">{c.college_name}</span>
                               </div>
                             </td>
@@ -973,7 +973,7 @@ export default function OverviewScreen() {
                       className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-indigo-200 hover:shadow-sm transition-all cursor-pointer bg-slate-50/30 hover:bg-white"
                       onClick={() => navigate("/college-details", { state: { college_code: c.college_code, branch: c.branch, college: c } })}
                     >
-                      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0"><MiniCollegeImg code={c.college_code} className="w-14 h-14" /></div>
+                      <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0"><MiniCollegeImg code={c.college_code} className="w-14 h-14" /></div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-slate-800 line-clamp-1">{c.college_name}</p>
                         <p className="text-xs text-slate-400 mt-0.5">{c.branch} · {c.city}</p>
@@ -1071,7 +1071,7 @@ export default function OverviewScreen() {
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <p className="text-sm font-semibold text-slate-700 mb-3">Most Affordable Match</p>
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"><MiniCollegeImg code={feeAnalysis.cheapest.college_code} className="w-12 h-12" /></div>
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"><MiniCollegeImg code={feeAnalysis.cheapest.college_code} className="w-12 h-12" /></div>
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-slate-800 line-clamp-1">{feeAnalysis.cheapest.college_name}</p>
                         <p className="text-xs text-slate-500">{feeAnalysis.cheapest.branch} · {feeAnalysis.cheapest.city}</p>

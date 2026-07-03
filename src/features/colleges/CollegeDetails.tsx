@@ -307,7 +307,7 @@ export default function CollegeDetails() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm overflow-hidden relative">
                   <h3 className="text-2xl font-bold mb-6">College Campus</h3>
-                  <div className="aspect-video rounded-2xl overflow-hidden cursor-pointer" onClick={() => setShowImageModal(true)}>
+                  <div className="relative aspect-video rounded-2xl overflow-hidden cursor-pointer" onClick={() => setShowImageModal(true)}>
                     <CollegeImage collegeCode={college.college_code || ""} type="campus" imageOverride={college.image} className="w-full h-full object-cover" alt="Campus" />
                   </div>
                 </div>
